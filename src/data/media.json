@@ -1,0 +1,86 @@
+{
+  "_readme": "Generated with Higgsfield (Seedance 2.0 Mini video, Cinema Studio 2.5 stills). Run `npm run media:fetch` to download, re-encode and self-host these; the site then prefers /media/* automatically.",
+  "videos": {
+    "hero": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115113_8898f3f9-719b-4b98-ae0a-3f39a1f4c4a9.mp4"
+    },
+    "ritual": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_114857_bd883006-d6b9-4ec6-a52b-d1a709ee8f83.mp4"
+    },
+    "sanctuary": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_114856_e89bd6ee-aa9b-4d12-b5fd-c9b0bd49cb43.mp4"
+    },
+    "couples": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115502_fedcc4aa-3751-4d1e-85c5-1ab6907e4026.mp4"
+    },
+    "night": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115504_23b34a19-0d03-4d35-8a28-efce009d642e.mp4"
+    }
+  },
+  "images": {
+    "room": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_d4f2c839-307a-4258-a185-ec9eb21f5d87_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_d4f2c839-307a-4258-a185-ec9eb21f5d87.png"
+    },
+    "garden": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_785e17a7-3234-46f8-ad40-640a89b8dd55_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_785e17a7-3234-46f8-ad40-640a89b8dd55.png"
+    },
+    "massage": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_b7034b3b-5fff-44cf-84c4-b38f53611d11_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_b7034b3b-5fff-44cf-84c4-b38f53611d11.png"
+    },
+    "pedicure": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_037f11be-aa09-4fd1-8614-f3bc68baa231_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_037f11be-aa09-4fd1-8614-f3bc68baa231.png"
+    },
+    "jacuzzi": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_d0126d11-87f7-4d5c-b8bb-2875cc4d1bb8_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_d0126d11-87f7-4d5c-b8bb-2875cc4d1bb8.png"
+    },
+    "lounge": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_c1245a5d-ef5a-48c4-a0f8-2eaf58a9d652_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_c1245a5d-ef5a-48c4-a0f8-2eaf58a9d652.png"
+    },
+    "facial": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115158_c44c155c-3507-4ae9-8503-d7da3f159325_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115158_c44c155c-3507-4ae9-8503-d7da3f159325.png"
+    },
+    "hands": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115158_48320246-330c-40e0-bcab-e20828496b04_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115158_48320246-330c-40e0-bcab-e20828496b04.png"
+    },
+    "scrub": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115507_3ba08727-0316-4200-91b8-e778ea4c30ec_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115507_3ba08727-0316-4200-91b8-e778ea4c30ec.png"
+    },
+    "stones": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_e8faa0ab-6ed6-4c22-bc1e-0685268a2245_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_e8faa0ab-6ed6-4c22-bc1e-0685268a2245.png"
+    },
+    "group": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_f691698c-4d42-4d33-9038-18b7c07f6e23_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115157_f691698c-4d42-4d33-9038-18b7c07f6e23.png"
+    },
+    "couple": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_333e01d4-d033-4796-be75-2e5658d455a1_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_333e01d4-d033-4796-be75-2e5658d455a1.png"
+    },
+    "night": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_82b31e13-7d18-42f2-946b-2b7b0515c17b_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_82b31e13-7d18-42f2-946b-2b7b0515c17b.png"
+    },
+    "aerial": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_c7c71ab2-63a5-45b9-9e90-09f309a5f0da_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_c7c71ab2-63a5-45b9-9e90-09f309a5f0da.png"
+    },
+    "welcome": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_2ad6953e-9763-4983-8f6d-1517dbf1554b_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_2ad6953e-9763-4983-8f6d-1517dbf1554b.png"
+    },
+    "towels": {
+      "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_7907ac1b-bad4-4cbe-a2fa-6a936ede73e5_min.webp",
+      "full": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_115338_7907ac1b-bad4-4cbe-a2fa-6a936ede73e5.png"
+    }
+  }
+}

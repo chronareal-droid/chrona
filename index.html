@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>L'abri Day Spa · Pretoria: Where Therapy Meets Nature</title>
+  <meta name="description" content="L'abri Day Spa, Pretoria. A private, Kalahari-inspired botanical sanctuary at 6 Sheila Street, Kilner Park. Massages, facials, spa packages, couples and corporate spa days." />
+  <meta name="theme-color" content="#141210" />
+  <meta property="og:title" content="L'abri Day Spa · Pretoria" />
+  <meta property="og:description" content="Where therapy meets nature. Book your escape." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23141210'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Georgia' font-size='40' fill='%23e9e2d6'%3EL%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <a class="skip" href="#booking">Skip to booking</a>
+
+  <!-- Preloader / page transition curtain -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader__inner">
+      <span class="loader__word">L'ABRI</span>
+      <span class="loader__count">0</span>
+    </div>
+    <svg class="loader__liquid" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 H100 V100 Q50 100 0 100 Z" /></svg>
+  </div>
+
+  <!-- Film grain + vignette overlays -->
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="veil" aria-hidden="true"></div>
+
+  <!-- Custom cursor -->
+  <div class="cursor" aria-hidden="true"><span class="cursor__dot"></span><span class="cursor__ring"><span class="cursor__label"></span></span></div>
+
+  <!-- SVG filters: image distortion on hover -->
+  <svg class="sr-only" aria-hidden="true" width="0" height="0">
+    <filter id="distort">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="3" result="noise">
+        <animate attributeName="baseFrequency" dur="9s" values="0.012 0.02;0.016 0.026;0.012 0.02" repeatCount="indefinite" />
+      </feTurbulence>
+      <feDisplacementMap class="distort-map" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="ripple">
+      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="1" seed="8" result="n">
+        <animate attributeName="seed" dur="3s" values="1;30;1" repeatCount="indefinite" />
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <header class="nav">
+    <a href="#top" class="nav__logo" data-cursor="HOME">L'ABRI</a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#treatments">Treatments</a>
+      <a href="#packages">Packages</a>
+      <a href="#couples">Couples</a>
+      <a href="#gift">Vouchers</a>
+      <a href="#location">Visit</a>
+    </nav>
+    <a href="tel:+27837785360" class="nav__phone" data-cursor="CALL">083-778-5360</a>
+  </header>
+
+  <main id="top">
+    <!-- ================= HERO: scroll-scrubbed film ================= -->
+    <section class="hero" id="hero" aria-label="L'abri Day Spa, Pretoria">
+      <div class="hero__stage">
+        <div class="hero__media">
+          <video class="hero__video" data-media="hero" muted playsinline preload="auto" aria-hidden="true"></video>
+          <div class="hero__shade"></div>
+        </div>
+        <div class="hero__type">
+          <p class="hero__kicker"><span>Day Spa</span><span class="dot">·</span><span>Pretoria</span></p>
+          <h1 class="hero__title" aria-label="L'abri">
+            <span class="hero__letter"><span class="hero__glyph">L</span></span><span class="hero__letter hero__apos"><span class="hero__glyph">'</span></span><span class="hero__letter"><span class="hero__glyph">A</span></span><span class="hero__letter"><span class="hero__glyph">B</span></span><span class="hero__letter"><span class="hero__glyph">R</span></span><span class="hero__letter"><span class="hero__glyph">I</span></span>
+          </h1>
+          <p class="hero__tag"><span class="line"><span>Where therapy</span></span> <span class="line"><span>meets nature.</span></span></p>
+        </div>
+        <ol class="hero__chapters" aria-hidden="true">
+          <li>Oil</li><li>Hands</li><li>Steam</li><li>Stones</li><li>Treatment</li><li>Garden</li>
+        </ol>
+        <div class="hero__progress" aria-hidden="true"><span></span></div>
+        <p class="hero__scroll">Scroll to escape <span class="arrow">↓</span></p>
+        <div class="words" aria-label="Escape. Unwind. Reconnect.">
+          <svg class="words__liquid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0,100 L0,100 Q50,100 100,100 L100,100 Z" /></svg>
+          <div class="words__stage">
+            <h2 class="words__word" data-word="0">Escape.</h2>
+            <h2 class="words__word" data-word="1">Unwind.</h2>
+            <h2 class="words__word" data-word="2">Reconnect.</h2>
+            <div class="words__rule"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PHILOSOPHY: pinned story ================= -->
+    <section class="story" id="philosophy" aria-label="Philosophy">
+      <div class="story__stage">
+        <div class="story__media">
+          <div class="story__img" data-img="welcome"></div>
+          <div class="story__img" data-img="lounge"></div>
+          <div class="story__img" data-img="towels"></div>
+          <div class="story__img" data-img="garden"></div>
+          <div class="story__img" data-img="massage"></div>
+          <div class="story__img" data-img="jacuzzi"></div>
+        </div>
+        <div class="story__label">The philosophy</div>
+        <div class="story__steps"></div>
+        <div class="story__count"><span class="story__current">01</span> / 06</div>
+        <div class="story__bar"><span></span></div>
+      </div>
+    </section>
+
+    <!-- ================= THE RITUAL: horizontal scrub ================= -->
+    <section class="ritual" id="ritual" aria-label="The Ritual">
+      <div class="ritual__bg">
+        <video data-media="ritual" muted playsinline loop preload="none" aria-hidden="true"></video>
+      </div>
+      <div class="ritual__track">
+        <div class="ritual__intro panel">
+          <p class="eyebrow">The experience</p>
+          <h2 class="display split">The Ritual</h2>
+          <p class="lede">Five movements, one afternoon. From the moment you arrive to the moment you leave, everything slows.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SIGNATURE TREATMENTS ================= -->
+    <section class="treat" id="treatments" aria-label="Signature treatments">
+      <header class="section-head">
+        <p class="eyebrow">Signature treatments</p>
+        <h2 class="display split">Choose your<br /><em>ritual.</em></h2>
+      </header>
+      <div class="treat__tabs" role="tablist" aria-label="Treatment categories"></div>
+      <div class="treat__grid" role="tabpanel"></div>
+      <p class="fineprint">Durations and prices are confirmed when you book. <a href="tel:+27837785360">Call 083-778-5360</a> for the current treatment menu.</p>
+    </section>
+
+    <!-- ================= PACKAGES ================= -->
+    <section class="pack" id="packages" aria-label="Spa packages">
+      <header class="section-head section-head--wide">
+        <div>
+          <p class="eyebrow">Spa packages</p>
+          <h2 class="mega split">Make a day of it.</h2>
+        </div>
+        <p class="pack__sub">Relax. Revive. Reconnect.</p>
+      </header>
+      <div class="pack__rail" tabindex="0" aria-label="Spa packages, scroll horizontally"></div>
+      <div class="pack__controls">
+        <button class="pack__btn" data-dir="-1" aria-label="Previous packages" data-cursor="PREV">←</button>
+        <div class="pack__meter"><span></span></div>
+        <button class="pack__btn" data-dir="1" aria-label="Next packages" data-cursor="NEXT">→</button>
+      </div>
+    </section>
+
+    <!-- ================= PRICING TRIO ================= -->
+    <section class="price" id="pricing" aria-label="Most loved packages">
+      <div class="price__bg"><video data-media="sanctuary" muted playsinline loop preload="none" aria-hidden="true"></video></div>
+      <header class="section-head section-head--center">
+        <p class="eyebrow">Most loved</p>
+        <h2 class="display split">Your escape, <em>measured in hours.</em></h2>
+      </header>
+      <div class="price__grid"></div>
+    </section>
+
+    <!-- ================= COUNTERS ================= -->
+    <section class="stats" aria-label="L'abri in numbers">
+      <div class="stats__row"></div>
+    </section>
+
+    <!-- ================= COUPLES ================= -->
+    <section class="couples" id="couples" aria-label="Couples experiences">
+      <div class="couples__stage">
+        <div class="couples__bg">
+          <video data-media="couples" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <div class="couples__img" data-img="couple"></div>
+        </div>
+        <div class="couples__content">
+          <p class="eyebrow">For two</p>
+          <h2 class="mega couples__title">Together<br />feels better.</h2>
+          <ul class="couples__list" aria-label="Massage, water, wine, time">
+            <li>Massage.</li><li>Water.</li><li>Wine.</li><li>Time.</li>
+          </ul>
+          <a href="#packages" class="btn btn--ghost magnetic" data-cursor="VIEW" data-filter="couple"><span>Explore couples experiences</span> <i>→</i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= NIGHT SPA ================= -->
+    <section class="night" id="night" aria-label="Date night spa">
+      <div class="night__sky"></div>
+      <div class="night__bg">
+        <video data-media="night" muted playsinline loop preload="none" aria-hidden="true"></video>
+        <div class="night__img" data-img="night"></div>
+      </div>
+      <canvas class="night__candles" aria-hidden="true"></canvas>
+      <div class="night__water" aria-hidden="true"></div>
+      <div class="night__content">
+        <h2 class="mega split night__title">When the sun<br />goes down.</h2>
+        <div class="night__offer">
+          <p class="eyebrow">Date Night Spa</p>
+          <p class="night__price"></p>
+          <a href="#booking" class="btn btn--solid magnetic" data-cursor="BOOK" data-book="Couples"><span>Book date night</span> <i>→</i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= GROUP & CORPORATE ================= -->
+    <section class="groups" id="groups" aria-label="Group and corporate spa">
+      <div class="groups__bgs"></div>
+      <div class="groups__inner">
+        <header class="section-head">
+          <p class="eyebrow">Groups &amp; corporate</p>
+          <h2 class="mega split">Bring your people.</h2>
+        </header>
+        <div class="groups__cards"></div>
+      </div>
+    </section>
+
+    <!-- ================= GIFT VOUCHERS ================= -->
+    <section class="gift" id="gift" aria-label="Gift vouchers">
+      <div class="gift__copy">
+        <p class="eyebrow">Gift vouchers</p>
+        <h2 class="mega split">Give them time.</h2>
+        <p class="lede">A spa experience is a gift they can actually feel.</p>
+        <a href="#booking" class="btn btn--solid magnetic" data-cursor="BOOK" data-book="Gift Voucher"><span>Buy a gift voucher</span> <i>→</i></a>
+      </div>
+      <div class="gift__scene" aria-hidden="true">
+        <div class="gift__card">
+          <div class="gift__face gift__front">
+            <span class="gift__brand">L'ABRI</span>
+            <span class="gift__small">Day Spa · Pretoria</span>
+            <span class="gift__for">A gift of time for</span>
+            <span class="gift__name">Someone you love</span>
+            <span class="gift__no">Nº 0001</span>
+          </div>
+          <div class="gift__face gift__back"><span>Where therapy meets nature.</span></div>
+        </div>
+        <div class="gift__shadow"></div>
+      </div>
+    </section>
+
+    <!-- ================= GALLERY ================= -->
+    <section class="gallery" id="gallery" aria-label="Gallery">
+      <div class="gallery__stage">
+        <div class="gallery__head">
+          <p class="eyebrow">Inside L'abri</p>
+          <h2 class="display">A sanctuary,<br /><em>frame by frame.</em></h2>
+        </div>
+        <div class="gallery__track"></div>
+      </div>
+    </section>
+
+    <!-- ================= TEAM ================= -->
+    <section class="team" id="team" aria-label="The team">
+      <header class="section-head">
+        <p class="eyebrow">The team</p>
+        <h2 class="display split">The hands behind<br /><em>the experience.</em></h2>
+      </header>
+      <div class="team__rail"></div>
+      <p class="fineprint team__note"></p>
+    </section>
+
+    <!-- ================= LOCATION ================= -->
+    <section class="loc" id="location" aria-label="Location">
+      <div class="loc__stage">
+        <div class="loc__film"><div class="loc__img" data-img="aerial"></div></div>
+        <div class="loc__map" id="map" aria-label="Map showing L'abri Day Spa, Kilner Park"></div>
+        <div class="loc__card">
+          <p class="eyebrow">Visit</p>
+          <h2 class="display">Find your way<br />to L'abri.</h2>
+          <address class="loc__addr"></address>
+          <a class="btn btn--solid magnetic loc__dir" target="_blank" rel="noopener" data-cursor="GO"><span>Get directions</span> <i>→</i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BOOKING ================= -->
+    <section class="book" id="booking" aria-label="Book your escape">
+      <div class="book__frame">
+        <div class="book__progress" aria-hidden="true"><span></span></div>
+        <form class="book__form" novalidate>
+          <!-- step 1 -->
+          <fieldset class="book__step is-active" data-step="1">
+            <legend><span class="book__n">01</span> What are you looking for?</legend>
+            <div class="book__choices" role="radiogroup" aria-label="Experience type"></div>
+          </fieldset>
+          <!-- step 2 -->
+          <fieldset class="book__step" data-step="2">
+            <legend><span class="book__n">02</span> When are you escaping?</legend>
+            <div class="cal">
+              <div class="cal__head">
+                <button type="button" class="cal__nav" data-cal="-1" aria-label="Previous month">←</button>
+                <span class="cal__month" aria-live="polite"></span>
+                <button type="button" class="cal__nav" data-cal="1" aria-label="Next month">→</button>
+              </div>
+              <div class="cal__dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+              <div class="cal__grid" role="grid"></div>
+              <div class="cal__times" role="radiogroup" aria-label="Preferred time"></div>
+            </div>
+          </fieldset>
+          <!-- step 3 -->
+          <fieldset class="book__step" data-step="3">
+            <legend><span class="book__n">03</span> How many guests?</legend>
+            <div class="guests">
+              <button type="button" class="guests__btn magnetic" data-g="-1" aria-label="Fewer guests">−</button>
+              <output class="guests__out" aria-live="polite"><span class="guests__num">2</span></output>
+              <button type="button" class="guests__btn magnetic" data-g="1" aria-label="More guests">+</button>
+            </div>
+            <p class="guests__label">guests</p>
+            <div class="guests__dots" aria-hidden="true"></div>
+          </fieldset>
+          <!-- step 4 -->
+          <fieldset class="book__step" data-step="4">
+            <legend><span class="book__n">04</span> Tell us about your visit</legend>
+            <div class="fields">
+              <label class="field"><input name="name" autocomplete="name" required placeholder=" " /><span>Name</span></label>
+              <label class="field"><input name="email" type="email" autocomplete="email" required placeholder=" " /><span>Email</span></label>
+              <label class="field"><input name="phone" type="tel" autocomplete="tel" required placeholder=" " /><span>Phone</span></label>
+              <label class="field field--wide"><textarea name="message" rows="3" placeholder=" "></textarea><span>Message (optional)</span></label>
+            </div>
+            <p class="book__error" role="alert"></p>
+          </fieldset>
+          <!-- step 5 -->
+          <fieldset class="book__step book__final" data-step="5">
+            <legend class="mega">Your escape<br />starts here.</legend>
+            <dl class="book__summary"></dl>
+            <button type="submit" class="btn btn--solid btn--xl magnetic" data-cursor="BOOK"><span>Request booking</span> <i>→</i></button>
+            <p class="fineprint">We'll confirm availability by phone or email. Nothing is charged online.</p>
+          </fieldset>
+          <!-- done -->
+          <div class="book__step book__done" data-step="6" role="status">
+            <p class="eyebrow">Request received</p>
+            <h3 class="display">Breathe out.</h3>
+            <p class="lede book__done-msg"></p>
+          </div>
+        </form>
+        <div class="book__nav">
+          <button type="button" class="btn btn--ghost book__back" data-cursor="BACK"><i>←</i> <span>Back</span></button>
+          <button type="button" class="btn btn--solid book__next magnetic" data-cursor="NEXT"><span>Continue</span> <i>→</i></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="foot__big">L'ABRI</div>
+    <div class="foot__cols">
+      <p>6 Sheila Street<br />Kilner Park, Pretoria</p>
+      <p><a href="tel:+27837785360">083-778-5360</a><br /><a href="mailto:pretoria@labridayspa.co.za">pretoria@labridayspa.co.za</a></p>
+      <p>Open 08:30–17:30</p>
+      <p>© <span class="year"></span> L'abri Day Spa</p>
+    </div>
+  </footer>
+
+  <!-- Sticky booking CTA -->
+  <a href="#booking" class="sticky-cta magnetic" data-cursor="BOOK"><span>Book your escape</span> <i>→</i></a>
+
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>
