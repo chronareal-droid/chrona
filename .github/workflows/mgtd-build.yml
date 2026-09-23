@@ -1,34 +1,69 @@
-name: MGTD site build
+name: Publish sites (spa + MGTD)
 
-# Builds the MGTD Environmental site with self-hosted media and uploads it as an artifact.
-# It does not deploy: the repository's GitHub Pages slot is used by another site.
+# One GitHub Pages site per repository, so this publishes both projects together:
+#   /       L'abri Day Spa (repository root)
+#   /mgtd/  MGTD Environmental (mgtd/)
 on:
   push:
     branches: [claude/nice-babbage-91xppv]
-    paths: ['mgtd/**', '.github/workflows/mgtd-build.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mgtd
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: mgtd/package-lock.json
-      - run: npm ci
-      - name: Download and encode media (WebP srcsets, WebM/MP4 hero, OG image)
-        run: npm run media:fetch
-      - run: npm run build
-      - uses: actions/upload-artifact@v4
+          cache-dependency-path: |
+            package-lock.json
+            mgtd/package-lock.json
+
+      - name: Build the spa site
+        run: |
+          npm ci
+          npm run media:fetch
+          npm run build
+
+      - name: Build the MGTD site (self-hosted media)
+        working-directory: mgtd
+        run: |
+          npm ci
+          npm run media:fetch
+          npm run build
+
+      - name: Combine
+        run: |
+          mkdir -p site
+          cp -r dist/. site/
+          mkdir -p site/mgtd
+          cp -r mgtd/dist/. site/mgtd/
+
+      - uses: actions/configure-pages@v5
+        continue-on-error: true
         with:
-          name: mgtd-site
-          path: mgtd/dist
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}mgtd/
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
