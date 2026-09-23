@@ -1,0 +1,17 @@
+{
+  "_note": "Illustrative imagery generated with Higgsfield Cinema Studio 2.5 as art direction for the redesign. None of it depicts an MGTD project, person or site. Replace with MGTD's own field photography before launch (same keys, drop files in public/media/img and update local.json).",
+  "images": {
+    "hero":        { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181557_4dbf3176-8ee5-4453-94f6-24034148d92b.png", "alt": "Dawn over Highveld grassland with a river winding towards a distant rocky ridge" },
+    "wetland":     { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_335a32bc-d1ad-4068-a746-8b24d398babf.png", "alt": "Reeds and sedges at the edge of a still Highveld wetland reflecting a pale sky" },
+    "field":       { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_71430c11-327d-490a-b641-203d31eb6001.png", "alt": "A consultant with a tablet beside a flagged survey peg in open grassland" },
+    "water":       { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_8a334ffc-7cef-4828-903c-aa67776f3395.png", "alt": "A gloved hand taking a water sample from a shallow reed-lined stream" },
+    "corridor":    { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_8821fcc5-28c4-48b9-8d5e-abc5bb83ff19.png", "alt": "Aerial view of a pipeline trench and service road crossing open veld beside a stream" },
+    "development": { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_cbba98c0-7b5b-4e8d-904e-88281c32827f.png", "alt": "A new suburb and highway meeting open grassland and a green river corridor" },
+    "grass":       { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_2473e81f-7a0e-4f01-9fdf-4c5f5a6dd604.png", "alt": "" },
+    "desk":        { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_f217ab65-42b8-4883-b447-a55bff034827.png", "alt": "Topographic maps and site plans on a desk with a scale ruler and field notebook" },
+    "dusk":        { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181429_7741c0c6-3ca6-48e2-bd83-7cdd4b395618.png", "alt": "" }
+  },
+  "videos": {
+    "hero": { "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20260923_181716_b697e89b-a53a-48cd-8ccc-d6d07168afe4.mp4", "poster": "hero" }
+  }
+}

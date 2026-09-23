@@ -1,0 +1,201 @@
+{
+  "_readme": "All site copy lives here. Every factual claim carries a `source`. Anything MGTD must supply is wrapped in [square brackets] and rendered as a visible placeholder (class .ph). Replace, then delete the brackets.",
+  "company": {
+    "name": "MGTD Environmental",
+    "legalName": "MGTD Environmental (Pty) Ltd",
+    "tagline": "High-quality, turnkey, strategic environmental consulting services.",
+    "summary": "MGTD Environmental offers high-quality, turnkey, strategic environmental consulting services aimed at addressing complex environmental challenges faced by the business community.",
+    "vision": "To be the preferred environmental firm for our clients, delivering global services that align with their business goals.",
+    "mission": "To deliver effective environmental consulting that supports clients in achieving their objectives, with strategic solutions that also consider the needs of other stakeholders.",
+    "sources": [
+      "mgtdenvironmental.co.za (page title and description, as indexed by search engines)",
+      "ZoomInfo company profile for MGTD Environmental (quotes the company's vision and mission)"
+    ],
+    "_note": "Vision and mission are reconstructed from indexed summaries of the site because the live site could not be fetched from the build environment. Paste the exact wording from mgtdenvironmental.co.za."
+  },
+  "contact": {
+    "email": null,
+    "emailLabel": "[Email address from mgtdenvironmental.co.za]",
+    "phone": null,
+    "phoneLabel": "[Telephone number from mgtdenvironmental.co.za]",
+    "address": "[Street address from mgtdenvironmental.co.za]",
+    "area": "Cresta, Randburg · Johannesburg",
+    "areaSource": "Fourways Review (March 2014) refers to 'the MGTD Environmental offices in Cresta'. Confirm this is still current.",
+    "hours": null,
+    "formEndpoint": null,
+    "_formEndpoint": "Set to a URL that accepts a JSON POST (Formspree, a CRM webhook, etc.). While null, a valid form opens a pre-filled email if `email` is set, otherwise it reports that the form is not yet connected.",
+    "social": []
+  },
+  "services": [
+    {
+      "id": "strategic",
+      "title": "Strategic Environmental Consulting",
+      "verified": true,
+      "summary": "Environmental advice framed around the client's business goals, so that environmental decisions support what the business is trying to achieve.",
+      "points": [
+        "Aligned with client business goals",
+        "Considers the needs of other stakeholders",
+        "A broader, global perspective"
+      ],
+      "source": "Company positioning: 'strategic environmental consulting services', vision of 'global services that align with their business goals'.",
+      "image": "field"
+    },
+    {
+      "id": "turnkey",
+      "title": "Turnkey Environmental Solutions",
+      "verified": true,
+      "summary": "One consultant carrying the environmental component of a project from first question to finished deliverable, rather than a series of disconnected appointments.",
+      "points": [
+        "End-to-end delivery",
+        "High-quality work",
+        "Solutions to complex problems"
+      ],
+      "source": "Company positioning: 'high-quality, turnkey, strategic environmental consulting services'.",
+      "image": "desk"
+    },
+    {
+      "id": "assessment",
+      "title": "Environmental Assessment",
+      "verified": true,
+      "summary": "Assessment of proposed development and infrastructure, including the Basic Assessment process for proposed bulk water and sewer pipelines between Cosmo City and Lanseria.",
+      "points": [
+        "Background information documents",
+        "Draft Basic Assessment Reports",
+        "Linear infrastructure"
+      ],
+      "source": "Fourways Review, 7 March 2014: a background information document and draft basic assessment report were available from MGTD Environmental.",
+      "image": "water"
+    },
+    {
+      "id": "participation",
+      "title": "Public Participation",
+      "verified": true,
+      "summary": "Informing the public and interested and affected parties about a proposed project, gathering their comments and explaining the environmental assessment process.",
+      "points": [
+        "Public meetings",
+        "Comment periods",
+        "Interested & affected parties"
+      ],
+      "source": "Fourways Review, 7 March 2014: public meetings at Thabo Mbeki Village and Das Landhaus Guestlodge; comments invited until 19 April.",
+      "image": "wetland"
+    },
+    {
+      "id": "tbc-1",
+      "title": "[Service from MGTD service list]",
+      "verified": false,
+      "summary": "[One-line description of this service, taken from mgtdenvironmental.co.za.]",
+      "points": [
+        "[Supporting detail]",
+        "[Supporting detail]"
+      ],
+      "source": "Placeholder. The full service list on mgtdenvironmental.co.za could not be retrieved; add each listed service here.",
+      "image": "corridor"
+    }
+  ],
+  "projects": [
+    {
+      "id": "cosmo-lanseria",
+      "name": "Cosmo City to Lanseria bulk water and sewer pipelines",
+      "location": "Cosmo City to Lanseria, north-west Johannesburg, Gauteng. The upgrades also affect the Lion Park and Farmall areas.",
+      "type": "Linear infrastructure: proposed new bulk water pipelines, sewer pipelines and associated infrastructure",
+      "role": "Environmental assessment. The background information document and the draft Basic Assessment Report were available from MGTD Environmental, and the public was invited to meetings and to comment.",
+      "context": "A proposed service corridor through the peri-urban edge of northern Johannesburg, where new bulk infrastructure meets existing settlements, farmland and open veld.",
+      "timeline": [
+        {
+          "label": "Mar 2014",
+          "text": "Background information document and draft Basic Assessment Report made available in hard copy and electronic format."
+        },
+        {
+          "label": "23 Mar",
+          "text": "Public meetings: 09:00 at Thabo Mbeki Village, 11:00 at Das Landhaus Guestlodge."
+        },
+        {
+          "label": "19 Apr",
+          "text": "Closing date for comments from interested and affected parties."
+        }
+      ],
+      "documents": [
+        "Background Information Document",
+        "Draft Basic Assessment Report"
+      ],
+      "source": "Fourways Review, 'Meetings to discuss infrastructure', 7 March 2014",
+      "sourceUrl": "https://www.citizen.co.za/fourways-review/news-headlines/2014/03/07/meetings-to-discuss-infrastructure/",
+      "image": "corridor",
+      "imageNote": "Illustrative image, not a photograph of this project."
+    },
+    {
+      "id": "tbc-a",
+      "placeholder": true,
+      "name": "[Project name]",
+      "location": "[Location]",
+      "type": "[Project type]",
+      "role": "[MGTD's role]",
+      "context": "[Environmental context, from MGTD's project page or public documents.]",
+      "documents": [
+        "[Relevant documentation]"
+      ],
+      "source": "Placeholder. mgtdenvironmental.co.za/projects.html lists MGTD projects; add verified entries here.",
+      "image": "development"
+    },
+    {
+      "id": "tbc-b",
+      "placeholder": true,
+      "name": "[Project name]",
+      "location": "[Location]",
+      "type": "[Project type]",
+      "role": "[MGTD's role]",
+      "context": "[Environmental context.]",
+      "documents": [
+        "[Relevant documentation]"
+      ],
+      "source": "Placeholder.",
+      "image": "wetland"
+    }
+  ],
+  "approach": {
+    "_note": "Derived from the four ideas in MGTD's documented positioning. No numbered methodology was found in public material; replace if MGTD publishes one.",
+    "steps": [
+      {
+        "word": "Address.",
+        "line": "Start from the complex problem the business is actually facing.",
+        "source": "'addressing complex environmental challenges faced by the business community'"
+      },
+      {
+        "word": "Align.",
+        "line": "Shape the environmental solution around the client's business goals.",
+        "source": "'global services that align with their business goals'"
+      },
+      {
+        "word": "Consider.",
+        "line": "Weigh the needs of the other stakeholders the decision affects.",
+        "source": "'strategic solutions that also consider the needs of other stakeholders'"
+      },
+      {
+        "word": "Deliver.",
+        "line": "Carry it through as one turnkey, high-quality service.",
+        "source": "'high-quality, turnkey, strategic environmental consulting services'"
+      }
+    ]
+  },
+  "credentials": [
+    {
+      "title": "National Nuclear Regulator: Certificate of Exemption holder",
+      "body": "MGTD Environmental (Pty) Ltd is listed among Certificate of Exemption holders in the National Nuclear Regulator's public annual report.",
+      "meta": "[NNR annual report year and page]",
+      "source": "National Nuclear Regulator annual report (public). Add the report year and link before launch."
+    },
+    {
+      "title": "Public record of assessment work",
+      "body": "MGTD Environmental's Basic Assessment and public participation for the Cosmo City to Lanseria pipelines was reported in the local press.",
+      "meta": "Fourways Review · March 2014",
+      "source": "Fourways Review, 7 March 2014"
+    },
+    {
+      "title": "[Professional registration]",
+      "body": "[For example, EAPASA registration of MGTD's assessment practitioners, if MGTD confirms it. Leave out if not applicable.]",
+      "meta": "[Registration body and number]",
+      "source": "Placeholder",
+      "placeholder": true
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+name: MGTD site build
+
+# Builds the MGTD Environmental site with self-hosted media and uploads it as an artifact.
+# It does not deploy: the repository's GitHub Pages slot is used by another site.
+on:
+  push:
+    branches: [claude/nice-babbage-91xppv]
+    paths: ['mgtd/**', '.github/workflows/mgtd-build.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mgtd
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mgtd/package-lock.json
+      - run: npm ci
+      - name: Download and encode media (WebP srcsets, WebM/MP4 hero, OG image)
+        run: npm run media:fetch
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mgtd-site
+          path: mgtd/dist

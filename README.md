@@ -1,5 +1,7 @@
 # L'abri Day Spa · Pretoria: cinematic website
 
+> This repository also contains **[`mgtd/`](mgtd/README.md)**, the MGTD Environmental website redesign.
+
 A scroll-driven, film-like site for L'abri Day Spa (6 Sheila Street, Kilner Park, Pretoria).
 Vite + vanilla JS, GSAP ScrollTrigger, Lenis smooth scroll, Leaflet map.
 
