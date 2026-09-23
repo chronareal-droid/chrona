@@ -1,3 +1,11 @@
+import '@fontsource/syne/latin-700.css';
+import '@fontsource/syne/latin-800.css';
+import '@fontsource/cormorant-garamond/latin-300.css';
+import '@fontsource/cormorant-garamond/latin-300-italic.css';
+import '@fontsource/cormorant-garamond/latin-400-italic.css';
+import '@fontsource/inter/latin-300.css';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
 import '../styles.css';
 import 'leaflet/dist/leaflet.css';
 import gsap from 'gsap';
@@ -5,7 +13,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { loadLocalManifest, attachVideo } from './media.js';
 import { renderAll, renderTreatments, content } from './render.js';
-import { grain, cursor, magnetic, splitWords, lazyImages, lazyVideos, hoverVideo, isTouch } from './effects.js';
+import { grain, cursor, magnetic, splitWords, lazyImages, lazyVideos, hoverVideo, isTouch, fitType } from './effects.js';
 import { booking } from './booking.js';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -27,6 +35,18 @@ async function init() {
   await loadLocalManifest();
   renderAll();
   splitWords();
+  // size the display type against the real (self-hosted) fonts before anything measures the page
+  try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 2500))]); } catch { /* ignore */ }
+  fitType();
+  let fitTimer;
+  let lastW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    // phones fire resize when the URL bar shows/hides; only refit when the width really changes
+    if (window.innerWidth === lastW) return;
+    lastW = window.innerWidth;
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => { fitType(); ScrollTrigger.refresh(); }, 200);
+  });
   const rescanImages = lazyImages();
   lazyVideos(reduced);
   grain(reduced);

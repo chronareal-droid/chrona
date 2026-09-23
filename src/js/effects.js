@@ -149,3 +149,41 @@ export function hoverVideo(card, on) {
     v.pause();
   }
 }
+
+/* ---------- fit oversized display type to its box ----------
+   Syne is very wide, so on narrow screens a single long word ("RECONNECT.") can be wider than the
+   viewport. Shrink each heading just enough that its widest line fits; groups share one size. */
+const FIT = [
+  { sel: '.hero__title', pad: 0 },
+  { sel: '.words__word', group: true },
+  { sel: '.story__step h3' },
+  { sel: '.stage__copy h3, .ritual__intro .display' },
+  { sel: '.display, .mega, .couples__title, .night__title, .book__step legend' },
+  { sel: '.pcard__name, .pricecard__name, .gcard h3, .mcard__name' },
+  { sel: '.stat__n', group: true },
+  { sel: '.foot__big' },
+];
+
+export function fitType() {
+  const vw = document.documentElement.clientWidth;
+  const gutter = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 16;
+  FIT.forEach(({ sel, group }) => {
+    const els = [...document.querySelectorAll(sel)];
+    els.forEach((el) => { el.style.fontSize = ''; });
+    const ratios = els.map((el) => {
+      const fs = parseFloat(getComputedStyle(el).fontSize);
+      // available width: the element's own box, but never more than the viewport minus gutters
+      const box = el.classList.contains('words__word') || el.classList.contains('hero__title') || el.classList.contains('foot__big')
+        ? vw - gutter * 2
+        : Math.min(el.clientWidth || vw, vw - gutter * 2);
+      const need = el.scrollWidth;
+      return { el, fs, r: need > box + 1 ? box / need : 1 };
+    });
+    if (group) {
+      const r = Math.min(...ratios.map((x) => x.r), 1);
+      if (r < 1) ratios.forEach(({ el, fs }) => { el.style.fontSize = `${Math.floor(fs * r * 0.98)}px`; });
+    } else {
+      ratios.forEach(({ el, fs, r }) => { if (r < 1) el.style.fontSize = `${Math.floor(fs * r * 0.98)}px`; });
+    }
+  });
+}
