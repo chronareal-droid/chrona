@@ -1,0 +1,9 @@
+@import '@fontsource/inter-tight/800.css';
+@import '@fontsource/inter/400.css';
+body { margin: 0; background: #F3F2EE; color: #0E0F10; font: 400 17px/1.65 'Inter', system-ui, sans-serif; }
+.legal { max-width: 760px; margin: 0 auto; padding: 64px 20px 96px; }
+.legal__back { color: #D9772B; font-weight: 600; text-decoration: none; }
+.legal__draft { margin-top: 28px; padding: 12px 16px; background: #fff3e6; border-left: 3px solid #D9772B; font-size: 14px; }
+h1 { font: 800 clamp(40px, 7vw, 72px)/1 'Inter Tight', sans-serif; text-transform: uppercase; letter-spacing: -.03em; margin: 32px 0 40px; }
+h2 { font: 800 26px/1.1 'Inter Tight', sans-serif; text-transform: uppercase; margin: 40px 0 12px; }
+a { color: #D9772B; }
