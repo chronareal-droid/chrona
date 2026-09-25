@@ -1,0 +1,49 @@
+{
+  "_readme": "All business facts live here. null = not yet confirmed: the site shows a visible placeholder (or hides the link) instead of inventing a value. See README.md.",
+
+  "business": {
+    "name": "Greenfields Instant Lawns",
+    "tagline": "Instant Lawns • Landscaping • Garden Solutions",
+    "phone": null,
+    "phoneDisplay": null,
+    "whatsapp": null,
+    "email": null,
+    "serviceAreaSummary": null,
+    "hours": null
+  },
+
+  "social": {
+    "facebook": null,
+    "instagram": null,
+    "tiktok": null,
+    "google": null
+  },
+
+  "about": null,
+
+  "services": [
+    { "id": "instant-lawn", "enabled": true, "icon": "turf", "image": "laying", "title": "Instant Lawn Installation", "text": "Professional preparation and installation of quality instant lawn to transform bare ground into a beautiful green space." },
+    { "id": "landscaping", "enabled": true, "icon": "landscape", "image": "bed", "title": "Landscaping", "text": "Complete landscaping solutions designed around the property, lifestyle and desired look of the customer." },
+    { "id": "makeovers", "enabled": true, "icon": "sparkle", "image": "front", "title": "Garden Makeovers", "text": "Transform tired, outdated or unfinished gardens into attractive outdoor spaces." },
+    { "id": "maintenance", "enabled": true, "icon": "shears", "image": null, "title": "Garden Maintenance", "text": "Ongoing lawn and garden care to keep outdoor spaces healthy, neat and presentable." },
+    { "id": "preparation", "enabled": true, "icon": "level", "image": null, "title": "Lawn Preparation", "text": "Proper ground preparation, levelling and preparation before lawn installation." },
+    { "id": "design", "enabled": true, "icon": "plan", "image": null, "title": "Garden Design", "text": "Help customers plan a functional and attractive garden before installation begins." }
+  ],
+
+  "rating": {
+    "score": null,
+    "count": null,
+    "source": "Google",
+    "url": null
+  },
+
+  "testimonials": [],
+
+  "serviceAreas": [],
+
+  "quote": {
+    "endpoint": null
+  },
+
+  "imagesAreIllustrative": true
+}

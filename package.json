@@ -1,7 +1,7 @@
 {
-  "name": "labri-day-spa",
+  "name": "greenfields-instant-lawns",
   "version": "1.0.0",
-  "description": "L’abri Day Spa Pretoria: cinematic website",
+  "description": "Greenfields Instant Lawns: premium lawn installation and landscaping website",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -17,16 +17,12 @@
   },
   "homepage": "https://github.com/chronareal-droid/chrona#readme",
   "devDependencies": {
-    "ffmpeg-static": "^5.3.0",
+    "sharp": "^0.35.4",
     "vite": "^6.4.3"
   },
   "dependencies": {
-    "@fontsource/cormorant-garamond": "^5.3.0",
-    "@fontsource/inter": "^5.3.0",
-    "@fontsource/syne": "^5.3.0",
-    "gsap": "^3.15.0",
-    "leaflet": "^1.9.4",
-    "lenis": "^1.3.26"
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0"
   },
   "private": true,
   "type": "module"

@@ -2,3 +2,4 @@ node_modules
 dist
 media-src
 .DS_Store
+public/media/*.webp

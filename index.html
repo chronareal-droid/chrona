@@ -3,356 +3,360 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>L'abri Day Spa · Pretoria: Where Therapy Meets Nature</title>
-  <meta name="description" content="L'abri Day Spa, Pretoria. A private, Kalahari-inspired botanical sanctuary at 6 Sheila Street, Kilner Park. Massages, facials, spa packages, couples and corporate spa days." />
-  <meta name="theme-color" content="#141210" />
-  <meta property="og:title" content="L'abri Day Spa · Pretoria" />
-  <meta property="og:description" content="Where therapy meets nature. Book your escape." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23141210'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='Georgia' font-size='40' fill='%23e9e2d6'%3EL%3C/text%3E%3C/svg%3E" />
+  <title>Greenfields Instant Lawns · Instant Lawn Installation &amp; Landscaping</title>
+  <meta name="description" content="Greenfields Instant Lawns: professionally installed instant lawns, landscaping, garden makeovers and garden maintenance in South Africa. Request a free quote." />
+  <meta name="theme-color" content="#1c3a29" />
+  <meta property="og:title" content="Greenfields Instant Lawns" />
+  <meta property="og:description" content="Instant Lawns. Beautiful Gardens. Professional lawn installation and landscaping." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c3a29'/%3E%3Cpath d='M16 25c0-6 1-11 6-15-6 1-9 5-9.5 9C11 16 9 14 6 13.5c3 2.5 5.5 6 6 11.5z' fill='%23a9c97e'/%3E%3C/svg%3E" />
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
-  <a class="skip" href="#booking">Skip to booking</a>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- Preloader / page transition curtain -->
-  <div class="loader" aria-hidden="true">
-    <div class="loader__inner">
-      <span class="loader__word">L'ABRI</span>
-      <span class="loader__count">0</span>
+  <!-- ───────── Header ───────── -->
+  <header class="nav" id="top">
+    <div class="nav__inner wrap">
+      <a class="brand" href="#top" aria-label="Greenfields Instant Lawns, home">
+        <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11"/><path d="M20 31c0-7.5 1.2-13.6 7.6-18.6-7.4 1.2-11 6.3-11.8 11.2C14 19.9 11.5 17.6 7.8 17c3.8 3.1 6.9 7.5 7.5 14z"/><path d="M8 31.5h24" /></svg>
+        <span class="brand__text"><strong>Greenfields</strong><em>Instant Lawns</em></span>
+      </a>
+      <nav class="nav__links" aria-label="Main">
+        <a href="#top">Home</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#work">Our Work</a>
+        <a href="#quote">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="nav__phone" data-link="phone" href="#quote"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-text="phoneDisplay">Call us</span></a>
+        <a class="btn btn--primary btn--sm" href="#quote">Free Quote</a>
+        <button class="nav__toggle" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu"><span></span><span></span></button>
+      </div>
     </div>
-    <svg class="loader__liquid" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 H100 V100 Q50 100 0 100 Z" /></svg>
-  </div>
-
-  <!-- Film grain + vignette overlays -->
-  <div class="grain" aria-hidden="true"></div>
-  <div class="vignette" aria-hidden="true"></div>
-  <div class="veil" aria-hidden="true"></div>
-
-  <!-- Custom cursor -->
-  <div class="cursor" aria-hidden="true"><span class="cursor__dot"></span><span class="cursor__ring"><span class="cursor__label"></span></span></div>
-
-  <!-- SVG filters: image distortion on hover -->
-  <svg class="sr-only" aria-hidden="true" width="0" height="0">
-    <filter id="distort">
-      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="3" result="noise">
-        <animate attributeName="baseFrequency" dur="9s" values="0.012 0.02;0.016 0.026;0.012 0.02" repeatCount="indefinite" />
-      </feTurbulence>
-      <feDisplacementMap class="distort-map" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="ripple">
-      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="1" seed="8" result="n">
-        <animate attributeName="seed" dur="3s" values="1;30;1" repeatCount="indefinite" />
-      </feTurbulence>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  </svg>
-
-  <header class="nav">
-    <a href="#top" class="nav__logo" data-cursor="HOME">L'ABRI</a>
-    <nav class="nav__links" aria-label="Primary">
-      <a href="#treatments">Treatments</a>
-      <a href="#packages">Packages</a>
-      <a href="#couples">Couples</a>
-      <a href="#gift">Vouchers</a>
-      <a href="#location">Visit</a>
-    </nav>
-    <a href="tel:+27837785360" class="nav__phone" data-cursor="CALL">083-778-5360</a>
+    <div class="mobile-menu" id="mobile-menu" hidden>
+      <nav aria-label="Mobile">
+        <a href="#top">Home</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#work">Our Work</a>
+        <a href="#quote">Contact</a>
+      </nav>
+      <a class="btn btn--primary btn--block" href="#quote">Get a free quote</a>
+    </div>
   </header>
 
-  <main id="top">
-    <!-- ================= HERO: scroll-scrubbed film ================= -->
-    <section class="hero" id="hero" aria-label="L'abri Day Spa, Pretoria">
-      <div class="hero__stage">
-        <div class="hero__media">
-          <video class="hero__video" data-media="hero" muted playsinline preload="auto" aria-hidden="true"></video>
-          <div class="hero__shade"></div>
+  <main id="main">
+    <!-- ───────── Hero ───────── -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__media">
+        <img data-media="hero" data-eager alt="" />
+      </div>
+      <div class="hero__shade" aria-hidden="true"></div>
+      <div class="hero__body wrap">
+        <p class="eyebrow eyebrow--light hero__eyebrow" data-hero>Lawn installation &amp; landscaping · South Africa</p>
+        <h1 id="hero-title" class="hero__title" data-hero>
+          <span class="line"><span>Instant Lawns.</span></span>
+          <span class="line"><span><em>Beautiful</em> Gardens.</span></span>
+        </h1>
+        <p class="hero__lede" data-hero>Transform your outdoor space with professionally installed instant lawns and landscaping solutions designed to make your property look better, greener and more inviting.</p>
+        <div class="hero__actions" data-hero>
+          <a class="btn btn--primary btn--lg" href="#quote">Get a free quote <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn--glass btn--lg" href="#work">View our work</a>
         </div>
-        <div class="hero__type">
-          <p class="hero__kicker"><span>Day Spa</span><span class="dot">·</span><span>Pretoria</span></p>
-          <h1 class="hero__title" aria-label="L'abri">
-            <span class="hero__letter"><span class="hero__glyph">L</span></span><span class="hero__letter hero__apos"><span class="hero__glyph">'</span></span><span class="hero__letter"><span class="hero__glyph">A</span></span><span class="hero__letter"><span class="hero__glyph">B</span></span><span class="hero__letter"><span class="hero__glyph">R</span></span><span class="hero__letter"><span class="hero__glyph">I</span></span>
-          </h1>
-          <p class="hero__tag"><span class="line"><span>Where therapy</span></span> <span class="line"><span>meets nature.</span></span></p>
-        </div>
-        <ol class="hero__chapters" aria-hidden="true">
-          <li>Oil</li><li>Hands</li><li>Steam</li><li>Stones</li><li>Treatment</li><li>Garden</li>
-        </ol>
-        <div class="hero__progress" aria-hidden="true"><span></span></div>
-        <p class="hero__scroll">Scroll to escape <span class="arrow">↓</span></p>
-        <div class="words" aria-label="Escape. Unwind. Reconnect.">
-          <svg class="words__liquid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0,100 L0,100 Q50,100 100,100 L100,100 Z" /></svg>
-          <div class="words__stage">
-            <h2 class="words__word" data-word="0">Escape.</h2>
-            <h2 class="words__word" data-word="1">Unwind.</h2>
-            <h2 class="words__word" data-word="2">Reconnect.</h2>
-            <div class="words__rule"></div>
+        <ul class="hero__trust" data-hero>
+          <li>Professional Landscaping</li>
+          <li>Quality Lawn Installation</li>
+          <li>Reliable Service</li>
+        </ul>
+      </div>
+
+      <a class="hero__ba" href="#transformation" data-hero aria-label="See the before and after transformation">
+        <span class="hero__ba-img">
+          <img data-media="before" data-size="900" alt="" />
+          <img class="hero__ba-after" data-media="after" data-size="900" alt="" />
+          <span class="hero__ba-line" aria-hidden="true"></span>
+        </span>
+        <span class="hero__ba-text"><small>Before → After</small>From bare ground to lawn</span>
+      </a>
+
+      <a class="hero__scroll" href="#services" aria-label="Scroll to services"><span></span></a>
+    </section>
+
+    <!-- ───────── Services ───────── -->
+    <section class="section services" id="services" aria-labelledby="services-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow" data-reveal>Our services</p>
+            <h2 id="services-title" class="h2" data-reveal>Everything Your Garden Needs</h2>
           </div>
+          <p class="section-head__aside" data-reveal>From the first spade of preparation to the last rolled seam, every job is planned and finished with the same care.</p>
         </div>
+        <div class="services__grid" id="services-grid"></div>
       </div>
     </section>
 
-    <!-- ================= PHILOSOPHY: pinned story ================= -->
-    <section class="story" id="philosophy" aria-label="Philosophy">
-      <div class="story__stage">
-        <div class="story__media">
-          <div class="story__img" data-img="welcome"></div>
-          <div class="story__img" data-img="lounge"></div>
-          <div class="story__img" data-img="towels"></div>
-          <div class="story__img" data-img="garden"></div>
-          <div class="story__img" data-img="massage"></div>
-          <div class="story__img" data-img="jacuzzi"></div>
-        </div>
-        <div class="story__label">The philosophy</div>
-        <div class="story__steps"></div>
-        <div class="story__count"><span class="story__current">01</span> / 06</div>
-        <div class="story__bar"><span></span></div>
-      </div>
-    </section>
-
-    <!-- ================= THE RITUAL: horizontal scrub ================= -->
-    <section class="ritual" id="ritual" aria-label="The Ritual">
-      <div class="ritual__bg">
-        <video data-media="ritual" muted playsinline loop preload="none" aria-hidden="true"></video>
-      </div>
-      <div class="ritual__track">
-        <div class="ritual__intro panel">
-          <p class="eyebrow">The experience</p>
-          <h2 class="display split">The Ritual</h2>
-          <p class="lede">Five movements, one afternoon. From the moment you arrive to the moment you leave, everything slows.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= SIGNATURE TREATMENTS ================= -->
-    <section class="treat" id="treatments" aria-label="Signature treatments">
-      <header class="section-head">
-        <p class="eyebrow">Signature treatments</p>
-        <h2 class="display split">Choose your<br /><em>ritual.</em></h2>
-      </header>
-      <div class="treat__tabs" role="tablist" aria-label="Treatment categories"></div>
-      <div class="treat__grid" role="tabpanel"></div>
-      <p class="fineprint">Durations and prices are confirmed when you book. <a href="tel:+27837785360">Call 083-778-5360</a> for the current treatment menu.</p>
-    </section>
-
-    <!-- ================= PACKAGES ================= -->
-    <section class="pack" id="packages" aria-label="Spa packages">
-      <header class="section-head section-head--wide">
-        <div>
-          <p class="eyebrow">Spa packages</p>
-          <h2 class="mega split">Make a day of it.</h2>
-        </div>
-        <p class="pack__sub">Relax. Revive. Reconnect.</p>
-      </header>
-      <div class="pack__rail" tabindex="0" aria-label="Spa packages, scroll horizontally"></div>
-      <div class="pack__controls">
-        <button class="pack__btn" data-dir="-1" aria-label="Previous packages" data-cursor="PREV">←</button>
-        <div class="pack__meter"><span></span></div>
-        <button class="pack__btn" data-dir="1" aria-label="Next packages" data-cursor="NEXT">→</button>
-      </div>
-    </section>
-
-    <!-- ================= PRICING TRIO ================= -->
-    <section class="price" id="pricing" aria-label="Most loved packages">
-      <div class="price__bg"><video data-media="sanctuary" muted playsinline loop preload="none" aria-hidden="true"></video></div>
-      <header class="section-head section-head--center">
-        <p class="eyebrow">Most loved</p>
-        <h2 class="display split">Your escape, <em>measured in hours.</em></h2>
-      </header>
-      <div class="price__grid"></div>
-    </section>
-
-    <!-- ================= COUNTERS ================= -->
-    <section class="stats" aria-label="L'abri in numbers">
-      <div class="stats__row"></div>
-    </section>
-
-    <!-- ================= COUPLES ================= -->
-    <section class="couples" id="couples" aria-label="Couples experiences">
-      <div class="couples__stage">
-        <div class="couples__bg">
-          <video data-media="couples" muted playsinline loop preload="none" aria-hidden="true"></video>
-          <div class="couples__img" data-img="couple"></div>
-        </div>
-        <div class="couples__content">
-          <p class="eyebrow">For two</p>
-          <h2 class="mega couples__title">Together<br />feels better.</h2>
-          <ul class="couples__list" aria-label="Massage, water, wine, time">
-            <li>Massage.</li><li>Water.</li><li>Wine.</li><li>Time.</li>
+    <!-- ───────── About / Why choose ───────── -->
+    <section class="section why" id="about" aria-labelledby="why-title">
+      <div class="wrap why__grid">
+        <figure class="why__media" data-reveal-img>
+          <img data-media="edging" alt="" />
+          <figcaption class="why__badge">
+            <svg aria-hidden="true"><use href="#i-leaf"/></svg>
+            <span>Clean edges.<br />Level ground.<br />Lush results.</span>
+          </figcaption>
+        </figure>
+        <div class="why__body">
+          <p class="eyebrow" data-reveal>About Greenfields</p>
+          <h2 id="why-title" class="h2" data-reveal>Why Homeowners Choose Greenfields</h2>
+          <p class="why__intro" data-reveal data-text="about">Greenfields Instant Lawns installs instant lawns and creates landscaped gardens for homeowners who want their outdoor space done properly, from the ground up.</p>
+          <ul class="benefits">
+            <li data-reveal><span class="benefits__icon"><svg aria-hidden="true"><use href="#i-hand"/></svg></span><div><h3>Professional workmanship</h3><p>Neat, organised work from preparation to clean-up, so the result looks right on day one.</p></div></li>
+            <li data-reveal><span class="benefits__icon"><svg aria-hidden="true"><use href="#i-turf"/></svg></span><div><h3>Quality lawn installation</h3><p>Properly prepared ground and carefully laid instant lawn with tight seams and even levels.</p></div></li>
+            <li data-reveal><span class="benefits__icon"><svg aria-hidden="true"><use href="#i-eye"/></svg></span><div><h3>Attention to detail</h3><p>Crisp edges, tidy beds and finishing touches that make a garden feel complete.</p></div></li>
+            <li data-reveal><span class="benefits__icon"><svg aria-hidden="true"><use href="#i-clock"/></svg></span><div><h3>Reliable service</h3><p>Clear communication and a team that turns up and follows through on what was agreed.</p></div></li>
+            <li data-reveal><span class="benefits__icon"><svg aria-hidden="true"><use href="#i-sun"/></svg></span><div><h3>Beautiful, long-lasting results</h3><p>Gardens planned and installed to keep looking good well beyond the day we leave.</p></div></li>
           </ul>
-          <a href="#packages" class="btn btn--ghost magnetic" data-cursor="VIEW" data-filter="couple"><span>Explore couples experiences</span> <i>→</i></a>
         </div>
       </div>
     </section>
 
-    <!-- ================= NIGHT SPA ================= -->
-    <section class="night" id="night" aria-label="Date night spa">
-      <div class="night__sky"></div>
-      <div class="night__bg">
-        <video data-media="night" muted playsinline loop preload="none" aria-hidden="true"></video>
-        <div class="night__img" data-img="night"></div>
-      </div>
-      <canvas class="night__candles" aria-hidden="true"></canvas>
-      <div class="night__water" aria-hidden="true"></div>
-      <div class="night__content">
-        <h2 class="mega split night__title">When the sun<br />goes down.</h2>
-        <div class="night__offer">
-          <p class="eyebrow">Date Night Spa</p>
-          <p class="night__price"></p>
-          <a href="#booking" class="btn btn--solid magnetic" data-cursor="BOOK" data-book="Couples"><span>Book date night</span> <i>→</i></a>
+    <!-- ───────── Before & After ───────── -->
+    <section class="section ba" id="transformation" aria-labelledby="ba-title">
+      <div class="wrap">
+        <div class="section-head section-head--center">
+          <p class="eyebrow eyebrow--light" data-reveal>The transformation</p>
+          <h2 id="ba-title" class="h2" data-reveal>From Bare Ground to <em>Beautiful Garden</em></h2>
+          <p class="section-head__aside" data-reveal>Drag the handle to see what a properly prepared, professionally installed lawn does for a property.</p>
         </div>
-      </div>
-    </section>
-
-    <!-- ================= GROUP & CORPORATE ================= -->
-    <section class="groups" id="groups" aria-label="Group and corporate spa">
-      <div class="groups__bgs"></div>
-      <div class="groups__inner">
-        <header class="section-head">
-          <p class="eyebrow">Groups &amp; corporate</p>
-          <h2 class="mega split">Bring your people.</h2>
-        </header>
-        <div class="groups__cards"></div>
-      </div>
-    </section>
-
-    <!-- ================= GIFT VOUCHERS ================= -->
-    <section class="gift" id="gift" aria-label="Gift vouchers">
-      <div class="gift__copy">
-        <p class="eyebrow">Gift vouchers</p>
-        <h2 class="mega split">Give them time.</h2>
-        <p class="lede">A spa experience is a gift they can actually feel.</p>
-        <a href="#booking" class="btn btn--solid magnetic" data-cursor="BOOK" data-book="Gift Voucher"><span>Buy a gift voucher</span> <i>→</i></a>
-      </div>
-      <div class="gift__scene" aria-hidden="true">
-        <div class="gift__card">
-          <div class="gift__face gift__front">
-            <span class="gift__brand">L'ABRI</span>
-            <span class="gift__small">Day Spa · Pretoria</span>
-            <span class="gift__for">A gift of time for</span>
-            <span class="gift__name">Someone you love</span>
-            <span class="gift__no">Nº 0001</span>
+        <div class="compare" data-reveal-img>
+          <div class="compare__frame" style="--pos: 50%">
+            <img class="compare__img" data-media="after" alt="" />
+            <div class="compare__before">
+              <img class="compare__img" data-media="before" alt="" />
+            </div>
+            <span class="compare__tag compare__tag--before">Before</span>
+            <span class="compare__tag compare__tag--after">After</span>
+            <div class="compare__handle" aria-hidden="true"><span><svg><use href="#i-drag"/></svg></span></div>
+            <input class="compare__range" type="range" min="0" max="100" value="50" step="0.1" aria-label="Before and after comparison: move to reveal" />
           </div>
-          <div class="gift__face gift__back"><span>Where therapy meets nature.</span></div>
+          <p class="illustrative" data-illustrative>Illustrative visualisation. Replace with a Greenfields project.</p>
         </div>
-        <div class="gift__shadow"></div>
-      </div>
-    </section>
-
-    <!-- ================= GALLERY ================= -->
-    <section class="gallery" id="gallery" aria-label="Gallery">
-      <div class="gallery__stage">
-        <div class="gallery__head">
-          <p class="eyebrow">Inside L'abri</p>
-          <h2 class="display">A sanctuary,<br /><em>frame by frame.</em></h2>
-        </div>
-        <div class="gallery__track"></div>
-      </div>
-    </section>
-
-    <!-- ================= TEAM ================= -->
-    <section class="team" id="team" aria-label="The team">
-      <header class="section-head">
-        <p class="eyebrow">The team</p>
-        <h2 class="display split">The hands behind<br /><em>the experience.</em></h2>
-      </header>
-      <div class="team__rail"></div>
-      <p class="fineprint team__note"></p>
-    </section>
-
-    <!-- ================= LOCATION ================= -->
-    <section class="loc" id="location" aria-label="Location">
-      <div class="loc__stage">
-        <div class="loc__film"><div class="loc__img" data-img="aerial"></div></div>
-        <div class="loc__map" id="map" aria-label="Map showing L'abri Day Spa, Kilner Park"></div>
-        <div class="loc__card">
-          <p class="eyebrow">Visit</p>
-          <h2 class="display">Find your way<br />to L'abri.</h2>
-          <address class="loc__addr"></address>
-          <a class="btn btn--solid magnetic loc__dir" target="_blank" rel="noopener" data-cursor="GO"><span>Get directions</span> <i>→</i></a>
+        <div class="ba__steps">
+          <div data-reveal><span>01</span><p>Clear &amp; remove rubble, weeds and dead grass</p></div>
+          <div data-reveal><span>02</span><p>Prepare, level and compact the ground</p></div>
+          <div data-reveal><span>03</span><p>Lay instant lawn and finish the edges</p></div>
         </div>
       </div>
     </section>
 
-    <!-- ================= BOOKING ================= -->
-    <section class="book" id="booking" aria-label="Book your escape">
-      <div class="book__frame">
-        <div class="book__progress" aria-hidden="true"><span></span></div>
-        <form class="book__form" novalidate>
-          <!-- step 1 -->
-          <fieldset class="book__step is-active" data-step="1">
-            <legend><span class="book__n">01</span> What are you looking for?</legend>
-            <div class="book__choices" role="radiogroup" aria-label="Experience type"></div>
-          </fieldset>
-          <!-- step 2 -->
-          <fieldset class="book__step" data-step="2">
-            <legend><span class="book__n">02</span> When are you escaping?</legend>
-            <div class="cal">
-              <div class="cal__head">
-                <button type="button" class="cal__nav" data-cal="-1" aria-label="Previous month">←</button>
-                <span class="cal__month" aria-live="polite"></span>
-                <button type="button" class="cal__nav" data-cal="1" aria-label="Next month">→</button>
-              </div>
-              <div class="cal__dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-              <div class="cal__grid" role="grid"></div>
-              <div class="cal__times" role="radiogroup" aria-label="Preferred time"></div>
-            </div>
-          </fieldset>
-          <!-- step 3 -->
-          <fieldset class="book__step" data-step="3">
-            <legend><span class="book__n">03</span> How many guests?</legend>
-            <div class="guests">
-              <button type="button" class="guests__btn magnetic" data-g="-1" aria-label="Fewer guests">−</button>
-              <output class="guests__out" aria-live="polite"><span class="guests__num">2</span></output>
-              <button type="button" class="guests__btn magnetic" data-g="1" aria-label="More guests">+</button>
-            </div>
-            <p class="guests__label">guests</p>
-            <div class="guests__dots" aria-hidden="true"></div>
-          </fieldset>
-          <!-- step 4 -->
-          <fieldset class="book__step" data-step="4">
-            <legend><span class="book__n">04</span> Tell us about your visit</legend>
-            <div class="fields">
-              <label class="field"><input name="name" autocomplete="name" required placeholder=" " /><span>Name</span></label>
-              <label class="field"><input name="email" type="email" autocomplete="email" required placeholder=" " /><span>Email</span></label>
-              <label class="field"><input name="phone" type="tel" autocomplete="tel" required placeholder=" " /><span>Phone</span></label>
-              <label class="field field--wide"><textarea name="message" rows="3" placeholder=" "></textarea><span>Message (optional)</span></label>
-            </div>
-            <p class="book__error" role="alert"></p>
-          </fieldset>
-          <!-- step 5 -->
-          <fieldset class="book__step book__final" data-step="5">
-            <legend class="mega">Your escape<br />starts here.</legend>
-            <dl class="book__summary"></dl>
-            <button type="submit" class="btn btn--solid btn--xl magnetic" data-cursor="BOOK"><span>Request booking</span> <i>→</i></button>
-            <p class="fineprint">We'll confirm availability by phone or email. Nothing is charged online.</p>
-          </fieldset>
-          <!-- done -->
-          <div class="book__step book__done" data-step="6" role="status">
-            <p class="eyebrow">Request received</p>
-            <h3 class="display">Breathe out.</h3>
-            <p class="lede book__done-msg"></p>
+    <!-- ───────── Our work ───────── -->
+    <section class="section work" id="work" aria-labelledby="work-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow" data-reveal>Our work</p>
+            <h2 id="work-title" class="h2" data-reveal>See What We've Grown</h2>
           </div>
+          <p class="section-head__aside" data-reveal>Freshly laid lawns, planted beds and finished outdoor spaces. Tap any image to view it larger.</p>
+        </div>
+        <div class="masonry" id="gallery"></div>
+        <p class="illustrative illustrative--dark" data-illustrative>Gallery shows illustrative imagery. Replace with real Greenfields project photos.</p>
+      </div>
+    </section>
+
+    <!-- ───────── Process ───────── -->
+    <section class="section process" aria-labelledby="process-title">
+      <div class="wrap">
+        <div class="section-head section-head--center">
+          <p class="eyebrow" data-reveal>How it works</p>
+          <h2 id="process-title" class="h2" data-reveal>Four Simple Steps to a Greener Garden</h2>
+        </div>
+        <ol class="steps">
+          <li data-reveal><span class="steps__num">01</span><h3>Get in Touch</h3><p>Tell us about your garden and what you would like to achieve.</p></li>
+          <li data-reveal><span class="steps__num">02</span><h3>Site Assessment</h3><p>Assess the space and determine the appropriate solution.</p></li>
+          <li data-reveal><span class="steps__num">03</span><h3>Preparation &amp; Installation</h3><p>Prepare the ground and professionally install the lawn or landscaping.</p></li>
+          <li data-reveal><span class="steps__num">04</span><h3>Enjoy Your New Garden</h3><p>Finish with a clean, lush outdoor space that you can enjoy.</p></li>
+        </ol>
+        <div class="process__cta" data-reveal><a class="btn btn--primary btn--lg" href="#quote">Start with step one <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+      </div>
+    </section>
+
+    <!-- ───────── Testimonials ───────── -->
+    <section class="section reviews" aria-labelledby="reviews-title">
+      <div class="wrap">
+        <div class="reviews__grid">
+          <div class="reviews__head">
+            <p class="eyebrow" data-reveal>Reviews</p>
+            <h2 id="reviews-title" class="h2" data-reveal>What Our Customers Say</h2>
+            <div class="rating" id="rating" data-reveal></div>
+          </div>
+          <div class="reviews__list" id="reviews"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── Service area ───────── -->
+    <section class="section area" id="area" aria-labelledby="area-title">
+      <div class="wrap area__grid">
+        <div>
+          <p class="eyebrow" data-reveal>Service area</p>
+          <h2 id="area-title" class="h2" data-reveal>Where We Work</h2>
+          <p class="area__lede" data-reveal data-text="serviceAreaSummary">Greenfields installs lawns and landscapes for homes across our local service area. Get in touch to confirm we cover your suburb.</p>
+          <ul class="area__list" id="areas" data-reveal></ul>
+          <a class="link-arrow" href="#quote" data-reveal>Check if we cover your area <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="area__map" data-reveal-img aria-hidden="true">
+          <svg viewBox="0 0 520 520" class="map">
+            <defs>
+              <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#7fa65a" stop-opacity=".35"/><stop offset="1" stop-color="#7fa65a" stop-opacity="0"/></radialGradient>
+              <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="currentColor" opacity=".18"/></pattern>
+            </defs>
+            <rect width="520" height="520" rx="28" fill="url(#dots)"/>
+            <g class="map__contours" fill="none" stroke="currentColor" stroke-opacity=".14">
+              <path d="M-10 120c80-30 140 20 220-10s150-70 320-20"/><path d="M-10 170c90-25 160 25 240-5s150-60 300-15"/>
+              <path d="M-10 380c70 20 150-30 230 0s160 50 310 10"/><path d="M-10 430c90 15 160-25 240 5s150 40 300 0"/>
+              <path d="M60-10c30 80-20 150 10 230s70 150 20 310"/><path d="M460-10c-30 90 20 160-10 240s-60 150-20 300"/>
+            </g>
+            <g class="map__roads" fill="none" stroke="currentColor" stroke-opacity=".22" stroke-width="2" stroke-linecap="round">
+              <path d="M0 290c120-20 200-40 260-30s170 30 260 10"/><path d="M250 0c10 90 0 180 10 260s-10 180 0 260"/><path d="M40 60l190 170M480 470L300 300"/>
+            </g>
+            <circle cx="260" cy="260" r="220" fill="url(#glow)"/>
+            <g class="map__rings" fill="none" stroke="#3f6b3a">
+              <circle cx="260" cy="260" r="200" stroke-dasharray="3 7" stroke-opacity=".5"/>
+              <circle cx="260" cy="260" r="135" stroke-dasharray="3 7" stroke-opacity=".7"/>
+              <circle cx="260" cy="260" r="70" stroke-opacity=".9"/>
+            </g>
+            <circle class="map__pulse" cx="260" cy="260" r="16" fill="#3f6b3a"/>
+            <g transform="translate(260 260)">
+              <path d="M0 -42c-15 0-26 11-26 25 0 19 26 43 26 43s26-24 26-43c0-14-11-25-26-25z" fill="#1c3a29"/>
+              <circle cy="-17" r="9" fill="#cfe0b0"/>
+            </g>
+          </svg>
+          <div class="map__card"><strong>Greenfields</strong><span data-text="serviceAreaSummary">Service area: to be confirmed</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── Quote ───────── -->
+    <section class="quote" id="quote" aria-labelledby="quote-title">
+      <div class="quote__bg" aria-hidden="true"><img data-media="grass" alt="" /></div>
+      <div class="wrap quote__grid">
+        <div class="quote__intro">
+          <p class="eyebrow eyebrow--light" data-reveal>Free, no-obligation quote</p>
+          <h2 id="quote-title" class="h2 h2--xl" data-reveal>Ready for a Greener Garden?</h2>
+          <p class="quote__lede" data-reveal>Tell us about your space and let's turn it into a lawn you'll be proud of.</p>
+          <div class="quote__direct" data-reveal>
+            <a class="btn btn--whatsapp" data-link="whatsapp" href="#quote-form"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg>WhatsApp us</a>
+            <a class="btn btn--outline-light" data-link="phone" href="#quote-form"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-text="phoneDisplay">Call us</span></a>
+          </div>
+          <ul class="quote__points" data-reveal>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Tell us what you have in mind</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>We'll arrange a site assessment</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Receive a clear, itemised quote</li>
+          </ul>
+        </div>
+        <form class="form" id="quote-form" novalidate data-reveal>
+          <h3 class="form__title">Request a free quote</h3>
+          <div class="form__row">
+            <label class="field"><span>Full name</span><input name="name" autocomplete="name" required /></label>
+            <label class="field"><span>Phone</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" required /></label>
+          </div>
+          <div class="form__row">
+            <label class="field"><span>Email <small>(optional)</small></span><input name="email" type="email" autocomplete="email" /></label>
+            <label class="field"><span>Suburb / area</span><input name="suburb" autocomplete="address-level2" required /></label>
+          </div>
+          <fieldset class="field field--chips">
+            <legend>What do you need?</legend>
+            <div class="chips" id="service-chips"></div>
+          </fieldset>
+          <label class="field"><span>Approximate lawn area <small>(optional, m²)</small></span><input name="area" inputmode="numeric" placeholder="e.g. 120" /></label>
+          <label class="field"><span>Tell us about your garden</span><textarea name="message" rows="3" placeholder="Current condition, what you'd like, timing…"></textarea></label>
+          <button class="btn btn--cream btn--lg btn--block" type="submit">Request a free quote <svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <p class="form__status" role="status" aria-live="polite"></p>
         </form>
-        <div class="book__nav">
-          <button type="button" class="btn btn--ghost book__back" data-cursor="BACK"><i>←</i> <span>Back</span></button>
-          <button type="button" class="btn btn--solid book__next magnetic" data-cursor="NEXT"><span>Continue</span> <i>→</i></button>
-        </div>
       </div>
     </section>
   </main>
 
-  <footer class="foot">
-    <div class="foot__big">L'ABRI</div>
-    <div class="foot__cols">
-      <p>6 Sheila Street<br />Kilner Park, Pretoria</p>
-      <p><a href="tel:+27837785360">083-778-5360</a><br /><a href="mailto:pretoria@labridayspa.co.za">pretoria@labridayspa.co.za</a></p>
-      <p>Open 08:30–17:30</p>
-      <p>© <span class="year"></span> L'abri Day Spa</p>
+  <!-- ───────── Footer ───────── -->
+  <footer class="footer">
+    <div class="wrap footer__grid">
+      <div class="footer__brand">
+        <a class="brand brand--light" href="#top">
+          <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11"/><path d="M20 31c0-7.5 1.2-13.6 7.6-18.6-7.4 1.2-11 6.3-11.8 11.2C14 19.9 11.5 17.6 7.8 17c3.8 3.1 6.9 7.5 7.5 14z"/><path d="M8 31.5h24" /></svg>
+          <span class="brand__text"><strong>Greenfields</strong><em>Instant Lawns</em></span>
+        </a>
+        <p>Instant Lawns • Landscaping • Garden Solutions</p>
+        <div class="socials" id="socials"></div>
+      </div>
+      <nav class="footer__col" aria-label="Footer">
+        <h4>Explore</h4>
+        <a href="#top">Home</a><a href="#services">Services</a><a href="#about">About</a><a href="#work">Our Work</a><a href="#quote">Contact</a>
+      </nav>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <a data-link="phone" href="#quote"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-text="phoneDisplay" data-placeholder="Phone number to be added">Phone</span></a>
+        <a data-link="whatsapp" href="#quote"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg><span data-text="whatsappDisplay" data-placeholder="WhatsApp number to be added">WhatsApp</span></a>
+        <a data-link="email" href="#quote"><svg aria-hidden="true"><use href="#i-mail"/></svg><span data-text="email" data-placeholder="Email address to be added">Email</span></a>
+      </div>
+      <div class="footer__col">
+        <h4>Service area</h4>
+        <p data-text="serviceAreaSummary" data-placeholder="Service area to be confirmed">Service area</p>
+        <a class="btn btn--primary btn--sm" href="#quote">Get a free quote</a>
+      </div>
+    </div>
+    <div class="wrap footer__base">
+      <span>© <span id="year"></span> Greenfields Instant Lawns. All rights reserved.</span>
+      <a href="#top">Back to top ↑</a>
     </div>
   </footer>
 
-  <!-- Sticky booking CTA -->
-  <a href="#booking" class="sticky-cta magnetic" data-cursor="BOOK"><span>Book your escape</span> <i>→</i></a>
+  <!-- Floating WhatsApp -->
+  <a class="fab" data-link="whatsapp" href="#quote" aria-label="Chat with Greenfields on WhatsApp">
+    <svg aria-hidden="true"><use href="#i-whatsapp"/></svg><span>Chat with us</span>
+  </a>
 
-  <script type="module" src="/src/js/main.js"></script>
+  <!-- Lightbox -->
+  <dialog class="lightbox" id="lightbox" aria-label="Image viewer">
+    <button class="lightbox__close" aria-label="Close">×</button>
+    <button class="lightbox__nav lightbox__nav--prev" aria-label="Previous image">‹</button>
+    <figure><img alt="" /><figcaption></figcaption></figure>
+    <button class="lightbox__nav lightbox__nav--next" aria-label="Next image">›</button>
+  </dialog>
+
+  <!-- Icon sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.6 3.5l2.6.4 1.3 4-2 1.5a12 12 0 0 0 6.1 6.1l1.5-2 4 1.3.4 2.6c.1 1-.7 2-1.8 2A16.9 16.9 0 0 1 4.6 5.3c0-1.1 1-1.9 2-1.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+      <symbol id="i-whatsapp" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2A9.8 9.8 0 0 0 3.6 17l-1.3 4.8 4.9-1.3A9.8 9.8 0 1 0 12 2.2zm0 17.9a8.1 8.1 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8.1 8.1 0 1 1 12 20.1zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.9 11.9 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-drag" viewBox="0 0 24 24"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15M5 19l7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-turf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M3 16h18"/><path d="M5 16c0-3 .5-5 2-7M9 16c0-3.5-.3-6 1-9M13 16c.2-3 1-5 3-7M17 16c0-2.5.6-4.5 2-6"/></g></symbol>
+      <symbol id="i-landscape" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M7 20v-6M7 14c-2.5 0-3.5-2-3.5-3.5S5 7 7 7s3.5 2 3.5 3.5S9.5 14 7 14z"/><path d="M13 20c0-3 1.5-5 4-6M17 20c0-4 1-7 3.5-9M14.5 20c1-2.5 1-5-.5-7.5"/></g></symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/></g></symbol>
+      <symbol id="i-shears" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M7.8 16.2L16 3M16.2 16.2L8 3"/></g></symbol>
+      <symbol id="i-level" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="9" width="19" height="6" rx="1.5"/><rect x="10" y="10.5" width="4" height="3" rx="1.5"/><path d="M3 19h18"/></g></symbol>
+      <symbol id="i-plan" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M3 14c4 0 6-2 7-5M14 21c0-4 3-7 7-7"/><circle cx="16" cy="8" r="2"/></g></symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.7-7 10-7 10z"/></g></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5M8.5 11h5"/></g></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 3v3M16 3v3M8.5 15l2.3 2.3L15.5 13"/></g></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11c0-4 2.5-7 7-7 0 4.5-3 7-7 7zM12 14c0-3-2-5.5-6.5-5.5 0 3.5 2.5 5.5 6.5 5.5z"/></g></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></symbol>
+      <symbol id="i-quote" viewBox="0 0 24 24"><path fill="currentColor" d="M4 18v-5.5C4 8.4 6.2 5.8 10 5l.8 1.6C8.6 7.4 7.6 8.9 7.5 11H10v7zm10 0v-5.5c0-4.1 2.2-6.7 6-7.5l.8 1.6c-2.2.8-3.2 2.3-3.3 4.4H20v7z"/></symbol>
+      <symbol id="i-facebook" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 21v-7.5H16l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5h1.5V4.4a20 20 0 0 0-2.3-.1c-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.4V21z"/></symbol>
+      <symbol id="i-instagram" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></g></symbol>
+      <symbol id="i-tiktok" viewBox="0 0 24 24"><path fill="currentColor" d="M16.6 3h-3v12.2a2.7 2.7 0 1 1-2.7-2.7c.3 0 .5 0 .8.1V9.5a5.8 5.8 0 1 0 4.9 5.7V9.1a7.3 7.3 0 0 0 4.2 1.3V7.3A4.3 4.3 0 0 1 16.6 3z"/></symbol>
+      <symbol id="i-google" viewBox="0 0 24 24"><path fill="currentColor" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2zM12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22zM6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2zM12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10C7.2 7.7 9.4 6 12 6z"/></symbol>
+    </defs>
+  </svg>
+
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
