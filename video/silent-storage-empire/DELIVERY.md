@@ -13,3 +13,8 @@
 - Captions: burned in, white sentence-case, thin black outline, bottom (clean style, size 15). 382 cues, 1451/1451 words, script similarity 0.93.
 - Music: original instrumental (calm piano/strings), looped with 4s crossfades, ducked under the voice, fades in 3s / out 5s.
 - Reference check: no burned subtitles in the reference (only in-scene sign/chart text); continuous music bed under narration (gaps only ~6 dB below speech).
+
+## Thumbnails (concept A — "nobody knows")
+- A1 (uncle carrying couch, orange doors, "$480M" + "HE OWNS THIS"): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/41c8210e-6d0c-4de6-9052-6ed34d9617c3.jpg
+- A2 (close-up smile, glowing door at dusk, "$480M" + "nobody knows"): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/713f1fa0-88bf-4e46-8c28-8efb2a5be35a.jpg
+- Both 1280x720 JPG, ~150 KB (under YouTube's 2 MB limit). Source jobs: e2ac0e0b (A1), 1f87d7be (A2), 2K PNG.
