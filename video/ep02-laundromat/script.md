@@ -227,7 +227,7 @@ Someone like you.
 
 You form a holding company. You name it Northgate Laundry Group, after the street your first apartment was on. It doesn't appear on a single sign.
 
-Every store keeps its old name. Sunny Wash. Bubbles on Fifth. The Spin Cycle. Mr. Clean Coin Wash. Customers never notice anything changed except that the machines suddenly all work.
+Every store keeps its old name. Sunny Wash. Bubbles on Fifth. The Spin Cycle. Corner Coin Wash. Customers never notice anything changed except that the machines suddenly all work.
 
 There's a second reason you buy quietly, and it's the part most people miss.
 
