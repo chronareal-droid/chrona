@@ -35,3 +35,7 @@
 - B1 (recommended; dusk street of small businesses, name + tagline inside the all-devices safe area): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/31faf211-9f85-4f28-8a2b-4cd8b2fa8851.jpg
 - B2 (navy icon pattern; NOTE name runs past the right edge of the safe area, gets cut on phones): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/17d99291-5ff5-4e2d-bfd2-51f99644b621.jpg
 - Source jobs: 0ec35cbd (B1), 2b53844a (B2)
+
+## v3 — no music, echo reduced (current upload candidate)
+- File: https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/48917475-946b-4e70-aa02-fafeaff05c7d.mp4
+- Same subtitles as v2. Voice cleanup: high-pass 80 Hz, light denoise, gate on tails (cuts reverb decay), -3 dB at 300 Hz (boxiness), +2 dB at 3.5 kHz (clarity), compression, loudness -16 LUFS. Echo is baked into the Archie preset, so some remains; full fix = re-record with a drier voice (~30 credits).
