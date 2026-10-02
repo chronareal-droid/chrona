@@ -21,15 +21,17 @@ This is the story of how a 24-year-old with one rundown storage lot, a retired b
 
 In this video:
 0:00 – The nephew and the 10x10
-0:50 – One gravel lot and $41,000
-2:05 – Ruth's notebook: the three rules
-3:30 – The rent nobody had raised in 9 years
-4:50 – The Storage Baron
-6:00 – When rates doubled
-7:10 – Buying at 8, selling at 5: cap-rate arbitrage
-8:30 – Going overseas without moving
-9:40 – The phone call you let go to voicemail
-10:30 – The three rules, one more time
+1:11 – One gravel lot and $41,000
+1:51 – Ruth's notebook: the three rules
+3:13 – The rent nobody had raised in 9 years
+4:17 – The Storage Baron
+5:18 – When rates doubled
+6:12 – Buying at 8, selling at 5: cap-rate arbitrage
+7:30 – Going overseas without moving
+8:30 – The phone call you let go to voicemail
+8:58 – The three rules, one more time
+
+Want the next one? The silent owner behind a chain of laundromats is coming. Subscribe to The Silent Owner and keep it quiet.
 
 Everything in this story is fictional and for entertainment and education. It is not financial advice.
 
