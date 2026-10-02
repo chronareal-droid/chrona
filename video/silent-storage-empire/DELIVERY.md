@@ -18,3 +18,15 @@
 - A1 (uncle carrying couch, orange doors, "$480M" + "HE OWNS THIS"): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/41c8210e-6d0c-4de6-9052-6ed34d9617c3.jpg
 - A2 (close-up smile, glowing door at dusk, "$480M" + "nobody knows"): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/713f1fa0-88bf-4e46-8c28-8efb2a5be35a.jpg
 - Both 1280x720 JPG, ~150 KB (under YouTube's 2 MB limit). Source jobs: e2ac0e0b (A1), 1f87d7be (A2), 2K PNG.
+
+## Channel logo (profile picture, 800x800 PNG)
+- L1 (finger to lips "keep it quiet", navy circle, orange ring): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/d58c9eaa-bb01-4a9b-87eb-4a9af9a29940.png
+- L2 (calm smile, half-open orange storage door behind, navy): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/3487547d-1c85-4b41-8bcf-eb522cc41864.png
+- Source jobs (2048px): ceaccb09 (L1), 7682a9aa (L2)
+
+## Channel name ideas
+1. The Silent Owner (recommended) — handle idea @TheSilentOwner
+2. Quiet Ledger
+3. No Name On The Sign
+4. Quiet Compound
+5. Backroom Billions
