@@ -30,3 +30,8 @@
 3. No Name On The Sign
 4. Quiet Compound
 5. Backroom Billions
+
+## Channel banner (2560x1440 JPG) — name: The Silent Owner
+- B1 (recommended; dusk street of small businesses, name + tagline inside the all-devices safe area): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/31faf211-9f85-4f28-8a2b-4cd8b2fa8851.jpg
+- B2 (navy icon pattern; NOTE name runs past the right edge of the safe area, gets cut on phones): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/17d99291-5ff5-4e2d-bfd2-51f99644b621.jpg
+- Source jobs: 0ec35cbd (B1), 2b53844a (B2)
