@@ -277,7 +277,7 @@ Two years later, the sneaker market crashes. The bank repossesses Tyson's car fr
 
 You don't lend him the money.
 
-Instead, you offer him a job driving one of the commercial delivery vans. Thirty-one dollars an hour, benefits, and a share of every new account he signs.
+Instead, you quietly ask Rosa to call him with a job: driving one of the commercial delivery vans. Thirty-one dollars an hour, benefits, and a share of every new account he signs.
 
 He's quiet for a long time. Then he says yes.
 
@@ -292,7 +292,7 @@ They've been buying up laundromat chains across the country, and they've done th
 
 It's more money than anyone in your family has ever seen.
 
-You call Dolores. She's eighty-four now. She lives with her daughter and still does the crossword, though not in pen anymore.
+You call Dolores. She's eighty-five now. She lives with her daughter and still does the crossword, though not in pen anymore.
 
 "What do they want it for?" she asks.
 
