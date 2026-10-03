@@ -9,7 +9,7 @@
 
 Alternates to test:
 - POV: You Quietly Built a Laundromat Empire — Nobody Noticed
-- POV: Your Cousin Leased a BMW. You Bought a Laundromat.
+- POV: Your Cousin Leased a Luxury Car. You Bought a Laundromat.
 
 ## THUMBNAIL (no text)
 The Silent Owner in the center, calm closed smile, walking toward camera in a plain grey sweatshirt, carrying a laundry basket of folded towels. Left: cousin Tyson leaning on a shiny black leased sports sedan, filming a selfie, friends with shopping bags. Right: a clean, bright neighborhood laundromat at golden hour, rows of machines, and on a folding table a laptop showing a rising green chart and a stack of property deeds. Bright, saturated, detailed cartoon.
