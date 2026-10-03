@@ -21,7 +21,13 @@ This is the story of how a 24-year-old repair tech with a toolbox, a jar of quar
 
 In this video:
 0:00 – 5:40 on a Saturday
-LEVEL TIMESTAMPS FILLED IN AFTER THE CUT
+2:10 – Level One: The jar of quarters
+4:40 – Level Two: The laundromat nobody wanted
+7:47 – Level Three: The quiet years
+10:25 – Level Four: The bad year
+12:37 – Level Five: The quiet roll-up
+17:51 – Level Six: The phone call you didn't take
+19:45 – Back to 5:40 on a Saturday
 
 Want the next one? Subscribe to The Silent Owner and keep it quiet.
 
