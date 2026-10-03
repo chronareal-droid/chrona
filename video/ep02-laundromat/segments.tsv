@@ -1,4 +1,4 @@
-1	COLD OPEN	It's 5:40 on a Saturday morning, and you're on your knees behind a row of dryers with a flashlight in your teeth.
+1	COLD OPEN	5:40 on a Saturday morning. You're on your knees behind a row of dryers with a flashlight in your teeth.
 2	COLD OPEN	The floor is cold. The vent you're cleaning is packed with a gray felt of lint as thick as a winter glove.
 3	COLD OPEN	Your sweatshirt is eleven years old. There's a hole in the cuff you keep meaning to sew. Behind you, the front door chimes.
 4	COLD OPEN	A college kid drags in a garbage bag full of clothes, looks around, and spots you on the floor.
@@ -12,9 +12,9 @@
 12	COLD OPEN	Here's what Tyson doesn't know. The laundromat you're standing in is yours. So are thirty-seven others, across four cities.
 13	COLD OPEN	So are nineteen of the buildings they sit inside. Last year, your company did a little over eleven million dollars in revenue.
 14	COLD OPEN	Your share of what it's worth, on a conservative day, is about twenty-three million. Tyson's credit card balance is somewhere north of thirty-one thousand.
-15	COLD OPEN	He told you once, after a few drinks, and then never mentioned it again. You look poorer than you are.
-16	COLD OPEN	Tyson looks richer than he is. And nobody at that family dinner table knows either thing. You didn't plan any of this.
-17	COLD OPEN	Seventeen years ago, you couldn't afford to do your own laundry. This is the story of how that changed, and what it cost you along the way.
+15	COLD OPEN	He told you once, after a few drinks, and then never mentioned it again. From the outside, you're the cousin who's still figuring it out.
+16	COLD OPEN	Tyson's the cousin who made it. Both of those things are wrong, and nobody at that dinner table has any idea. You didn't plan any of this.
+17	COLD OPEN	Seventeen years ago, you couldn't afford to do your own laundry. So let's go back to the night that started it.
 18	LEVEL ONE	Level One. The jar of quarters.
 19	LEVEL ONE	You're twenty-four. You fix commercial washers and dryers for a route company that services apartment buildings. Twenty-one dollars an hour.
 20	LEVEL ONE	A van that smells like detergent and burnt belts. Your apartment doesn't have a washer.
@@ -57,14 +57,14 @@
 57	LEVEL TWO	Gas for the dryers, one thousand eight hundred. Electricity, one thousand three hundred. Rosa's pay, insurance, the bank loan, Dolores's note, repairs.
 58	LEVEL TWO	Revenue that month is twenty-two thousand four hundred dollars. After every single bill, you keep six thousand two hundred.
 59	LEVEL TWO	It's the first time in your life money has come in while you were asleep.
-60	LEVEL THREE	Level Three. The years nothing happened.
+60	LEVEL THREE	Level Three. The quiet years.
 61	LEVEL THREE	Nothing dramatic happens for a long time. You keep your day job for the first eighteen months. Nights and weekends, you're at Sunny Wash.
 62	LEVEL THREE	You fix every machine. You replace the buzzing lights with bright LEDs. You patch the lightning bolt crack in the floor.
 63	LEVEL THREE	You put in card readers so people don't need quarters, and the average customer starts spending more, because a card doesn't run out the way a pocketful of coins does.
 64	LEVEL THREE	Then you add something Dolores never had: wash and fold. People drop off a bag in the morning and pick it up folded by evening.
 65	LEVEL THREE	You charge by the pound. Rosa runs it, and you give her a raise and a share of every pound.
 66	LEVEL THREE	In year one, Sunny Wash clears ninety-six thousand dollars. In year three, it clears one hundred and sixty-one thousand.
-67	LEVEL THREE	Same building. Same corner. Same lightning bolt in the floor, just filled in. Nobody sees this happen. There's no moment to announce.
+67	LEVEL THREE	Same building. Same corner. Same lightning bolt in the floor, just filled in. No headlines. No big moment. Just the numbers, slowly getting better.
 68	LEVEL THREE	That same year, Tyson leases his first luxury car. Six hundred and eighty dollars a month. He picks you up from a family barbecue and taps the dashboard screen.
 69	LEVEL THREE	"You should get one of these," he says. "Life's short. You can afford it, can't you?" "Probably," you say.
 70	LEVEL THREE	You mean it. You could afford it. But by now you've done a different kind of math.
@@ -80,7 +80,7 @@
 80	LEVEL FOUR	Level Four. The bad year.
 81	LEVEL FOUR	You're thirty-one when the chain comes back. They don't buy you out. They open a brand-new location three blocks away.
 82	LEVEL FOUR	It's called SpinCity. Glass front. Fifty machines. A phone app. A grand opening with a DJ and free detergent for a month.
-83	LEVEL FOUR	In the first sixty days, your revenue drops twenty-eight percent. Your bank payment doesn't drop. Your payment to Dolores doesn't drop.
+83	LEVEL FOUR	In the first sixty days, your revenue drops twenty-eight percent. Your bank payment doesn't drop. Your water bill doesn't drop.
 84	LEVEL FOUR	Rosa's paycheck doesn't drop. Every instinct you have says cut prices. Match them. Fight. You call Dolores. She's seventy-five now, and still does the crossword in pen.
 85	LEVEL FOUR	"Don't race them to the bottom," she says. "They have more money than you. You'll lose that race.
 86	LEVEL FOUR	Find the customers they can't be bothered with." So you do something boring. You drive around and knock on doors.
@@ -155,6 +155,6 @@
 155	CLOSE	And whenever you can, own the building, not just the business.
 156	CLOSE	Somewhere on a quiet corner, there's a guy in an old sweatshirt handing a college kid five singles from the change machine.
 157	CLOSE	The kid thinks he's just the maintenance guy. That's exactly how he planned it.
-158	CLOSE	If this story made you think differently about what real wealth looks like, hit like and subscribe. There are more stories like this one coming.
+158	CLOSE	If you want more stories about the quiet people who own your neighborhood, subscribe to The Silent Owner.
 159	CLOSE	And I'm curious: what's one boring business in your town that you walk past every day, and never once wondered who owns it?
 160	CLOSE	Tell me in the comments.

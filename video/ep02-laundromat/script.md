@@ -34,7 +34,7 @@ Everything in this story is fictional and for entertainment and education. It is
 ## SCRIPT
 
 ### COLD OPEN
-It's 5:40 on a Saturday morning, and you're on your knees behind a row of dryers with a flashlight in your teeth.
+5:40 on a Saturday morning. You're on your knees behind a row of dryers with a flashlight in your teeth.
 
 The floor is cold. The vent you're cleaning is packed with a gray felt of lint as thick as a winter glove. Your sweatshirt is eleven years old. There's a hole in the cuff you keep meaning to sew.
 
@@ -60,11 +60,11 @@ Last year, your company did a little over eleven million dollars in revenue. You
 
 Tyson's credit card balance is somewhere north of thirty-one thousand. He told you once, after a few drinks, and then never mentioned it again.
 
-You look poorer than you are. Tyson looks richer than he is. And nobody at that family dinner table knows either thing.
+From the outside, you're the cousin who's still figuring it out. Tyson's the cousin who made it. Both of those things are wrong, and nobody at that dinner table has any idea.
 
 You didn't plan any of this. Seventeen years ago, you couldn't afford to do your own laundry.
 
-This is the story of how that changed, and what it cost you along the way.
+So let's go back to the night that started it.
 
 ### LEVEL ONE — The jar of quarters
 You're twenty-four. You fix commercial washers and dryers for a route company that services apartment buildings. Twenty-one dollars an hour. A van that smells like detergent and burnt belts.
@@ -146,7 +146,7 @@ Revenue that month is twenty-two thousand four hundred dollars. After every sing
 
 It's the first time in your life money has come in while you were asleep.
 
-### LEVEL THREE — The years nothing happened
+### LEVEL THREE — The quiet years
 Nothing dramatic happens for a long time.
 
 You keep your day job for the first eighteen months. Nights and weekends, you're at Sunny Wash.
@@ -159,7 +159,7 @@ In year one, Sunny Wash clears ninety-six thousand dollars. In year three, it cl
 
 Same building. Same corner. Same lightning bolt in the floor, just filled in.
 
-Nobody sees this happen. There's no moment to announce.
+No headlines. No big moment. Just the numbers, slowly getting better.
 
 That same year, Tyson leases his first luxury car. Six hundred and eighty dollars a month. He picks you up from a family barbecue and taps the dashboard screen.
 
@@ -188,7 +188,7 @@ They don't buy you out. They open a brand-new location three blocks away. It's c
 
 In the first sixty days, your revenue drops twenty-eight percent.
 
-Your bank payment doesn't drop. Your payment to Dolores doesn't drop. Rosa's paycheck doesn't drop.
+Your bank payment doesn't drop. Your water bill doesn't drop. Rosa's paycheck doesn't drop.
 
 Every instinct you have says cut prices. Match them. Fight.
 
@@ -335,4 +335,4 @@ Somewhere on a quiet corner, there's a guy in an old sweatshirt handing a colleg
 
 That's exactly how he planned it.
 
-If this story made you think differently about what real wealth looks like, hit like and subscribe. There are more stories like this one coming. And I'm curious: what's one boring business in your town that you walk past every day, and never once wondered who owns it? Tell me in the comments.
+If you want more stories about the quiet people who own your neighborhood, subscribe to The Silent Owner. And I'm curious: what's one boring business in your town that you walk past every day, and never once wondered who owns it? Tell me in the comments.

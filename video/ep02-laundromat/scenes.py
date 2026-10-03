@@ -20,7 +20,7 @@ SC={
 'c17':("Flashback, slightly faded colors: the young 24-year-old man with short dark hair stands in a laundromat holding out his open palm with only a few coins in it.",['Y']),
 'L1':("Chapter title card: solid deep navy background, a small orange washing machine icon, large clean white text 'LEVEL ONE' and below it smaller text 'The jar of quarters'.",['I']),
 'L2':("Chapter title card: solid deep navy background, a small orange key icon, large clean white text 'LEVEL TWO' and below it smaller text 'The laundromat nobody wanted'.",['I']),
-'L3':("Chapter title card: solid deep navy background, a small orange calendar icon, large clean white text 'LEVEL THREE' and below it smaller text 'The years nothing happened'.",['I']),
+'L3':("Chapter title card: solid deep navy background, a small orange calendar icon, large clean white text 'LEVEL THREE' and below it smaller text 'The quiet years'.",['I']),
 'L4':("Chapter title card: solid deep navy background, a small orange storm cloud icon, large clean white text 'LEVEL FOUR' and below it smaller text 'The bad year'.",['I']),
 'L5':("Chapter title card: solid deep navy background, a small orange building icon, large clean white text 'LEVEL FIVE' and below it smaller text 'The quiet roll-up'.",['I']),
 'L6':("Chapter title card: solid deep navy background, a small orange phone icon, large clean white text 'LEVEL SIX' and below it smaller text 'The phone call you didn't take'.",['I']),
