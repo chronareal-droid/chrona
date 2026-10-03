@@ -42,7 +42,7 @@ Everything in this story is fictional and for entertainment and education. It is
 #FinancePOV #MoneyPOV #SmallBusiness #QuietWealth #PhoneRepair #PersonalFinance
 
 ## DELIVERY
-- Final video (13:32, subtitles, Harrison voice, no music): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/9f8e9fee-060c-4355-ad89-26e3e1bdbe53.mp4
+- Final video v2, shake removed (13:32, subtitles, Harrison voice, no music): https://d2ol7oe51mr4n9.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/708bd703-b26b-43fe-8094-06d46c624f42.mp4
 - Thumbnail T1: https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20261003_223542_399a6beb-2136-4c3c-b89b-1e1e1268100a.png
 - Thumbnail T2: https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20261003_223542_3069e2f2-f5fd-4537-8b42-a1f4613c96db.png
 - Build: `bash build.sh <upload_url>` in the Higgsfield sandbox (pulls m.tsv + script_manifest.json from this branch).
