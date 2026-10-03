@@ -39,7 +39,7 @@ ffmpeg -nostdin -v error -y -i video.mp4 -i voice.wav -map 0:v -map 1:a -c:v cop
 echo "mux-ok $(date +%T)"
 python3 $S/audio_to_captions.py asr.mp4 --srt caps.srt --script script_manifest.json --language en > asr.log 2>&1 || { tail -20 asr.log; exit 1; }
 echo "caps-ok $(date +%T) $(grep -c -- '-->' caps.srt)"; tail -4 caps.srt
-bash $S/burn_caps_clean.sh --in processed.mp4 --srt caps.srt --out final.mp4 --no-caps --fontsize 15
+bash $S/burn_caps_clean.sh --in processed.mp4 --srt caps.srt --out final.mp4 --no-caps --fontsize 15 --outline 1 --shadow 0
 echo "burn-ok $(date +%T)"
 ffprobe -v error -show_entries stream=codec_type,duration -of compact final.mp4
 awk '{print $2,$3}' clips.log | sort -n > durs.txt
