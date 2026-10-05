@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* ── Light ──────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --muted: #6b6b76;
+  --border: #ebebef;
+  --accent: #0b8f52;
+  --accent-foreground: #ffffff;
+  --card: #ffffff;
+  --card-border: #f2f2f5;
+  --surface: #f7f7f8;
+}
+
+/* ── Dark (class-based) ─────────────────────── */
+.dark {
+  color-scheme: dark;
+  --background: #090909;
+  --foreground: #ededef;
+  --muted: #9494a0;
+  --border: #1c1c21;
+  --accent: #2bbf78;
+  --accent-foreground: #04170d;
+  --card: #111113;
+  --card-border: #19191d;
+  --surface: #111113;
+}
+
+/* ── Form fields (case form, deposit check) ─── */
+/* In the components layer so utilities like pl-6 can override it. */
+@layer components {
+  .field {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background: var(--background);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--foreground);
+  }
+  .field:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+/* ── Animations ─────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.45s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out both;
+}
+
+.delay-100 { animation-delay: 75ms; }
+.delay-200 { animation-delay: 150ms; }
+.delay-300 { animation-delay: 225ms; }
+.delay-400 { animation-delay: 300ms; }
+.delay-500 { animation-delay: 375ms; }
+
+/* ── Reduced motion ────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation: none;
+  }
+
+  .delay-100,
+  .delay-200,
+  .delay-300,
+  .delay-400,
+  .delay-500 {
+    animation-delay: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

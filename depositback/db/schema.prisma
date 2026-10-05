@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String   @id @default(cuid())
+  whopUserId      String   @unique
+  email           String?
+  name            String?
+  profileImageUrl String?
+  plan            String   @default("free") // "free" | "kit"
+  whopMembershipId   String?
+  cancelAtPeriodEnd  Boolean  @default(false)
+  isAdmin            Boolean  @default(false)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  activities ActivityEvent[]
+  cases      DepositCase[]
+
+  @@index([email])
+  @@index([plan])
+}
+
+/// User activity events (sign-ins, plan changes, settings updates).
+model ActivityEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "sign_in" | "plan_change" | "setting" | "account"
+  description String
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+/// Internal key-value config (e.g. auto-generated SESSION_SECRET).
+model SystemConfig {
+  key   String @id
+  value String
+}
+
+/// A renter's security deposit case: the facts we need to assess it and write the letter.
+model DepositCase {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state                String   // two-letter code, see lib/deposit-laws.ts
+  depositAmount        Decimal  @db.Decimal(10, 2)
+  amountReturned       Decimal  @default(0) @db.Decimal(10, 2)
+  moveOutDate          DateTime @db.Date
+  itemizedListReceived Boolean  @default(false)
+  forwardingAddressSent Boolean @default(false)
+  tenantName           String
+  tenantAddress        String   // current mailing address (where the landlord should send the money)
+  landlordName         String
+  landlordAddress      String
+  rentalAddress        String
+  /// [{ reason: string, amount: number, dispute: string }]
+  deductions           Json     @default("[]")
+  /// Free-text account of what happened, in the renter's words.
+  story                String   @default("")
+  /// Most recent generated demand letter (plain text).
+  letter               String?
+  letterGeneratedAt    DateTime? @db.Timestamptz(3)
+  createdAt            DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([userId, createdAt(sort: Desc)])
+}
