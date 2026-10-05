@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { DEFAULT_PLAN, PAID_PRICE_SUFFIX, type PlanKey } from "@/lib/constants";
 import type { PlansConfig } from "@/lib/config";
-import { buttonClass, Arrow } from "@/components/ui/button";
+import { Arrow } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-class";
 import { cn } from "@/lib/utils";
 
 /**
