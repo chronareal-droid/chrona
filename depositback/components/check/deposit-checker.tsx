@@ -45,7 +45,7 @@ export function DepositChecker() {
   });
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
       <form className="space-y-6" onSubmit={(e) => e.preventDefault()} aria-label="Deposit details">
         <div className="flex items-center gap-3">
           <span className="eyebrow">Worksheet</span>

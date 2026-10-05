@@ -74,6 +74,7 @@ export async function getRecentActivity(userId: string, limit = MAX_EVENTS) {
     orderBy: { createdAt: "desc" },
     take: limit,
     select: {
+      id: true,
       type: true,
       description: true,
       createdAt: true,

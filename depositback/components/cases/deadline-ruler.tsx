@@ -119,3 +119,26 @@ export function DeadlineRuler({
     </div>
   );
 }
+
+/** Compact bar for lists: elapsed time against the deadline, overflow hatched red. */
+export function MiniRuler({ moveOutDate, deadline }: { moveOutDate: string; deadline: string }) {
+  const start = utcDay(moveOutDate);
+  const total = Math.max(1, (utcDay(deadline) - start) / DAY_MS);
+  const elapsed = Math.max(0, (Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()) - start) / DAY_MS);
+  const within = Math.min(elapsed, total) / Math.max(elapsed, total);
+  const over = elapsed > total;
+
+  return (
+    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface)]" aria-hidden="true">
+      <div className="animate-draw absolute inset-y-0 left-0 flex w-full">
+        <span className="h-full bg-[var(--foreground)]/70" style={{ width: `${within * 100}%` }} />
+        {over && (
+          <span
+            className="h-full flex-1"
+            style={{ backgroundImage: "repeating-linear-gradient(-45deg, var(--stamp) 0 1.5px, transparent 1.5px 4px)" }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

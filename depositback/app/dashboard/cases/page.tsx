@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/db";
 import { toCaseRecord } from "@/lib/cases";
-import { assessCase, formatUsd, type CaseStatus } from "@/lib/deposit-laws";
+import { assessCase, formatUsd } from "@/lib/deposit-laws";
+import { ButtonLink } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui/tooltip";
+import { MiniRuler } from "@/components/cases/deadline-ruler";
+import { CaseStatusLabel } from "@/components/cases/case-status";
+import { NewCaseShortcut } from "@/components/cases/new-case-shortcut";
+import { Stamp } from "@/components/ui/stamp";
 
 export const metadata: Metadata = {
-  title: "My cases",
-};
-
-const STATUS_LABEL: Record<CaseStatus, { text: string; className: string }> = {
-  overdue: { text: "Landlord is late", className: "bg-red-500/10 text-red-600 dark:text-red-400" },
-  withheld: { text: "Money withheld", className: "bg-amber-500/10 text-amber-700 dark:text-amber-400" },
-  waiting: { text: "Waiting on landlord", className: "bg-[var(--surface)] text-[var(--muted)]" },
-  returned: { text: "Fully returned", className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
+  title: "Cases",
 };
 
 export default async function CasesPage() {
@@ -22,63 +22,66 @@ export default async function CasesPage() {
     where: { userId: session.userId },
     orderBy: { createdAt: "desc" },
   });
-  const cases = rows.map(toCaseRecord);
+  const cases = rows.map((r) => {
+    const c = toCaseRecord(r);
+    return { c, a: assessCase(c) };
+  });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-start justify-between gap-4 animate-slide-up">
+    <div className="mx-auto max-w-5xl">
+      <NewCaseShortcut />
+      <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">My cases</h1>
-          <p className="mt-0.5 text-sm text-[var(--muted)]">One case per deposit you want back.</p>
+          <p className="eyebrow animate-fade-in">Cases</p>
+          <h1 className="display animate-rise mt-3 text-[2.75rem] sm:text-[3.5rem]">Every deposit you&apos;re owed.</h1>
         </div>
-        <Link
-          href="/dashboard/cases/new"
-          className="shrink-0 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-        >
-          New case
-        </Link>
-      </div>
+        <Tooltip content={<>New case · press <kbd className="font-mono">N</kbd></>} side="bottom">
+          <ButtonLink href="/dashboard/cases/new" variant="ink" size="md" className="shrink-0">
+            <Plus className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">New case</span>
+          </ButtonLink>
+        </Tooltip>
+      </header>
 
       {cases.length === 0 ? (
-        <div className="animate-slide-up delay-100 rounded-xl border border-dashed border-[var(--border)] bg-[var(--card)] p-8 text-center">
-          <h2 className="text-sm font-semibold">No cases yet</h2>
-          <p className="mx-auto mt-1 max-w-sm text-xs text-[var(--muted)]">
-            Add the deposit you&apos;re owed. We&apos;ll check your state&apos;s deadline and penalties, then help you
-            demand it back.
+        <div className="animate-slide-up delay-200 mt-12 flex flex-col items-center rounded-2xl border border-dashed border-[var(--border-strong)] px-6 py-16 text-center">
+          <Stamp tone="accent" delay={300}>Nothing filed yet</Stamp>
+          <p className="display mt-6 max-w-md text-[2rem]">Start with the deposit you want back.</p>
+          <p className="mt-2 max-w-sm text-sm text-[var(--muted)]">
+            Two minutes to fill in. We&apos;ll check the deadline and the penalty for your state.
           </p>
-          <Link
-            href="/dashboard/cases/new"
-            className="mt-4 inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-          >
-            Start a case
-          </Link>
+          <ButtonLink href="/dashboard/cases/new" size="lg" className="mt-8" magnetic>
+            Open a case
+          </ButtonLink>
         </div>
       ) : (
-        <div className="animate-slide-up delay-100 divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--card)]">
-          {cases.map((c) => {
-            const a = assessCase(c);
-            const status = a ? STATUS_LABEL[a.status] : null;
-            return (
-              <Link
-                key={c.id}
-                href={`/dashboard/cases/${c.id}`}
-                className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-[var(--surface)]"
-              >
-                <div className="min-w-0">
-                  <h3 className="truncate text-sm font-medium">{c.rentalAddress}</h3>
-                  <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                    {c.landlordName} · {a ? `${formatUsd(a.withheld)} owed` : c.state}
-                    {c.letter ? " · letter ready" : ""}
-                  </p>
-                </div>
-                {status && (
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${status.className}`}>
-                    {status.text}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+        <div className="animate-slide-up delay-200 mt-12">
+          <div className="eyebrow hidden grid-cols-[minmax(0,1fr)_9rem_8rem_8rem] gap-6 border-b border-[var(--border)] pb-3 md:grid">
+            <span>Rental</span>
+            <span>Deadline</span>
+            <span className="text-right">Owed</span>
+            <span className="text-right">Status</span>
+          </div>
+          <ul>
+            {cases.map(({ c, a }) => (
+              <li key={c.id} className="border-b border-[var(--border)]">
+                <Link
+                  href={`/dashboard/cases/${c.id}`}
+                  className="group -mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 rounded-xl px-3 py-5 transition-colors hover:bg-[var(--card)] md:grid-cols-[minmax(0,1fr)_9rem_8rem_8rem]"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium transition-colors group-hover:text-[var(--accent)]">{c.rentalAddress}</p>
+                    <p className="mt-1 truncate text-xs text-[var(--muted)]">
+                      {c.landlordName} · {c.state}
+                      {c.letter && <span className="text-[var(--accent)]"> · letter ready</span>}
+                    </p>
+                  </div>
+                  <div className="col-span-2 md:col-span-1">{a && <MiniRuler moveOutDate={c.moveOutDate} deadline={a.deadline} />}</div>
+                  <p className="figure row-start-1 text-right text-lg md:row-start-auto">{a ? formatUsd(a.withheld) : "—"}</p>
+                  <div className="hidden text-right md:block">{a && <CaseStatusLabel status={a.status} />}</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

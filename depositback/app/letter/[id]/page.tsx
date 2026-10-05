@@ -22,13 +22,14 @@ export default async function LetterPrintPage({ params }: { params: Promise<{ id
   if (!row?.letter) notFound();
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      <div className="mx-auto max-w-[8.5in] px-8 py-10 print:p-0">
-        <div className="mb-6 flex justify-end print:hidden">
-          <PrintButton />
-        </div>
-        <article className="whitespace-pre-wrap font-serif text-[12pt] leading-relaxed">{row.letter}</article>
+    <div className="min-h-screen bg-[var(--surface)] py-10 print:bg-white print:py-0">
+      <div className="mx-auto mb-6 flex max-w-[8.5in] items-center justify-between px-6 print:hidden">
+        <p className="eyebrow">Check every detail before you mail it</p>
+        <PrintButton />
       </div>
+      <article className="mx-auto max-w-[8.5in] bg-white px-[1in] py-[0.9in] text-black shadow-[var(--shadow-sheet)] print:max-w-none print:p-0 print:shadow-none">
+        <div className="whitespace-pre-wrap font-serif text-[12.5pt] leading-[1.6]">{row.letter}</div>
+      </article>
     </div>
   );
 }

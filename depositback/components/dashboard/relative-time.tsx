@@ -15,9 +15,7 @@ export function RelativeTime({ iso }: { iso: string }) {
   }, [iso]);
 
   return (
-    <p className="mt-0.5 text-xs text-[var(--muted)]">
-      {relative ?? formatAbsolute(iso)}
-    </p>
+    <time dateTime={iso}>{relative ?? formatAbsolute(iso)}</time>
   );
 }
 

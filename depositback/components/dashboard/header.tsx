@@ -7,7 +7,7 @@ import { UserMenu } from "./user-menu";
 
 export function DashboardHeader({ session }: { session: Session }) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-[var(--border)] px-4 sm:px-6">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--border)] px-4 sm:px-6 lg:h-16 lg:border-transparent lg:px-10">
       {/* Left — hamburger + logo (mobile only) */}
       <div className="flex items-center gap-2 lg:hidden">
         <SidebarToggle />
@@ -21,7 +21,7 @@ export function DashboardHeader({ session }: { session: Session }) {
 
       {/* Right — email + theme toggle (desktop), avatar dropdown */}
       <div className="flex items-center gap-3">
-        <span className="hidden text-xs text-[var(--muted)] lg:block">
+        <span className="hidden font-mono text-[11px] text-[var(--muted)] lg:block">
           {session.email}
         </span>
         <div className="hidden lg:block">

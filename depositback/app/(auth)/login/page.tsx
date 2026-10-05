@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LINKS } from "@/lib/constants";
 import { AppLogo } from "@/components/app-logo";
+import { buttonClass } from "@/components/ui/button-class";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -16,37 +17,51 @@ export default async function LoginPage({
   const redirectPath = next ?? "/dashboard";
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-xs animate-slide-up">
-        <div className="text-center mb-8">
-          <Link href="/">
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[var(--foreground)] p-12 text-[var(--background)] lg:flex">
+        <Link href="/" className="[&_rect]:fill-[var(--background)] [&_path:first-of-type]:stroke-[var(--foreground)]">
+          <AppLogo />
+        </Link>
+        <blockquote className="max-w-md">
+          <p className="display text-[3.5rem]">
+            The law has a deadline. <span className="italic opacity-60">So should your landlord.</span>
+          </p>
+        </blockquote>
+        <p className="font-mono text-[11px] uppercase tracking-[0.12em] opacity-50">Deposit rules for 50 states + DC</p>
+      </aside>
+
+      <main className="flex items-center justify-center px-6 py-16">
+        <div className="animate-slide-up w-full max-w-sm">
+          <Link href="/" className="lg:hidden">
             <AppLogo />
           </Link>
-          <p className="mt-2 text-xs text-[var(--muted)]">
-            Sign in to your account
+          <h1 className="display mt-10 text-[2.75rem] lg:mt-0">Welcome back.</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">Sign in to see your cases and letters.</p>
+
+          <a
+            href={`/api/auth/login?next=${encodeURIComponent(redirectPath)}`}
+            className={buttonClass("ink", "lg", "mt-10 w-full")}
+          >
+            <WhopLogo />
+            Continue with Whop
+          </a>
+          <p className="mt-4 text-xs leading-relaxed text-[var(--muted)]">
+            Keepsit uses Whop for secure sign-in and payments. New here? Continuing creates your account.
+          </p>
+
+          <p className="mt-12 border-t border-[var(--border)] pt-6 text-[11px] leading-relaxed text-[var(--faint)]">
+            By continuing, you agree to our{" "}
+            <a href={LINKS.terms} className="underline underline-offset-4 hover:text-[var(--foreground)]">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href={LINKS.privacy} className="underline underline-offset-4 hover:text-[var(--foreground)]">
+              Privacy Policy
+            </a>
+            .
           </p>
         </div>
-
-        <a
-          href={`/api/auth/login?next=${encodeURIComponent(redirectPath)}`}
-          className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-        >
-          <WhopLogo />
-          Continue with Whop
-        </a>
-
-        <p className="mt-6 text-center text-[10px] text-[var(--muted)] leading-relaxed">
-          By continuing, you agree to our{" "}
-          <a href={LINKS.terms} className="underline underline-offset-4 hover:text-[var(--foreground)]">
-            Terms
-          </a>{" "}
-          and{" "}
-          <a href={LINKS.privacy} className="underline underline-offset-4 hover:text-[var(--foreground)]">
-            Privacy Policy
-          </a>
-          .
-        </p>
-      </div>
+      </main>
     </div>
   );
 }
