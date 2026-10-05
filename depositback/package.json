@@ -19,6 +19,7 @@
     "@prisma/client": "^7.8.0",
     "@whop/checkout": "^0.2.0",
     "jose": "^6.2.3",
+    "lucide-react": "^1.52.0",
     "next": "^16.2.10",
     "pg": "^8.22.0",
     "react": "^19.2.7",

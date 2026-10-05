@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import Script from "next/script";
 import { preconnect, prefetchDNS } from "react-dom";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -10,9 +10,21 @@ import { getAnalyticsScript } from "@/lib/analytics";
 import { getWhopUrls, resolveWhopEnvironment } from "whop-kit/whop";
 import "./globals.css";
 
-const inter = Inter({
+const sans = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
+});
+
+const mono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
+
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
 });
 
 // For OG metadata URLs. Set NEXT_PUBLIC_APP_URL in production.
@@ -90,12 +102,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={inter.variable}
+      className={`${sans.variable} ${mono.variable} ${serif.variable}`}
       suppressHydrationWarning
     >
       <head>
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#090909" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0d0d0b" media="(prefers-color-scheme: dark)" />
         {/* Inline script to prevent flash of wrong theme */}
         <script
           id="theme-init"

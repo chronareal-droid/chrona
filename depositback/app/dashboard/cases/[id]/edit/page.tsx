@@ -25,14 +25,15 @@ export default async function EditCasePage({ params }: { params: Promise<{ id: s
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="animate-slide-up">
-        <h1 className="text-lg font-semibold tracking-tight">Edit case</h1>
-        <p className="mt-0.5 text-sm text-[var(--muted)]">
-          Saving changes clears your current letter so you can generate a fresh one.
+    <div className="mx-auto max-w-6xl">
+      <header className="mb-12 max-w-2xl">
+        <p className="eyebrow animate-fade-in">Edit case</p>
+        <h1 className="display animate-rise mt-3 truncate text-[2.75rem] sm:text-[3.5rem]">{c.rentalAddress}</h1>
+        <p className="animate-slide-up delay-200 mt-3 text-[0.9375rem] text-[var(--muted)]">
+          Saving clears your current letter so you can write a fresh one with the new facts.
         </p>
-      </div>
-      <div className="animate-slide-up delay-100">
+      </header>
+      <div className="animate-slide-up delay-300">
         <CaseForm initial={initial} caseId={c.id} />
       </div>
     </div>

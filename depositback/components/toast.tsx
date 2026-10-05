@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
+import { Check, Info, X } from "lucide-react";
 
 type ToastType = "success" | "error" | "info";
 
@@ -9,6 +10,8 @@ interface Toast {
   message: string;
   type: ToastType;
 }
+
+const DURATION_MS = 4000;
 
 const ToastContext = createContext<{
   toast: (message: string, type?: ToastType) => void;
@@ -25,11 +28,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const toast = useCallback((message: string, type: ToastType = "info") => {
     const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev, { id, message, type }]);
-
+    setToasts((prev) => [...prev.slice(-2), { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, DURATION_MS);
   }, []);
 
   function dismiss(id: string) {
@@ -39,38 +41,47 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      {/* Toast container */}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 w-80" aria-live="polite" role="status">
+      <div
+        className="pointer-events-none fixed inset-x-4 bottom-4 z-[150] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:items-end"
+        aria-live="polite"
+        role="status"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="animate-slide-up flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-lg backdrop-blur-sm"
+            style={{ animation: "toast-in 360ms var(--ease-spring) both" }}
+            className="pointer-events-auto relative flex w-full max-w-sm items-center gap-3 overflow-hidden rounded-xl bg-[var(--foreground)] py-3 pl-3.5 pr-2.5 text-[var(--background)] shadow-[var(--shadow-float)]"
           >
-            <div className="mt-0.5 shrink-0">
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                t.type === "success"
+                  ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                  : t.type === "error"
+                    ? "bg-[var(--stamp)] text-white"
+                    : "bg-[var(--background)]/15"
+              }`}
+            >
               {t.type === "success" ? (
-                <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+                <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
               ) : t.type === "error" ? (
-                <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
               ) : (
-                <svg className="h-4 w-4 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                </svg>
+                <Info className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
               )}
-            </div>
-            <p className="flex-1 text-sm">{t.message}</p>
+            </span>
+            <p className="flex-1 text-sm font-medium">{t.message}</p>
             <button
               onClick={() => dismiss(t.id)}
-              className="shrink-0 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              className="rounded-md p-1 opacity-50 transition-opacity hover:opacity-100"
               aria-label="Dismiss notification"
             >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
+            <span
+              aria-hidden="true"
+              className="absolute bottom-0 left-0 h-px w-full origin-left bg-[var(--background)]/30"
+              style={{ animation: `draw ${DURATION_MS}ms linear reverse both` }}
+            />
           </div>
         ))}
       </div>

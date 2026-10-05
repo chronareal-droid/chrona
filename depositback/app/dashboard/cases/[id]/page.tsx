@@ -48,7 +48,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
       </div>
 
       <div className="animate-slide-up delay-100">
-        <AssessmentCard assessment={assessment} />
+        <AssessmentCard assessment={assessment} moveOutDate={c.moveOutDate} />
       </div>
 
       {owed && (

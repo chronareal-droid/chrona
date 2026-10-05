@@ -38,58 +38,56 @@ const faqs = [
 ];
 
 export function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section>
-      <div className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-            Frequently asked questions
+    <section className="border-t border-[var(--border)]">
+      <div className="mx-auto grid max-w-6xl gap-12 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:py-32">
+        <div className="lg:col-span-4">
+          <p className="eyebrow">Questions</p>
+          <h2 className="display mt-4 text-5xl sm:text-6xl">
+            You have more rights <span className="italic text-[var(--muted)]">than you think.</span>
           </h2>
-          <p className="mt-3 text-sm text-[var(--muted)]">
-            The short version: you probably have more rights than you think.
-          </p>
         </div>
 
-        <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-          {faqs.map((faq, i) => (
-            <div key={i}>
-              <button
-                type="button"
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="flex w-full cursor-pointer items-center justify-between gap-4 py-5 text-left transition-colors hover:text-[var(--foreground)]"
-                aria-expanded={openIndex === i}
-              >
-                <span className="text-sm font-medium">{faq.question}</span>
-                <svg
-                  className={cn(
-                    "h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200",
-                    openIndex === i && "rotate-45"
-                  )}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  aria-hidden="true"
+        <div className="lg:col-span-8">
+          {faqs.map((faq, i) => {
+            const open = openIndex === i;
+            return (
+              <div key={faq.question} className="border-b border-[var(--border)] first:border-t">
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(open ? null : i)}
+                  className="group flex w-full cursor-pointer items-center justify-between gap-6 py-6 text-left"
+                  aria-expanded={open}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-              </button>
-              <div
-                className={cn(
-                  "grid transition-[grid-template-rows] duration-200",
-                  openIndex === i ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                )}
-              >
-                <div className="overflow-hidden">
-                  <p className="pb-5 text-sm text-[var(--muted)] leading-relaxed">
-                    {faq.answer}
-                  </p>
+                  <span className="text-[1.0625rem] font-medium transition-colors group-hover:text-[var(--accent)]">
+                    {faq.question}
+                  </span>
+                  <span
+                    className={cn(
+                      "relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] transition-[transform,background-color,border-color] duration-300 ease-[var(--ease-out-quint)]",
+                      open && "rotate-45 border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]",
+                    )}
+                    aria-hidden="true"
+                  >
+                    <span className="absolute h-px w-3 bg-current" />
+                    <span className="absolute h-3 w-px bg-current" />
+                  </span>
+                </button>
+                <div
+                  className={cn(
+                    "grid transition-[grid-template-rows,opacity] duration-300 ease-[var(--ease-out-quint)]",
+                    open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <p className="max-w-2xl pb-6 text-[0.9375rem] leading-relaxed text-[var(--muted)]">{faq.answer}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

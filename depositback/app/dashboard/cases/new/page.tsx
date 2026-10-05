@@ -28,14 +28,17 @@ export default async function NewCasePage({
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="animate-slide-up">
-        <h1 className="text-lg font-semibold tracking-tight">New case</h1>
-        <p className="mt-0.5 text-sm text-[var(--muted)]">
-          Takes about two minutes. You can change anything later.
+    <div className="mx-auto max-w-6xl">
+      <header className="mb-12 max-w-2xl">
+        <p className="eyebrow animate-fade-in">New case</p>
+        <h1 className="display animate-rise mt-3 text-[2.75rem] sm:text-[3.5rem]">
+          Let&apos;s get it <span className="italic text-[var(--accent)]">back.</span>
+        </h1>
+        <p className="animate-slide-up delay-200 mt-3 text-[0.9375rem] text-[var(--muted)]">
+          About two minutes. You can change anything later.
         </p>
-      </div>
-      <div className="animate-slide-up delay-100">
+      </header>
+      <div className="animate-slide-up delay-300">
         <CaseForm initial={initial} />
       </div>
     </div>

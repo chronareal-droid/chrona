@@ -1,34 +1,19 @@
-import Link from "next/link";
+import { ButtonLink, Arrow } from "@/components/ui/button";
 
 export function CTA() {
   return (
-    <section>
-      <div className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
-        <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] px-6 py-16 text-center sm:px-16">
-          {/* Subtle accent glow */}
-          <div className="pointer-events-none absolute inset-0 -z-10">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[300px] w-[500px] rounded-full bg-[var(--accent)]/[0.04] blur-[100px]" />
-          </div>
-
-          <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-            Find out what you&apos;re owed
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-[var(--muted)] leading-relaxed">
-            It takes 30 seconds and it&apos;s free. If your landlord missed the
-            deadline, you&apos;ll know exactly what to ask for.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/check"
-              prefetch={false}
-              className="group w-full rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80 sm:w-auto"
-            >
-              Check my deposit
-              <span className="ml-1.5 inline-block transition-transform group-hover:translate-x-0.5">
-                &rarr;
-              </span>
-            </Link>
-          </div>
+    <section className="border-t border-[var(--border)]">
+      <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 lg:py-32">
+        <h2 className="display text-[3.4rem] sm:text-[5rem] lg:text-[6.5rem]">
+          It&apos;s your money.
+          <br />
+          <span className="italic text-[var(--accent)]">Ask for it properly.</span>
+        </h2>
+        <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+          <ButtonLink href="/check" size="lg" magnetic>
+            Check my deposit, free <Arrow />
+          </ButtonLink>
+          <p className="text-sm text-[var(--muted)]">Takes 30 seconds. No account needed.</p>
         </div>
       </div>
     </section>

@@ -14,16 +14,20 @@ export default function CheckPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main id="main-content" className="flex-1">
-        <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20">
-          <div className="mb-10 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-              Is your landlord holding your deposit too long?
+        <section className="mx-auto max-w-6xl px-5 pt-12 pb-24 sm:px-8 sm:pt-16">
+          <div className="mb-12 max-w-3xl sm:mb-16">
+            <p className="eyebrow animate-fade-in">Free deposit check</p>
+            <h1 className="display animate-rise mt-4 text-[3rem] sm:text-[4.25rem]">
+              Is your landlord <span className="italic text-[var(--accent)]">late?</span>
             </h1>
-            <p className="mx-auto mt-2 max-w-lg text-sm text-[var(--muted)]">
-              Free, no sign-up. See your state&apos;s deadline and what the law says your landlord may owe you.
+            <p className="animate-slide-up delay-200 mt-5 max-w-xl text-[1.0625rem] leading-relaxed text-[var(--muted)]">
+              Three answers and you&apos;ll see your state&apos;s deadline, how late they are, and what the law says
+              they could owe you. Nothing is saved.
             </p>
           </div>
-          <DepositChecker />
+          <div className="animate-slide-up delay-300">
+            <DepositChecker />
+          </div>
         </section>
       </main>
       <Footer />

@@ -1,15 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { assessCase } from "@/lib/deposit-laws";
 import { AssessmentCard } from "@/components/cases/assessment-card";
-import { StateSelect } from "@/components/cases/state-select";
+import { ButtonLink, Arrow } from "@/components/ui/button";
+import { Field, MoneyInput, StateSelect } from "@/components/ui/field";
+import { Toggle } from "@/components/ui/toggle";
 
 /**
- * Free deposit check: state, amounts, move-out date → deadline and what the
- * landlord may owe. Runs entirely in the browser; nothing is saved until the
- * renter opens a case.
+ * Free deposit check: a short worksheet on the left, a live ledger on the
+ * right. Runs entirely in the browser; nothing is saved until the renter
+ * opens a case.
  */
 export function DepositChecker() {
   const [state, setState] = useState("");
@@ -20,9 +21,10 @@ export function DepositChecker() {
 
   const depositNum = Number(deposit);
   const returnedNum = Number(returned || 0);
+  const returnedTooHigh = depositNum > 0 && returnedNum > depositNum;
 
   const assessment = useMemo(() => {
-    if (!state || !moveOut || !(depositNum > 0) || returnedNum < 0 || returnedNum > depositNum) return null;
+    if (!state || !moveOut || !(depositNum > 0) || returnedNum < 0 || returnedTooHigh) return null;
     return assessCase({
       state,
       depositAmount: depositNum,
@@ -30,7 +32,9 @@ export function DepositChecker() {
       moveOutDate: moveOut,
       itemizedListReceived: itemized,
     });
-  }, [state, moveOut, depositNum, returnedNum, itemized]);
+  }, [state, moveOut, depositNum, returnedNum, returnedTooHigh, itemized]);
+
+  const filled = [state, deposit, moveOut].filter(Boolean).length;
 
   const prefill = new URLSearchParams({
     state,
@@ -39,120 +43,109 @@ export function DepositChecker() {
     moveOut,
     itemized: itemized ? "1" : "0",
   });
-  const caseHref = `/dashboard/cases/new?${prefill.toString()}`;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <form
-        className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-5"
-        onSubmit={(e) => e.preventDefault()}
-      >
-        <Field label="State the rental is in" htmlFor="check-state">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
+      <form className="space-y-6" onSubmit={(e) => e.preventDefault()} aria-label="Deposit details">
+        <div className="flex items-center gap-3">
+          <span className="eyebrow">Worksheet</span>
+          <span className="h-px flex-1 bg-[var(--border)]" />
+          <span className="figure text-[11px] text-[var(--muted)]">{filled}/3</span>
+        </div>
+
+        <Field label="Where was the rental?" htmlFor="check-state">
           <StateSelect id="check-state" value={state} onChange={setState} />
         </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Deposit you paid" htmlFor="check-deposit">
-            <MoneyInput id="check-deposit" value={deposit} onChange={setDeposit} placeholder="1500" />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Deposit paid" htmlFor="check-deposit">
+            <MoneyInput id="check-deposit" value={deposit} onChange={setDeposit} placeholder="1,500" />
           </Field>
-          <Field label="Amount returned so far" htmlFor="check-returned">
-            <MoneyInput id="check-returned" value={returned} onChange={setReturned} placeholder="0" />
+          <Field label="Returned so far" htmlFor="check-returned">
+            <MoneyInput
+              id="check-returned"
+              value={returned}
+              onChange={setReturned}
+              placeholder="0"
+              aria-invalid={returnedTooHigh}
+            />
           </Field>
         </div>
-        {returnedNum > depositNum && depositNum > 0 && (
-          <p className="text-xs text-red-600">The amount returned can&apos;t be more than the deposit.</p>
+        {returnedTooHigh && (
+          <p className="-mt-3 text-xs text-[var(--stamp)]">That&apos;s more than the deposit. Double-check the numbers.</p>
         )}
         <Field label="Move-out date" htmlFor="check-moveout">
           <input
             id="check-moveout"
             type="date"
-            className="field"
+            className="field figure"
             value={moveOut}
             max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setMoveOut(e.target.value)}
           />
         </Field>
-        <label className="flex items-start gap-2.5 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+        <div className="border-t border-[var(--border)] pt-5">
+          <Toggle
             checked={itemized}
-            onChange={(e) => setItemized(e.target.checked)}
+            onChange={setItemized}
+            label="I got an itemized list of deductions"
+            hint="A written list of what they charged for and how much."
           />
-          <span>
-            My landlord sent a written, itemized list of deductions
-            <span className="block text-xs text-[var(--muted)]">A list of what they charged for and how much.</span>
-          </span>
-        </label>
+        </div>
       </form>
 
-      <div className="space-y-4">
+      <div className="lg:sticky lg:top-24 lg:self-start">
         {assessment ? (
-          <>
-            <AssessmentCard assessment={assessment} />
+          <div className="animate-scale-in space-y-5">
+            <AssessmentCard assessment={assessment} moveOutDate={moveOut} />
             {assessment.status !== "returned" && (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-                <h3 className="text-sm font-semibold">Ask for it back the right way</h3>
-                <p className="mt-1 text-xs text-[var(--muted)] leading-relaxed">
-                  Most landlords pay once they get a demand letter that cites the law and the penalty. Keepsit writes
-                  yours in about two minutes.
-                </p>
-                <Link
-                  href={caseHref}
-                  className="mt-4 inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-                >
-                  Write my demand letter &rarr;
-                </Link>
+              <div className="flex flex-col gap-4 rounded-2xl bg-[var(--foreground)] p-6 text-[var(--background)] sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="display text-2xl">Put it in writing.</p>
+                  <p className="mt-1 max-w-sm text-sm opacity-70">
+                    A demand letter citing {assessment.law.name} law, ready to mail in about two minutes.
+                  </p>
+                </div>
+                <ButtonLink href={`/dashboard/cases/new?${prefill.toString()}`} size="lg" magnetic className="shrink-0">
+                  Write my letter <Arrow />
+                </ButtonLink>
               </div>
             )}
-          </>
-        ) : (
-          <div className="flex h-full min-h-48 items-center justify-center rounded-xl border border-dashed border-[var(--border)] p-6 text-center">
-            <p className="max-w-xs text-sm text-[var(--muted)]">
-              Fill in your details to see your state&apos;s deadline and what your landlord may owe you.
-            </p>
           </div>
+        ) : (
+          <EmptyLedger />
         )}
       </div>
     </div>
   );
 }
 
-function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
+/** Placeholder sheet: shows the shape of the answer before there is one. */
+function EmptyLedger() {
   return (
-    <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-medium">
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-export function MoneyInput({
-  id,
-  value,
-  onChange,
-  placeholder,
-}: {
-  id?: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div className="relative">
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--muted)]">$</span>
-      <input
-        id={id}
-        type="number"
-        inputMode="decimal"
-        min={0}
-        step="0.01"
-        className="field pl-6"
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-      />
+    <div className="relative rounded-2xl border border-dashed border-[var(--border-strong)] p-6 sm:p-8">
+      <p className="eyebrow">Your ledger</p>
+      <p className="display mt-3 max-w-md text-[2.1rem] text-[var(--faint)] sm:text-[2.6rem]">
+        Fill in three things. We&apos;ll do the math.
+      </p>
+      <div className="mt-8 grid grid-cols-2 border-t border-[var(--border)] pt-5">
+        <div>
+          <p className="eyebrow">Still owed</p>
+          <p className="figure mt-1.5 text-[2rem] text-[var(--border-strong)]">$—</p>
+        </div>
+        <div className="border-l border-[var(--border)] pl-5">
+          <p className="eyebrow">Recoverable up to</p>
+          <p className="figure mt-1.5 text-[2rem] text-[var(--border-strong)]">$—</p>
+        </div>
+      </div>
+      <div className="mt-8 flex h-7 items-end gap-[6px] overflow-hidden" aria-hidden="true">
+        {Array.from({ length: 64 }, (_, i) => (
+          <span
+            key={i}
+            className="w-px shrink-0 bg-[var(--border-strong)]"
+            style={{ height: i % 7 === 0 ? "100%" : "40%" }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

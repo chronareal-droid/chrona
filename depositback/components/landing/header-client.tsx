@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppLogo } from "@/components/app-logo";
+import { ButtonLink, Arrow } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * Check if the logged_in indicator cookie exists.
@@ -16,206 +18,162 @@ function hasLoggedInCookie(): boolean {
   return document.cookie.split(";").some((c) => c.trim().startsWith("logged_in="));
 }
 
+const NAV = [
+  { href: "/check", label: "Free check" },
+  { href: "/#how", label: "How it works" },
+  { href: "/pricing", label: "Pricing" },
+];
+
 export function HeaderClient() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
-  // Check cookie presence and close mobile nav on route change
   useEffect(() => {
     setIsLoggedIn(hasLoggedInCookie());
     setMobileOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when menu is open
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-5xl items-center px-4 sm:px-6">
-          {/* Left — logo */}
-          <Link href="/" prefetch={false} className="flex items-center">
+      <header
+        className={cn(
+          "sticky top-0 z-50 border-b transition-[background-color,border-color] duration-300",
+          scrolled || mobileOpen
+            ? "border-[var(--border)] bg-[var(--background)]/90 backdrop-blur-md"
+            : "border-transparent bg-transparent",
+        )}
+      >
+        <div className="mx-auto flex h-16 max-w-6xl items-center px-5 sm:px-8">
+          <Link href="/" prefetch={false} className="flex items-center" aria-label="Keepsit home">
             <AppLogo />
           </Link>
 
-          {/* Center — nav links (desktop) */}
-          <nav className="hidden flex-1 items-center justify-center gap-1 sm:flex">
-            <NavLink href="/check" active={pathname === "/check"} prefetch={true}>
-              Free check
-            </NavLink>
-            <NavLink href="/pricing" active={pathname === "/pricing"} prefetch={true}>
-              Pricing
-            </NavLink>
+          <nav className="ml-10 hidden items-center gap-1 md:flex" aria-label="Main">
+            {NAV.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "group relative px-3 py-2 text-sm transition-colors",
+                    active ? "text-[var(--foreground)]" : "text-[var(--muted)] hover:text-[var(--foreground)]",
+                  )}
+                >
+                  {item.label}
+                  <span
+                    className={cn(
+                      "absolute inset-x-3 -bottom-px h-px origin-left bg-[var(--foreground)] transition-transform duration-300 ease-[var(--ease-out-quint)]",
+                      active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
+                    )}
+                  />
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Right — actions (desktop) */}
-          <div className="hidden items-center gap-1 sm:flex">
+          <div className="ml-auto hidden items-center gap-1 md:flex">
+            <ThemeToggle />
             {isLoggedIn ? (
-              <>
-                <ThemeToggle />
-                <Link
-                  href="/dashboard"
-                  className="ml-2 rounded-lg bg-[var(--accent)] px-3.5 py-1.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-                >
-                  Dashboard
-                </Link>
-              </>
+              <ButtonLink href="/dashboard" variant="ink" size="sm" className="ml-2">
+                Dashboard <Arrow />
+              </ButtonLink>
             ) : (
               <>
                 <Link
                   href="/login"
-                  prefetch={true}
-                  className="rounded-md px-3 py-1.5 text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+                  className="px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
                 >
                   Sign in
                 </Link>
-                <ThemeToggle />
-                <Link
-                  href="/check"
-                  prefetch={false}
-                  className="ml-2 rounded-lg bg-[var(--accent)] px-3.5 py-1.5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-                >
-                  Check my deposit
-                </Link>
+                <ButtonLink href="/check" variant="ink" size="sm" magnetic className="ml-1">
+                  Check my deposit <Arrow />
+                </ButtonLink>
               </>
             )}
           </div>
 
-          {/* Mobile controls */}
-          <div className="ml-auto flex items-center gap-1 sm:hidden">
+          <div className="ml-auto flex items-center gap-1 md:hidden">
             <ThemeToggle />
             <button
               type="button"
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface)] active:bg-[var(--surface)] transition-colors"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--foreground)] hover:bg-[var(--surface)]"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
             >
-              <svg className="h-[15px] w-[15px]" fill="none" viewBox="0 0 15 15" stroke="currentColor" aria-hidden="true">
-                {mobileOpen ? (
-                  <path strokeLinecap="round" strokeWidth={1.25} d="M3.5 3.5l8 8M11.5 3.5l-8 8" />
-                ) : (
-                  <path strokeLinecap="round" strokeWidth={1.25} d="M2 4.5h11M2 7.5h11M2 10.5h11" />
+              <span
+                className={cn(
+                  "absolute h-[1.5px] w-4 rounded bg-current transition-transform duration-300 ease-[var(--ease-out-quint)]",
+                  mobileOpen ? "rotate-45" : "-translate-y-[4px]",
                 )}
-              </svg>
+              />
+              <span
+                className={cn(
+                  "absolute h-[1.5px] w-4 rounded bg-current transition-transform duration-300 ease-[var(--ease-out-quint)]",
+                  mobileOpen ? "-rotate-45" : "translate-y-[4px]",
+                )}
+              />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile nav overlay */}
+      {/* Mobile: full-height sheet with large type */}
       <div
-        className={`fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity duration-200 sm:hidden ${
-          mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setMobileOpen(false)}
-        onKeyDown={(e) => { if (e.key === "Escape") setMobileOpen(false); }}
-        role="button"
-        tabIndex={-1}
-        aria-label="Close menu"
-      />
-
-      {/* Mobile nav panel */}
-      <nav
-        className={`fixed top-14 left-0 right-0 z-50 border-b border-[var(--border)] bg-[var(--background)] px-4 pb-4 pt-2 sm:hidden transition-all duration-200 ${
-          mobileOpen
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-2 opacity-0 pointer-events-none"
-        }`}
-        style={{ overscrollBehavior: "contain" }}
+        className={cn(
+          "fixed inset-x-0 top-16 bottom-0 z-40 bg-[var(--background)] px-5 pt-6 pb-8 transition-[opacity,transform] duration-300 ease-[var(--ease-out-quint)] md:hidden",
+          mobileOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0",
+        )}
+        aria-hidden={!mobileOpen}
       >
-        <div className="mx-auto flex max-w-5xl flex-col gap-0.5">
-          <MobileNavLink href="/check" active={pathname === "/check"} prefetch={false}>
-            Free check
-          </MobileNavLink>
-          <MobileNavLink href="/pricing" active={pathname === "/pricing"} prefetch={false}>
-            Pricing
-          </MobileNavLink>
-
-          {/* Divider between nav and CTAs */}
-          <div className="my-2 border-t border-[var(--border)]" />
-
-          {isLoggedIn ? (
+        <nav className="flex flex-col" aria-label="Mobile">
+          {NAV.map((item, i) => (
             <Link
-              href="/dashboard"
-              className="rounded-lg bg-[var(--accent)] px-3 py-2.5 text-center text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              className="display border-b border-[var(--border)] py-4 text-[2.4rem]"
+              style={{ transitionDelay: `${i * 40}ms` }}
+              tabIndex={mobileOpen ? 0 : -1}
             >
-              Dashboard
+              {item.label}
             </Link>
+          ))}
+        </nav>
+        <div className="mt-8 flex flex-col gap-3">
+          {isLoggedIn ? (
+            <ButtonLink href="/dashboard" variant="ink" size="lg">
+              Dashboard <Arrow />
+            </ButtonLink>
           ) : (
             <>
-              <MobileNavLink href="/login" active={pathname === "/login"} prefetch={false}>
+              <ButtonLink href="/check" variant="primary" size="lg">
+                Check my deposit, free <Arrow />
+              </ButtonLink>
+              <ButtonLink href="/login" variant="secondary" size="lg">
                 Sign in
-              </MobileNavLink>
-              <Link
-                href="/check"
-                prefetch={false}
-                className="mt-1 rounded-lg bg-[var(--accent)] px-3 py-2.5 text-center text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-80"
-              >
-                Check my deposit
-              </Link>
+              </ButtonLink>
             </>
           )}
         </div>
-      </nav>
+      </div>
     </>
-  );
-}
-
-/* ── Shared link components ─────────────────────────────── */
-
-function NavLink({
-  href,
-  active,
-  prefetch,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  prefetch?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      prefetch={prefetch}
-      className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
-        active
-          ? "text-[var(--foreground)] font-medium"
-          : "text-[var(--muted)] hover:text-[var(--foreground)]"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function MobileNavLink({
-  href,
-  active,
-  prefetch,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  prefetch?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      prefetch={prefetch}
-      className={`rounded-lg px-3 py-2.5 text-sm transition-colors ${
-        active
-          ? "text-[var(--foreground)] font-medium bg-[var(--surface)]"
-          : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface)]"
-      }`}
-    >
-      {children}
-    </Link>
   );
 }
