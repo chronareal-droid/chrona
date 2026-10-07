@@ -416,7 +416,7 @@ export async function runGospel(G, startPart = 'entry') {
     G.updaters.push(() => guards.forEach((g, i) => { if (!g.followP) return; const goal = P.pos.clone().add(V(i ? 2 : -2, 0, 2.5)); if (g.pos.distanceTo(goal) > 1.2) g.walkTo(goal, 1.8); }));
     G.flags.carrying = true;
     let strength = 1, falls = 0, simonTook = false, womenMet = false;
-    const women = spawnCrowd(4, -26, -92, 4, { lookAtPlayer: true, beard: false, headwrap: 0x6a5a7a });
+    const women = spawnCrowd(4, -26, -92, 4, { lookAtPlayer: true, beard: false, headwrap: 0x6a5a7a, female: true });
     const simon = G.addNPC(robe({ name: 'Simon of Cyrene', skin: 0x6a4a30, robe: 0x8a6a3a, height: 1.8 }), at(-14, -88), 0);
     ui.hint('The cross is heavy. Walk slowly (do not run); your strength drains as you go. If you stumble, press E to rise.', 8000);
     G.setObjective('Carry the cross to Golgotha', GOLGOTHA);
@@ -594,5 +594,7 @@ export async function runGospel(G, startPart = 'entry') {
   if (part !== 'entry') await ui.fadeOut(10);
   if (part === 'temple') G.setPlayer(at(world.gates.south.x, 10), Math.PI);
   if (part === 'supper') G.setPlayer(world.upperRoom.clone(), Math.PI);
-  while (part) part = await runners[part]();
+  // Every chapter starts with the player in control (a chapter that opens with a cutscene takes it back).
+  // Starting from the title screen or chapter select would otherwise leave the title camera running.
+  while (part) { G.cine = null; ui.cinema(false); G.control = true; part = await runners[part](); }
 }

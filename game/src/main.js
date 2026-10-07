@@ -12,6 +12,7 @@ import { createPost } from './post.js';
 import { createSystems } from './systems.js';
 import { createMenu } from './menu.js';
 import { save } from './save.js';
+import { createPhysics } from './physics.js';
 
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -59,7 +60,7 @@ window.__G = G; // handy for debugging in the console
 
 // ---------------------------------------------------------------- Player (David)
 // The hero. Jesus: off-white linen tunic, sand-coloured mantle, dark shoulder-length hair and beard.
-const JESUS_LOOK = { skin: 0xb08560, robe: 0xe6dccb, sash: 0x6a4a2a, hair: 0x2e1e14, beard: true, height: 1.75, cape: 0xc8b48c };
+const JESUS_LOOK = { skin: 0xb08560, robe: 0xe6dccb, sash: 0x6a4a2a, hair: 0x2e1e14, beard: true, height: 1.75, cape: 0xc8b48c, longHair: true, longRobe: true };
 let david = CAMPAIGN === 'gospel'
   ? createHumanoid(JESUS_LOOK)
   : createHumanoid({ skin: 0xc4926a, robe: 0xcdb58a, sash: 0x7a3326, hair: 0x6b3a1e, height: 1.68, build: 0.92 });
@@ -552,6 +553,7 @@ function frame() {
   else updatePlayer(dtP);
   updateNPCs(dtW);
   updateSheep(dtW);
+  G.physics?.update(dtW);
   for (const u of G.updaters) u(dtW);
   updatePickups(dtW);
   updateProjectiles(dtW);
@@ -580,6 +582,7 @@ G.updateObjective = updateObjective;
 G.snapCamera = snapCamera;
 G.sling = sling;
 G.systems = createSystems(G);
+G.physics = createPhysics(G);
 G.setPlayer(V(10, 0, 170), Math.PI);
 post.apply(save.settings.quality, world.sun);
 camera.position.set(0, 60, 260); camera.lookAt(0, 0, 0);

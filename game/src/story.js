@@ -450,5 +450,7 @@ export async function runStory(G, startPart = 'prologue') {
   if (part === 'camp' || part === 'stones' || part === 'duel') G.setPlayer(at(pathX(14), 14), Math.PI);
   if (part === 'road') G.setPlayer(at(16, 170), Math.PI);
   if (part !== 'prologue') await ui.fadeOut(10);
-  while (part) part = await runners[part]();
+  // Every chapter starts with the player in control (a chapter that opens with a cutscene takes it back).
+  // Starting from the title screen or chapter select would otherwise leave the title camera running.
+  while (part) { G.cine = null; ui.cinema(false); G.control = true; part = await runners[part](); }
 }
