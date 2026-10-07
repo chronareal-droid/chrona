@@ -59,7 +59,7 @@ export async function runStory(G, startPart = 'prologue') {
   const say = (who, line, ref, o = {}) => ui.say(who, line, { reference: ref || '', ...o });
   const narrate = (line, ref, o) => say('', line, ref, o);
   const waitFor = (fn, poll = 100) => new Promise((res) => { const iv = setInterval(() => { if (fn()) { clearInterval(iv); res(); } }, poll); });
-  const near = (p, r) => () => G.control && P.pos.distanceTo(typeof p === 'function' ? p() : p) < r;
+  const near = (p, r) => () => G.control && G.hdist(P.pos, typeof p === 'function' ? p() : p) < r;
   const reach = (part) => {
     save.part = part;
     if (!save.reached.includes(part)) save.reached.push(part);
@@ -365,7 +365,7 @@ export async function runStory(G, startPart = 'prologue') {
       P.stones = 5;
     }
     ui.stones(P.stones, true);
-    if (P.pos.distanceTo(PLACES.arena) > 30) G.setPlayer(at(6, -84), Math.PI);
+    if (G.hdist(P.pos, PLACES.arena) > 30) G.setPlayer(at(6, -84), Math.PI);
     if (P.mount) S.dismount();
     gol.pos.copy(at(0, -140)); bearer.pos.copy(at(0, -136));
     await ui.fadeIn(400);

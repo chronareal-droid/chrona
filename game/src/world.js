@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { fbm, rand } from './noise.js';
+import { adobeHouse, stoneMaterial, wallBox } from './buildings.js';
 
 // Map layout (metres). South (+z) is Bethlehem's pasture, north (-z) the Philistine ridge.
 export const PLACES = {
@@ -84,8 +85,8 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
   })();
   scene.add(stars);
   const TIMES = {
-    golden: { elev: 16, az: 215, turb: 6, ray: 1.6, mie: 0.006, sun: 0xffd6a0, sunI: 3.0, sky: 0xfbe8c8, gnd: 0x6b5a3c, hemiI: 0.9, fog: 0xdcc6a2, fogD: 0.0036, exp: 0.72, env: 0.45, stars: 0 },
-    day: { elev: 52, az: 160, turb: 4, ray: 1.2, mie: 0.004, sun: 0xfff1dc, sunI: 3.4, sky: 0xe8f0ff, gnd: 0x7a6a4c, hemiI: 1.0, fog: 0xd6d8d4, fogD: 0.003, exp: 0.62, env: 0.5, stars: 0 },
+    golden: { elev: 16, az: 215, turb: 6, ray: 1.6, mie: 0.006, sun: 0xffd6a0, sunI: 3.0, sky: 0xfbe8c8, gnd: 0x6b5a3c, hemiI: 0.9, fog: 0xdcc6a2, fogD: 0.0026, exp: 0.72, env: 0.45, stars: 0 },
+    day: { elev: 52, az: 160, turb: 4, ray: 1.2, mie: 0.004, sun: 0xfff1dc, sunI: 3.4, sky: 0xe8f0ff, gnd: 0x7a6a4c, hemiI: 1.0, fog: 0xcfd6dc, fogD: 0.0019, exp: 0.6, env: 0.5, stars: 0 },
     dawn: { elev: 4, az: 95, turb: 8, ray: 2.6, mie: 0.008, sun: 0xffb27a, sunI: 2.2, sky: 0xf2c8b0, gnd: 0x4a3c34, hemiI: 0.7, fog: 0xd8b4a0, fogD: 0.0042, exp: 0.85, env: 0.4, stars: 0.25 },
     night: { elev: -4, az: 250, turb: 2, ray: 0.4, mie: 0.002, sun: 0x9ab4ff, sunI: 0.45, sky: 0x31406a, gnd: 0x10121a, hemiI: 0.35, fog: 0x0e1424, fogD: 0.006, exp: 1.25, env: 0.12, stars: 1 },
     darkness: { elev: 60, az: 160, turb: 20, ray: 0.2, mie: 0.05, sun: 0x8a7a70, sunI: 0.35, sky: 0x4a4440, gnd: 0x1e1a18, hemiI: 0.45, fog: 0x2a2624, fogD: 0.009, exp: 1.0, env: 0.1, stars: 0 },
@@ -170,38 +171,67 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
   scene.add(terrain);
   world.terrain = terrain;
 
-  // --- The brook of Elah ---
+  // --- The brook (Elah / Kidron): a flowing ribbon whose colour, clarity and foam follow its real depth.
   {
-    const pts = [], idx = [];
-    for (let x = -330; x <= 330; x += 3) {
-      const z = brookZ(x), y = waterLevel(x);
-      pts.push(x, y, z - 4.5, x, y, z + 4.5);
+    const ACROSS = 10, HALF = 5;
+    const pos = [], depth = [], idx = [];
+    let rows = 0;
+    for (let x = -330; x <= 330; x += 2, rows++) {
+      const z0 = brookZ(x), y = waterLevel(x);
+      for (let k = 0; k <= ACROSS; k++) {
+        const z = z0 - HALF + (k / ACROSS) * HALF * 2;
+        pos.push(x, y, z);
+        depth.push(y - heightAt(x, z));
+      }
     }
-    for (let i = 0; i < pts.length / 6 - 1; i++) {
-      const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    const W = ACROSS + 1;
+    for (let r = 0; r < rows - 1; r++) for (let k = 0; k < ACROSS; k++) {
+      const a = r * W + k; idx.push(a, a + 1, a + W, a + 1, a + W + 1, a + W);
     }
     const wg = new THREE.BufferGeometry();
-    wg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    wg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    wg.setAttribute('depth', new THREE.Float32BufferAttribute(depth, 1));
     wg.setIndex(idx); wg.computeVertexNormals();
-    const wm = new THREE.MeshStandardMaterial({ color: 0x4f7f86, roughness: 0.08, metalness: 0.3, transparent: true, opacity: 0.82 });
+    const wm = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.06, metalness: 0.0, transparent: true, depthWrite: false, envMapIntensity: 1.4 });
+    const wu = { uTime: { value: 0 }, uRipple: { value: new THREE.Vector4(0, -999, 0, 0) } };
+    world.waterRipple = (p, strength) => { wu.uRipple.value.set(p.x, p.y, p.z, strength); };
     wm.onBeforeCompile = (sh) => {
-      sh.uniforms.uTime = { value: 0 };
-      wm.userData.shader = sh;
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vW;')
-        .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvW = (modelMatrix*vec4(transformed,1.)).xyz;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uTime; varying vec3 vW;')
+      Object.assign(sh.uniforms, wu);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
+        attribute float depth; varying float vDepth; varying vec3 vW; uniform float uTime;`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          transformed.y += sin(position.x * 0.9 - uTime * 2.2) * 0.02 + sin(position.z * 2.3 + uTime * 1.7) * 0.012;`)
+        .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvDepth = depth; vW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+        uniform float uTime; uniform vec4 uRipple; varying float vDepth; varying vec3 vW;
+        float n2(vec2 p){ return sin(p.x) * cos(p.y); }`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          // shallow water is clear and sandy, deeper water turns green-blue
+          float dep = clamp(vDepth / 0.9, 0.0, 1.0);
+          diffuseColor.rgb = mix(vec3(0.55, 0.52, 0.38), vec3(0.12, 0.30, 0.30), dep);
+          diffuseColor.a = mix(0.25, 0.86, smoothstep(0.0, 0.6, dep));`)
         .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-          float r1 = sin(vW.x*1.7 + uTime*2.6) * cos(vW.z*2.3 - uTime*1.4);
-          float r2 = sin(vW.x*4.1 - uTime*3.3 + vW.z*3.0);
-          normal = normalize(normal + vec3(r1*0.12 + r2*0.05, 0., r2*0.1));`)
+          // the current runs along the brook (+x): scrolling ripples, plus rings where someone wades
+          vec2 f = vW.xz * vec2(1.4, 2.2) + vec2(uTime * 1.6, 0.0);
+          float a = n2(f) + 0.5 * n2(f * 2.3 + 1.7) + 0.25 * n2(f * 4.1 - uTime);
+          float b = n2(f.yx * 1.3 + 2.0) + 0.5 * n2(f.yx * 2.9);
+          vec3 nn = vec3(a * 0.09, 0.0, b * 0.07);
+          float rd = distance(vW.xz, uRipple.xz);
+          nn.xz += normalize(vW.xz - uRipple.xz + 1e-4) * sin(rd * 9.0 - uTime * 7.0) * exp(-rd * 0.9) * uRipple.w * 0.35;
+          normal = normalize(normal + (viewMatrix * vec4(nn, 0.0)).xyz);`)
         .replace('#include <dithering_fragment>', `#include <dithering_fragment>
-          float sparkle = pow(max(0., sin(vW.x*9.+uTime*4.)*sin(vW.z*11.-uTime*3.)), 24.);
-          gl_FragColor.rgb += vec3(1.,.9,.7)*sparkle*0.6;`);
+          // foam where the water thins over stones and banks
+          float foam = smoothstep(0.18, 0.0, vDepth) * (0.6 + 0.4 * sin(vW.x * 6.0 + uTime * 3.0) * sin(vW.z * 7.0));
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.92, 0.9, 0.84), foam * 0.55);
+          gl_FragColor.a = max(gl_FragColor.a, foam * 0.7) * smoothstep(-0.05, 0.03, vDepth);
+          float glint = pow(max(0.0, sin(vW.x * 9.0 + uTime * 4.0) * sin(vW.z * 11.0 - uTime * 3.0)), 30.0);
+          gl_FragColor.rgb += vec3(1.0, 0.92, 0.75) * glint * 0.5;`);
     };
     const water = new THREE.Mesh(wg, wm);
+    water.renderOrder = 2;
     scene.add(water);
     const prev = world.update;
-    world.update = (t, dt) => { prev(t, dt); if (wm.userData.shader) wm.userData.shader.uniforms.uTime.value = t; };
+    world.update = (t, dt) => { prev(t, dt); wu.uTime.value = t; wu.uRipple.value.w = Math.max(0, wu.uRipple.value.w - dt * 0.8); };
   }
 
   const tmp = new THREE.Object3D();
@@ -278,40 +308,103 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
     placeInstanced(rg, new THREE.MeshStandardMaterial({ color: 0xa79a86, roughness: 0.92, flatShading: true }), list);
   }
 
-  // --- Grass tufts with wind ---
+  // --- Grass: a dense field of curved 3D blades that follows the camera. Terrain height and a density
+  // mask are baked into a texture, so every blade sits exactly on the ground and avoids paths, water and streets.
   {
-    const blade = new THREE.PlaneGeometry(0.12, 0.7, 1, 3);
-    blade.translate(0, 0.35, 0);
-    const parts = [];
-    for (let k = 0; k < 5; k++) {
-      const b = blade.clone();
-      b.rotateZ((rand() - 0.5) * 0.6);
-      b.rotateY(rand() * Math.PI);
-      b.translate((rand() - 0.5) * 0.3, 0, (rand() - 0.5) * 0.3);
-      parts.push(b);
+    const RES = 512, X0 = -320, Z0 = -310, EXT = 640;
+    const data = new Float32Array(RES * RES * 4);
+    for (let j = 0; j < RES; j++) for (let i = 0; i < RES; i++) {
+      const x = X0 + (i / (RES - 1)) * EXT, z = Z0 + (j / (RES - 1)) * EXT;
+      const h = heightAt(x, z);
+      const slope = Math.abs(heightAt(x + 1.2, z) - h) + Math.abs(heightAt(x, z + 1.2) - h);
+      let m = 1;
+      if (Math.abs(x - pathX(z)) < 2.2 && z > -32) m = 0;
+      else if (Math.abs(x - pathX(z)) < 3.4 && z > -32) m = 0.35;
+      if (Math.abs(z - brookZ(x)) < 3.6) m = 0;
+      if (inCity(x, z)) m = 0;
+      if (campaign === 'gospel' && (Math.hypot(x - GOLGOTHA.x, z - GOLGOTHA.z) < 9)) m *= 0.15;
+      m *= THREE.MathUtils.clamp(1.6 - slope, 0, 1);
+      const patch = fbm(x * 0.03, z * 0.03, 2);
+      m *= THREE.MathUtils.clamp(0.55 + patch * 1.4, 0.15, 1);
+      const lush = Math.exp(-((z - brookZ(x)) ** 2) / (16 * 16));
+      const k = (j * RES + i) * 4;
+      data[k] = h; data[k + 1] = m; data[k + 2] = lush; data[k + 3] = patch;
     }
-    const tuft = mergeGeometries(parts);
-    const gm = new THREE.MeshStandardMaterial({ color: 0xa7a35a, side: THREE.DoubleSide, roughness: 1 });
+    // Half floats filter linearly on every WebGL2 device (full floats need an extension phones often lack).
+    const half = new Uint16Array(data.length);
+    for (let i = 0; i < data.length; i++) half[i] = THREE.DataUtils.toHalfFloat(data[i]);
+    const hm = new THREE.DataTexture(half, RES, RES, THREE.RGBAFormat, THREE.HalfFloatType);
+    hm.minFilter = hm.magFilter = THREE.LinearFilter; hm.needsUpdate = true;
+    world.heightTex = { tex: hm, X0, Z0, EXT };
+
+    // One blade: 5 segments, tapered, gently curved forward.
+    const seg = 5, bw = 0.06, bh = 1;
+    const bp = [], bi = [];
+    for (let i = 0; i <= seg; i++) {
+      const t = i / seg, w = bw * (1 - t * 0.92);
+      bp.push(-w, t * bh, t * t * 0.18, w, t * bh, t * t * 0.18);
+      if (i < seg) { const a = i * 2; bi.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const blade = new THREE.InstancedBufferGeometry();
+    blade.setAttribute('position', new THREE.Float32BufferAttribute(bp, 3));
+    blade.setIndex(bi);
+    blade.computeVertexNormals();
+    const N = { low: 30000, medium: 70000, high: 130000, ultra: 220000 }[quality] || 130000;
+    const R = { low: 32, medium: 42, high: 52, ultra: 64 }[quality] || 52;
+    const offs = new Float32Array(N * 4);
+    for (let i = 0; i < N; i++) {
+      // denser near the centre so close-up grass is thick while the far ring thins out
+      const r = R * Math.sqrt(rand()) ** 1.25, a = rand() * Math.PI * 2;
+      offs.set([Math.cos(a) * r, Math.sin(a) * r, rand() * Math.PI * 2, 0.55 + rand() * 0.75], i * 4);
+    }
+    blade.setAttribute('offset', new THREE.InstancedBufferAttribute(offs, 4));
+    blade.instanceCount = N;
+    const gm = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.85 });
+    const uniforms = { uTime: { value: 0 }, uCenter: { value: new THREE.Vector2() }, uHM: { value: hm }, uHMBox: { value: new THREE.Vector3(X0, Z0, EXT) }, uPlayer: { value: new THREE.Vector3(0, -999, 0) }, uR: { value: R } };
     gm.onBeforeCompile = (sh) => {
-      sh.uniforms.uTime = { value: 0 };
-      gm.userData.shader = sh;
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uTime;')
-        .replace('#include <begin_vertex>', `#include <begin_vertex>
-          vec4 ip = instanceMatrix * vec4(0.,0.,0.,1.);
-          float w = sin(uTime*1.7 + ip.x*0.15 + ip.z*0.1) * 0.5 + sin(uTime*3.1 + ip.x*0.6)*0.2;
-          transformed.x += w * position.y * 0.35; transformed.z += w * position.y * 0.15;`);
+      Object.assign(sh.uniforms, uniforms);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
+        attribute vec4 offset; uniform float uTime, uR; uniform vec2 uCenter; uniform sampler2D uHM; uniform vec3 uHMBox, uPlayer;
+        varying float vT; varying vec3 vTint;
+        float hh(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5); }`)
+      .replace('#include <begin_vertex>', `
+        // wrap each blade's slot around the camera so the field never pops
+        vec2 rel = mod(offset.xy - uCenter + uR, 2.0 * uR) - uR;
+        vec2 wp = uCenter + rel;
+        vec4 hmv = texture2D(uHM, (wp - uHMBox.xy) / uHMBox.z);
+        float fade = 1.0 - smoothstep(uR * 0.7, uR, length(rel));
+        float scale = offset.w * hmv.y * fade * (0.7 + hmv.z * 0.6);
+        float t = position.y;
+        vT = t;
+        vec3 transformed = position * vec3(1.0 + hmv.z * 0.5, 0.55 + hmv.w * 0.25 + hmv.z * 0.45, 1.0);
+        float ca = cos(offset.z), sa = sin(offset.z);
+        transformed.xz = mat2(ca, -sa, sa, ca) * transformed.xz;
+        // wind: big slow gusts plus quick flutter, stronger at the tip
+        float gust = sin(uTime * 0.9 + wp.x * 0.05 + wp.y * 0.04) * 0.5 + 0.5;
+        float flutter = sin(uTime * 4.0 + hh(wp) * 6.28) * 0.12;
+        vec2 bend = vec2(0.55, 0.25) * (gust * 0.45 + flutter) * t * t;
+        // trampling: blades lean away from whoever walks through them
+        vec2 away = wp - uPlayer.xz; float dP = length(away);
+        bend += (dP < 1.4 ? normalize(away + 1e-4) * (1.4 - dP) * 0.9 : vec2(0.0)) * t;
+        transformed.xz += bend;
+        transformed.y -= dot(bend, bend) * 0.4;
+        transformed *= scale;
+        transformed.xz += wp; transformed.y += hmv.x - 0.02;
+        float v = hh(wp + 3.1);
+        vTint = mix(vec3(0.58, 0.55, 0.26), vec3(0.32, 0.45, 0.16), hmv.z * 0.8 + v * 0.25);
+        vTint = mix(vTint, vec3(0.70, 0.62, 0.36), clamp(-hmv.w * 1.5, 0.0, 0.6));`)
+      .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+        objectNormal = normalize(vec3(0.0, 1.0, 0.0) + objectNormal * 0.35);`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vT; varying vec3 vTint;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          diffuseColor.rgb = vTint * mix(0.45, 1.15, vT);`);
     };
-    const list = [];
-    const grassN = { low: 6000, medium: 12000, high: 22000, ultra: 34000 }[quality] || 22000;
-    for (let i = 0; i < grassN; i++) {
-      const x = (rand() - 0.5) * 440, z = -200 + rand() * 430;
-      if (onPath(x, z) || inCity(x, z) || Math.abs(z - brookZ(x)) < 3.5) continue;
-      if (fbm(x * 0.03, z * 0.03, 2) < -0.15) continue;
-      list.push({ x, y: heightAt(x, z) - 0.05, z, ry: rand() * 6, s: 0.7 + rand() * 0.9 });
-    }
-    placeInstanced(tuft, gm, list, { shadow: false });
+    const grass = new THREE.Mesh(blade, gm);
+    grass.frustumCulled = false; grass.receiveShadow = true;
+    scene.add(grass);
+    world.grassFollow = (cam, player) => { uniforms.uCenter.value.set(cam.x, cam.z); if (player) uniforms.uPlayer.value.copy(player); };
     const prev = world.update;
-    world.update = (t, dt) => { prev(t, dt); if (gm.userData.shader) gm.userData.shader.uniforms.uTime.value = t; };
+    world.update = (t, dt) => { prev(t, dt); uniforms.uTime.value = t; };
   }
 
   // --- Footpath from Bethlehem to the camp ---
@@ -438,19 +531,14 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
   // Jesse's house in Bethlehem: a stone house and a sheepfold.
   {
     const p = PLACES.jesse;
-    const house = new THREE.Group();
-    const stone = new THREE.MeshStandardMaterial({ color: 0xcdb48c, roughness: 0.95 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(9, 4, 7), stone);
-    body.position.y = 2;
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.4, 7.6), new THREE.MeshStandardMaterial({ color: 0x8a6a48 }));
-    roof.position.y = 4.2;
-    const door = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x3b2a1c }));
-    door.position.set(1.5, 1.2, 3.55);
-    house.add(body, roof, door);
-    house.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } });
-    house.position.set(p.x - 6, heightAt(p.x - 6, p.z - 8) - 0.3, p.z - 8);
-    scene.add(house);
+    const hs = adobeHouse(p.x - 6, p.z - 8, { w: 9, d: 7, h: 3.6, upper: true, facing: 0, windows: 2 });
+    scene.add(hs.group);
     world.colliders.push({ x: p.x - 6, z: p.z - 8, r: 5.5 });
+    // A few more homes make a village (Bethlehem / Bethany)
+    [[-34, 172, 0.3], [-44, 186, 1.2], [-6, 200, Math.PI], [-30, 204, Math.PI * 0.9], [-52, 168, 0.8]].forEach(([vx, vz, f]) => {
+      const v = adobeHouse(vx, vz, { w: 6 + rand() * 2, d: 5 + rand(), h: 3.2, upper: rand() < 0.4, facing: f });
+      scene.add(v.group); world.colliders.push(v.footprint);
+    });
     // low stone wall of the sheepfold
     const wallM = new THREE.MeshStandardMaterial({ color: 0xa8957a, roughness: 1, flatShading: true });
     for (let a = 0; a < Math.PI * 1.75; a += 0.16) {
@@ -558,8 +646,8 @@ function buildCamp(scene, world, center, { cloth, banner, spread, count }) {
 // ------------------------------------------------------------ Jerusalem (Gospel campaign)
 function buildJerusalem(scene, world) {
   const J = JERUSALEM;
-  const stone = new THREE.MeshStandardMaterial({ color: 0xd9c7a2, roughness: 0.92 });
-  const stoneDark = new THREE.MeshStandardMaterial({ color: 0xb9a37c, roughness: 0.95 });
+  const stone = stoneMaterial();
+  const stoneDark = stoneMaterial().clone(); stoneDark.color = new THREE.Color(0xd0c0a0);
   const white = new THREE.MeshStandardMaterial({ color: 0xf1eadb, roughness: 0.6 });
   const gold = new THREE.MeshStandardMaterial({ color: 0xd9a93b, metalness: 0.9, roughness: 0.25 });
   const wood = new THREE.MeshStandardMaterial({ color: 0x5a3e26, roughness: 0.9 });
@@ -573,7 +661,7 @@ function buildJerusalem(scene, world) {
       const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t;
       if (gateAt != null && Math.abs((x0 === x1 ? z : x) - gateAt) < gateHalf) continue;
       const y = heightAt(x, z);
-      const b = add(new THREE.Mesh(new THREE.BoxGeometry(x0 === x1 ? 2 : len / n + 0.05, 12, x0 === x1 ? len / n + 0.05 : 2), stone));
+      const b = add(new THREE.Mesh(wallBox(x0 === x1 ? 2 : len / n + 0.05, 12, x0 === x1 ? len / n + 0.05 : 2, 0.02), stone));
       b.position.set(x, y + 1.5, z);
       if (i % 2 === 0) { const c = add(new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), stone)); c.position.set(x, y + 7.95, z); }
       world.colliders.push({ x, z, r: 1.6 });
@@ -587,7 +675,7 @@ function buildJerusalem(scene, world) {
   [[gateSX, J.maxZ], [gateNX, J.minZ]].forEach(([gx, gz]) => {
     [-1, 1].forEach((sx) => {
       const x = gx + sx * (gateHalf + 1.6), y = heightAt(x, gz);
-      const t = add(new THREE.Mesh(new THREE.BoxGeometry(4, 15, 4), stoneDark)); t.position.set(x, y + 3, gz);
+      const t = add(new THREE.Mesh(wallBox(4, 15, 4, 0.02), stoneDark)); t.position.set(x, y + 3, gz);
       world.colliders.push({ x, z: gz, r: 2.4 });
     });
     const lintel = add(new THREE.Mesh(new THREE.BoxGeometry(gateHalf * 2 + 2, 1.5, 3), stoneDark));
@@ -598,7 +686,7 @@ function buildJerusalem(scene, world) {
   const T = new THREE.Vector3(14, 0, -34);
   {
     const y = heightAt(T.x, T.z);
-    const plat = add(new THREE.Mesh(new THREE.BoxGeometry(22, 4, 16), stone)); plat.position.set(T.x, y, T.z);
+    const plat = add(new THREE.Mesh(wallBox(22, 8, 16, 0.02), stone)); plat.position.set(T.x, y - 2, T.z);
     const hall = add(new THREE.Mesh(new THREE.BoxGeometry(10, 10, 12), white)); hall.position.set(T.x, y + 7, T.z - 1);
     const porch = add(new THREE.Mesh(new THREE.BoxGeometry(14, 13, 3), white)); porch.position.set(T.x, y + 8.5, T.z + 5.5);
     const trim = add(new THREE.Mesh(new THREE.BoxGeometry(14.4, 0.6, 3.4), gold)); trim.position.set(T.x, y + 15.2, T.z + 5.5);
@@ -607,25 +695,27 @@ function buildJerusalem(scene, world) {
     world.colliders.push({ x: T.x - 6, z: T.z, r: 6 }, { x: T.x + 6, z: T.z, r: 6 }, { x: T.x, z: T.z - 3, r: 6 });
     world.temple = new THREE.Vector3(T.x, 0, T.z + 11);
   }
-  // Houses: flat-roofed, whitewashed limestone, clear of the main street.
-  const houseM = [stone, stoneDark, new THREE.MeshStandardMaterial({ color: 0xe6dcc4, roughness: 0.95 })];
-  const street = (x, z) => Math.abs(x - THREE.MathUtils.lerp(gateSX, gateNX, (J.maxZ - z) / (J.maxZ - J.minZ))) < 5;
-  for (let i = 0; i < 70; i++) {
-    const x = J.minX + 5 + rand() * (J.maxX - J.minX - 10), z = J.minZ + 5 + rand() * (J.maxZ - J.minZ - 10);
-    if (street(x, z) || Math.hypot(x - T.x, z - T.z) < 15 || Math.hypot(x + 18, z + 8) < 7) continue;
-    if (world.colliders.some((c) => c.house && Math.hypot(c.x - x, c.z - z) < 6)) continue;
-    const w = 3.5 + rand() * 3, d = 3.5 + rand() * 3, h = 3 + rand() * 3.5, y = heightAt(x, z);
-    const hm = add(new THREE.Mesh(new THREE.BoxGeometry(w, h + 3, d), houseM[i % 3])); hm.position.set(x, y + h / 2 - 1.5, z);
-    const door = add(new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.8, 0.1), wood)); door.position.set(x, y + 0.9, z + d / 2 + 0.03);
-    if (rand() < 0.4) { const aw = add(new THREE.Mesh(new THREE.BoxGeometry(w * 0.6, 0.06, 1.2), new THREE.MeshStandardMaterial({ color: [0x8a2a2a, 0x2b4f8a, 0xa8782e][i % 3], side: THREE.DoubleSide }))); aw.position.set(x, y + 2.2, z + d / 2 + 0.6); aw.rotation.x = 0.25; }
-    world.colliders.push({ x, z, r: Math.max(w, d) * 0.55, house: true });
+  // Houses: adobe and plastered limestone, clear of the main street, grounded on their lowest corner.
+  const street = (x, z) => Math.abs(x - THREE.MathUtils.lerp(gateSX, gateNX, (J.maxZ - z) / (J.maxZ - J.minZ))) < 5.5;
+  const awningM = [0x8a2a2a, 0x2b4f8a, 0xa8782e].map((c) => new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, roughness: 0.9 }));
+  for (let i = 0; i < 90; i++) {
+    const x = J.minX + 6 + rand() * (J.maxX - J.minX - 12), z = J.minZ + 6 + rand() * (J.maxZ - J.minZ - 12);
+    if (street(x, z) || Math.hypot(x - T.x, z - T.z) < 15 || Math.hypot(x + 18, z + 8) < 8) continue;
+    const w = 5 + rand() * 3, d = 4.5 + rand() * 2.5;
+    if (world.colliders.some((c) => c.house && Math.hypot(c.x - x, c.z - z) < c.r + Math.max(w, d) * 0.55 + 1)) continue;
+    const facing = x < THREE.MathUtils.lerp(gateSX, gateNX, (J.maxZ - z) / (J.maxZ - J.minZ)) ? Math.PI / 2 : -Math.PI / 2;
+    const hs = adobeHouse(x, z, { w, d, h: 3 + rand() * 1.2, upper: rand() < 0.35, facing, stone: rand() < 0.4, doorX: (rand() - 0.5) * 0.6 });
+    scene.add(hs.group);
+    if (rand() < 0.35) { const aw = add(new THREE.Mesh(new THREE.PlaneGeometry(w * 0.5, 1.4), awningM[i % 3])); aw.position.set(x + Math.sin(facing) * (d / 2 + 0.7), heightAt(x, z) + 2.3, z + Math.cos(facing) * (d / 2 + 0.7)); aw.rotation.set(-Math.PI / 2 + 0.3, facing, 0, 'YXZ'); }
+    world.colliders.push({ ...hs.footprint, house: true });
   }
   // The upper room: a two-storey house with an outside stair
   {
-    const U = new THREE.Vector3(-18, 0, -8), y = heightAt(U.x, U.z);
-    const low = add(new THREE.Mesh(new THREE.BoxGeometry(9, 4, 7), stone)); low.position.set(U.x, y + 1.5, U.z);
-    const up = add(new THREE.Mesh(new THREE.BoxGeometry(9, 3.5, 7), houseM[2])); up.position.set(U.x, y + 5.2, U.z);
-    for (let k = 0; k < 8; k++) { const st = add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 0.8), stoneDark)); st.position.set(U.x + 5.1, y + 0.3 + k * 0.45, U.z + 3 - k * 0.8); }
+    const U = new THREE.Vector3(-18, 0, -8);
+    const hs = adobeHouse(U.x, U.z, { w: 9, d: 7, h: 3.6, upper: true, facing: 0, windows: 2, doorX: -0.4 });
+    scene.add(hs.group);
+    const y = heightAt(U.x + 5.1, U.z);
+    for (let k = 0; k < 8; k++) { const st = add(new THREE.Mesh(wallBox(1.2, 0.45, 0.8, 0.01), stoneMaterial())); st.position.set(U.x + 5.1, y + 0.2 + k * 0.45, U.z + 3 - k * 0.8); }
     world.colliders.push({ x: U.x, z: U.z, r: 4.6 });
     world.upperRoom = new THREE.Vector3(U.x + 1, 0, U.z + 5.5);
   }

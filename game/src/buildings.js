@@ -1,0 +1,215 @@
+// Mud-brick (adobe) houses in the style of old desert towns: hand-plastered walls with straw and
+// cracks, protruding wooden roof beams, deep-set framed windows, triangular vents, parapet roofs.
+// Textures are painted procedurally on canvases, so no image files are needed.
+import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { heightAt } from './world.js';
+
+let seed = 4242;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+function canvasTex(size, paint, repeat = 1) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d');
+  paint(g, size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.repeat.set(repeat, repeat);
+  return t;
+}
+
+// Plaster: warm ochre mud with darker blotches, straw flecks and fine cracks.
+function paintPlaster(g, s, base = [214, 180, 122]) {
+  g.fillStyle = `rgb(${base})`; g.fillRect(0, 0, s, s);
+  for (let i = 0; i < 900; i++) {
+    const x = rnd() * s, y = rnd() * s, r = 10 + rnd() * 70, k = (rnd() - 0.5) * 16;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, `rgba(${base[0] + k},${base[1] + k * 0.9},${base[2] + k * 0.7},0.22)`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  for (let i = 0; i < 1400; i++) { // straw
+    const x = rnd() * s, y = rnd() * s, a = rnd() * Math.PI, l = 2 + rnd() * 5;
+    g.strokeStyle = rnd() < 0.7 ? 'rgba(240,214,150,0.35)' : 'rgba(140,108,62,0.22)'; g.lineWidth = 0.7;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
+  }
+  for (let i = 0; i < 9; i++) { // hairline cracks
+    let x = rnd() * s, y = rnd() * s; g.strokeStyle = 'rgba(110,80,44,0.3)'; g.lineWidth = 0.9; g.beginPath(); g.moveTo(x, y);
+    for (let k = 0; k < 8; k++) { x += (rnd() - 0.5) * 22; y += rnd() * 16; g.lineTo(x, y); }
+    g.stroke();
+  }
+}
+function paintStone(g, s) { // dressed limestone courses (ashlar)
+  g.fillStyle = '#cdb994'; g.fillRect(0, 0, s, s);
+  const rows = 8, rh = s / rows;
+  for (let r = 0; r < rows; r++) {
+    let x = -(r % 2) * 40;
+    while (x < s) {
+      const w = 60 + rnd() * 70, k = (rnd() - 0.5) * 30;
+      g.fillStyle = `rgb(${205 + k},${185 + k},${148 + k * 0.8})`; g.fillRect(x + 2, r * rh + 2, w - 4, rh - 4);
+      for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(90,70,40,${rnd() * 0.18})`; g.fillRect(x + rnd() * w, r * rh + rnd() * rh, 2 + rnd() * 3, 2 + rnd() * 3); }
+      x += w;
+    }
+  }
+}
+function paintWood(g, s) {
+  g.fillStyle = '#5a3e26'; g.fillRect(0, 0, s, s);
+  for (let i = 0; i < 160; i++) { const y = rnd() * s; g.strokeStyle = `rgba(${rnd() < 0.5 ? '30,18,8' : '120,86,52'},${0.2 + rnd() * 0.3})`; g.lineWidth = 1 + rnd() * 2; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(s * 0.3, y + (rnd() - 0.5) * 8, s * 0.6, y + (rnd() - 0.5) * 8, s, y); g.stroke(); }
+}
+
+let MATS = null;
+export function materials() {
+  if (MATS) return MATS;
+  const plaster = canvasTex(512, (g, s) => paintPlaster(g, s));
+  const plasterLight = canvasTex(512, (g, s) => paintPlaster(g, s, [214, 186, 136]));
+  const stone = canvasTex(512, paintStone);
+  const wood = canvasTex(256, paintWood);
+  [plaster, plasterLight, stone, wood].forEach((t) => (t.colorSpace = THREE.SRGBColorSpace));
+  const bump = (t) => { const b = t.clone(); b.colorSpace = THREE.NoColorSpace; b.needsUpdate = true; return b; };
+  MATS = {
+    wall: new THREE.MeshStandardMaterial({ map: plaster, bumpMap: bump(plaster), bumpScale: 1.0, roughness: 0.97 }),
+    trim: new THREE.MeshStandardMaterial({ map: plasterLight, bumpMap: bump(plasterLight), bumpScale: 1.4, roughness: 0.95 }),
+    stone: new THREE.MeshStandardMaterial({ map: stone, bumpMap: bump(stone), bumpScale: 3, roughness: 0.9 }),
+    wood: new THREE.MeshStandardMaterial({ map: wood, bumpMap: bump(wood), bumpScale: 1.5, roughness: 0.85 }),
+    dark: new THREE.MeshStandardMaterial({ color: 0x1a120a, roughness: 1 }),
+  };
+  return MATS;
+}
+
+/** A box with world-scaled UVs (1 texture tile ≈ 2 m) and gently uneven, hand-plastered faces. */
+function wallBox(w, h, d, wobble = 0.05) {
+  const g = new THREE.BoxGeometry(w, h, d, Math.max(1, Math.round(w * 1.5)), Math.max(1, Math.round(h * 1.5)), Math.max(1, Math.round(d * 1.5)));
+  const p = g.attributes.position, uv = g.attributes.uv, n = g.attributes.normal;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const nx = Math.abs(n.getX(i)), ny = Math.abs(n.getY(i));
+    // UVs in metres / 2
+    if (ny > 0.5) uv.setXY(i, x / 4, z / 4); else if (nx > 0.5) uv.setXY(i, z / 4, y / 4); else uv.setXY(i, x / 4, y / 4);
+    if (y > -h / 2 + 0.01) { // keep the footing flat; soften the rest
+      const k = Math.sin(x * 3.1 + z * 2.3) * Math.cos(y * 2.7) * wobble;
+      p.setXYZ(i, x + (Math.abs(x) > w / 2 - 0.01 ? Math.sign(x) * k : 0), y, z + (Math.abs(z) > d / 2 - 0.01 ? Math.sign(z) * k : 0));
+    }
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * Builds an adobe house. Returns { group, footprint:{x,z,r} }.
+ * opts: w, d, h (walls), upper (adds a stepped upper storey), facing (radians), windows (per long side)
+ */
+export function adobeHouse(x, z, opts = {}) {
+  const M = materials();
+  const w = opts.w ?? 7, d = opts.d ?? 5.5, h = opts.h ?? 3.4, facing = opts.facing ?? 0;
+  const group = new THREE.Group();
+  // Ground the house on its lowest corner and run the walls down below the highest, so no side floats or sinks.
+  const c = Math.cos(facing), s = Math.sin(facing);
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => heightAt(x + (a * w / 2) * c + (b * d / 2) * s, z - (a * w / 2) * s + (b * d / 2) * c));
+  const lo = Math.min(...corners), hi = Math.max(...corners);
+  const base = lo - 0.25, drop = hi - lo + 0.25;
+  const add = (geo, mat, px, py, pz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; group.add(m); return m; };
+
+  // Stone plinth showing where the hill falls away
+  if (drop > 0.5) add(wallBox(w + 0.3, drop + 0.4, d + 0.3, 0.02), M.stone, 0, (drop + 0.4) / 2 - 0.2, 0);
+  const wallH = h + drop;
+  const WM = opts.stone ? M.stone : M.wall;
+  add(wallBox(w, wallH, d), WM, 0, wallH / 2, 0);
+  // Parapet: a low, rounded lip around the flat roof
+  const top = wallH;
+  const lip = 0.45;
+  add(wallBox(w + 0.1, lip, 0.25, 0.03), M.wall, 0, top + lip / 2, d / 2 - 0.12);
+  add(wallBox(w + 0.1, lip, 0.25, 0.03), M.wall, 0, top + lip / 2, -d / 2 + 0.12);
+  add(wallBox(0.25, lip, d, 0.03), M.wall, w / 2 - 0.12, top + lip / 2, 0);
+  add(wallBox(0.25, lip, d, 0.03), M.wall, -w / 2 + 0.12, top + lip / 2, 0);
+  // Protruding palm-trunk roof beams (vigas)
+  const vigaG = new THREE.CylinderGeometry(0.08, 0.09, 0.7, 7); vigaG.rotateX(Math.PI / 2);
+  const vigas = [];
+  for (let vx = -w / 2 + 0.6; vx <= w / 2 - 0.5; vx += 1.1) {
+    for (const sz of [1, -1]) { const g = vigaG.clone(); g.translate(vx + (rnd() - 0.5) * 0.1, top - 0.35, sz * (d / 2 + 0.3)); vigas.push(g); }
+  }
+  if (vigas.length) add(mergeGeometries(vigas), M.wood, 0, 0, 0);
+
+  // Front facade (+z): door, framed windows, triangular vents
+  const fz = d / 2;
+  const doorX = (opts.doorX ?? 0) * w / 2;
+  add(new THREE.BoxGeometry(1.4, 2.35, 0.12), M.trim, doorX, drop + 1.17, fz + 0.03);   // door surround
+  add(new THREE.BoxGeometry(1.0, 2.05, 0.2), M.dark, doorX, drop + 1.02, fz - 0.02);    // recess
+  add(new THREE.BoxGeometry(0.92, 1.95, 0.06), M.wood, doorX, drop + 0.98, fz - 0.06);  // plank door
+  const winY = drop + Math.min(2.0, h - 1.1);
+  const nWin = opts.windows ?? Math.max(1, Math.floor(w / 3));
+  for (let i = 0; i < nWin; i++) {
+    const wx = -w / 2 + (w / (nWin + 1)) * (i + 1);
+    if (Math.abs(wx - doorX) < 1.2) continue;
+    window_(group, M, wx, winY, fz);
+    vent(add, M, wx, winY + 0.85, fz);
+  }
+  // Back and side windows, smaller
+  window_(group, M, 0, winY, -fz, Math.PI, 0.7);
+  window_(group, M, w / 2, winY, 0, Math.PI / 2, 0.7);
+
+  // A stepped upper storey (the taller central block in the reference photo)
+  if (opts.upper) {
+    const uw = w * 0.55, ud = d * 0.7, uh = 2.6;
+    const ux = (rnd() - 0.5) * (w - uw) * 0.6;
+    const ub = add(wallBox(uw, uh, ud), M.wall, ux, top + uh / 2, -d * 0.1);
+    add(wallBox(uw + 0.08, 0.4, 0.22, 0.03), M.wall, ux, top + uh + 0.2, -d * 0.1 + ud / 2 - 0.11);
+    add(new THREE.BoxGeometry(uw * 0.7, 0.85, 0.1), M.trim, ux, top + uh * 0.6, -d * 0.1 + ud / 2 + 0.03);
+    [-0.2, 0, 0.2].forEach((k) => add(new THREE.BoxGeometry(0.32, 0.5, 0.12), M.dark, ux + k * uw, top + uh * 0.6, -d * 0.1 + ud / 2 + 0.05));
+    const uv = [];
+    for (let vx = -uw / 2 + 0.5; vx <= uw / 2 - 0.4; vx += 1.0) { const g = vigaG.clone(); g.translate(ux + vx, top + uh - 0.3, -d * 0.1 + ud / 2 + 0.3); uv.push(g); }
+    if (uv.length) add(mergeGeometries(uv), M.wood, 0, 0, 0);
+    void ub;
+  }
+  // Clay jars and a bench by the door
+  if (rnd() < 0.6) {
+    const jar = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 10), new THREE.MeshStandardMaterial({ color: 0xa8603a, roughness: 0.8 }));
+    jar.scale.y = 1.25; jar.position.set(doorX + 1.2, drop + 0.3, fz + 0.45); jar.castShadow = true; group.add(jar);
+  }
+  const merged = mergeByMaterial(group);
+  merged.position.set(x, base, z);
+  merged.rotation.y = facing;
+  return { group: merged, footprint: { x, z, r: Math.max(w, d) * 0.55 } };
+}
+
+// Collapse a house's many parts into one mesh per material (a handful of draw calls per house).
+function mergeByMaterial(group) {
+  group.updateMatrixWorld(true);
+  const byMat = new Map();
+  group.traverse((m) => {
+    if (!m.isMesh) return;
+    let g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
+    g.applyMatrix4(m.matrixWorld);
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+    if (!byMat.has(m.material)) byMat.set(m.material, []);
+    byMat.get(m.material).push(g);
+  });
+  const out = new THREE.Group();
+  for (const [mat, list] of byMat) {
+    const mesh = new THREE.Mesh(mergeGeometries(list), mat);
+    mesh.castShadow = mesh.receiveShadow = true;
+    out.add(mesh);
+  }
+  return out;
+}
+
+function window_(group, M, x, y, z, ry = 0, scale = 1) {
+  const g = new THREE.Group();
+  const f = new THREE.Mesh(new THREE.BoxGeometry(1.25 * scale, 1.05 * scale, 0.14), M.trim);
+  const hole = new THREE.Mesh(new THREE.BoxGeometry(0.78 * scale, 0.62 * scale, 0.2), M.dark); hole.position.z = 0.02;
+  g.add(f, hole);
+  for (let k = -1; k <= 1; k++) { const bar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.62 * scale, 0.05), M.wood); bar.position.set(k * 0.2 * scale, 0, 0.1); g.add(bar); }
+  g.traverse((m) => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; } });
+  g.rotation.y = ry;
+  g.position.set(x, y, z);
+  g.translateZ(0.04); // sit just proud of the wall
+  group.add(g);
+}
+
+function vent(add, M, x, y, z) {
+  const shape = new THREE.Shape(); shape.moveTo(-0.16, 0.14); shape.lineTo(0.16, 0.14); shape.lineTo(0, -0.14); shape.closePath();
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.06, bevelEnabled: false });
+  add(geo, M.dark, x, y, z - 0.02);
+}
+
+/** Stone/ashlar material for city walls, towers and the temple platform. */
+export const stoneMaterial = () => materials().stone;
+export const plasterMaterial = () => materials().wall;
+export { wallBox };

@@ -229,8 +229,8 @@ export function createSystems(G) {
     if (Q.lostSheep !== 'active') return;
     for (const s of lost) {
       if (s.homeFlag) continue;
-      if (!s.following && s.pos.distanceTo(P.pos) < 4) { s.following = true; s.follow = { pos: P.pos }; audio.play('bleat'); ui.toast('A lost ewe follows you'); sys.refreshQuestObjective(); }
-      if (s.following && s.pos.distanceTo(fold) < 9) {
+      if (!s.following && G.hdist(s.pos, P.pos) < 4) { s.following = true; s.follow = { pos: P.pos }; audio.play('bleat'); ui.toast('A lost ewe follows you'); sys.refreshQuestObjective(); }
+      if (s.following && G.hdist(s.pos, fold) < 9) {
         s.following = false; s.follow = null; s.homeFlag = true;
         s.home = fold.clone().add(V((Math.random() - 0.5) * 6, 0, (Math.random() - 0.5) * 6)); s.target = s.home;
         audio.play('bleat');

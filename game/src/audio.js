@@ -105,6 +105,7 @@ export function createAudio() {
     hurt: () => noise(0.3, 600, 0.4, 'lowpass'),
     thud: () => { drum(0.9); noise(0.8, 120, 0.6, 'lowpass'); },
     step: () => noise(0.06, 500, 0.03, 'lowpass'),
+    splash: () => { const f = noise(0.35, 1800, 0.12, 'bandpass', 0.8); f.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.3); noise(0.2, 300, 0.05, 'lowpass'); },
     spirit: () => {
       const t = ctx.currentTime;
       [261.6, 329.6, 392, 523.2, 659.3].forEach((fr, i) => {

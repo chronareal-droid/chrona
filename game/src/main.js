@@ -41,12 +41,15 @@ const CAMPAIGN = hashCampaign === 'david' ? 'david' : 'gospel';
 const world = buildWorld(scene, renderer, save.settings.quality, CAMPAIGN);
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+// Mission distances are measured across the ground: many story points are stored at y = 0, and on the
+// hills (Jerusalem's ridge, Golgotha) a 3D distance would never come within a trigger radius.
+const hdist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const ground = (v) => { v.y = heightAt(v.x, v.z); return v; };
 
 // ---------------------------------------------------------------- Game context
 const G = {
   THREE, scene, camera, renderer, input, ui, audio, world, V, ground, wait,
-  t: 0, control: false, cine: null, shakeAmt: 0, timeScale: 1, paused: false, post, save,
+  hdist, t: 0, control: false, cine: null, shakeAmt: 0, timeScale: 1, paused: false, post, save,
   camMode: save.settings.camMode || 'third', focus: 10, hurtFx: 0,
   npcs: [], sheep: [], pickups: [], projectiles: [], targets: [], updaters: [],
   objective: null, interactBusy: false, stats: { start: 0, stonesThrown: 0, deaths: 0 },
@@ -132,8 +135,13 @@ function updatePlayer(dt) {
   if (P.aiming) speed = 2.2 * wishLen;
   if (P.armored) speed *= 0.22;
   if (G.carrySpeed) speed = Math.min(speed, 3.3 * G.carrySpeed * wishLen);
-  const inWater = Math.abs(P.pos.z - brookZ(P.pos.x)) < 3.2 && P.pos.y < waterLevel(P.pos.x) + 0.1;
-  if (inWater) speed *= 0.65;
+  const wDepth = Math.abs(P.pos.z - brookZ(P.pos.x)) < 5 ? waterLevel(P.pos.x) - P.pos.y : -1;
+  const inWater = wDepth > 0.02;
+  // Wading: drag grows with depth; moving through water leaves ripples and splashes.
+  if (inWater) speed *= THREE.MathUtils.lerp(0.85, 0.45, Math.min(1, wDepth / 0.9));
+  if (inWater && Math.hypot(P.vel.x, P.vel.z) > 0.6) world.waterRipple?.(P.pos, Math.min(1, 0.4 + wDepth));
+  if (inWater && !P.wasInWater) { audio.play('splash'); world.waterRipple?.(P.pos, 1); }
+  P.wasInWater = inWater; P.wading = inWater ? wDepth : 0;
 
   P.invuln = Math.max(0, P.invuln - dt);
   if (P.rollT > 0) {
@@ -174,7 +182,7 @@ function updatePlayer(dt) {
   david.root.rotation.y = P.facing;
 
   // Footsteps
-  if (P.onGround && hs > 1) { P.stepT -= dt * hs; if (P.stepT < 0) { P.stepT = 2.1; audio.play('step'); } }
+  if (P.onGround && hs > 1) { P.stepT -= dt * hs; if (P.stepT < 0) { P.stepT = 2.1; audio.play(P.wading ? 'splash' : 'step'); } }
 
   // Staff strike
   const pose = david.pose;
@@ -302,6 +310,8 @@ function updateProjectiles(dt) {
         if (done) break;
       }
       const gy = heightAt(pr.mesh.position.x, pr.mesh.position.z);
+      const wl = Math.abs(pr.mesh.position.z - brookZ(pr.mesh.position.x)) < 4.5 ? waterLevel(pr.mesh.position.x) : -1e9;
+      if (!pr.splashed && pr.mesh.position.y < wl) { pr.splashed = true; pr.vel.multiplyScalar(0.25); audio.play('splash'); world.waterRipple?.(pr.mesh.position, 1); }
       if (!done && pr.mesh.position.y < gy) {
         done = true;
         G.addStonePickup(pr.mesh.position); // a missed stone can be gathered again
@@ -352,7 +362,7 @@ function updateNPCs(dt) {
     n.pose.talk += ((n.talking ? 1 : 0) - n.pose.talk) * Math.min(1, dt * 8);
     n.animate(dt, sp);
     if (n.talk && G.control && !G.interactBusy) {
-      const d = n.pos.distanceTo(P.pos);
+      const d = hdist(n.pos, P.pos);
       if (d < bestD) { best = n; bestD = d; }
     }
   }
@@ -360,7 +370,7 @@ function updateNPCs(dt) {
     for (const it of G.interactables || []) {
       if (it.enabled && !it.enabled()) continue;
       const p = typeof it.pos === 'function' ? it.pos() : it.pos;
-      const d = p.distanceTo(P.pos) * (2.6 / (it.range || 2.6));
+      const d = hdist(p, P.pos) * (2.6 / (it.range || 2.6));
       if (d < bestD) { best = it; bestD = d; }
     }
   }
@@ -426,7 +436,8 @@ function updateObjective() {
   let tgt = o && (typeof o.target === 'function' ? o.target() : o.target);
   if (!tgt && G.systems?.sideTarget) tgt = G.systems.sideTarget;
   if (!tgt || G.cine) { ui.marker(0, 0, 0, false); beacon.visible = false; ui.objectiveDist(null); return; }
-  const d = P.pos.distanceTo(tgt);
+  tgt = V(tgt.x, heightAt(tgt.x, tgt.z), tgt.z); // markers always sit on the ground, never under it
+  const d = hdist(P.pos, tgt);
   ui.objectiveDist(d);
   beacon.visible = d > 8; beacon.position.set(tgt.x, heightAt(tgt.x, tgt.z) + 30, tgt.z);
   beacon.material.opacity = 0.08 + Math.sin(G.t * 2) * 0.03;
@@ -547,6 +558,7 @@ function frame() {
   world.update(G.t, dtW);
   world.followShadow(G.cine ? camTarget : P.pos);
   world.followDust?.(camera.position);
+  world.grassFollow?.(camera.position, P.pos);
   updateCamera(raw);
   updateObjective();
   G.hurtFx = Math.max(0, G.hurtFx - raw * 2);
