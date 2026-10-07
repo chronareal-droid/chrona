@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "models:fetch": "node scripts/fetch-models.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"

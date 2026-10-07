@@ -6,6 +6,8 @@ import { createInput } from './input.js';
 import { createUI, wait } from './ui.js';
 import { createAudio } from './audio.js';
 import { runStory } from './story.js';
+import { runGospel } from './gospel.js';
+import { loadRiggedHumanoid } from './models.js';
 import { createPost } from './post.js';
 import { createSystems } from './systems.js';
 import { createMenu } from './menu.js';
@@ -32,7 +34,11 @@ addEventListener('resize', () => {
 const input = createInput(canvas);
 const ui = createUI(input);
 const audio = createAudio();
-const world = buildWorld(scene, renderer, save.settings.quality);
+// Campaign: the Gospel ("The Way of the Cross", Jesus) is the main story; David is the Old Testament campaign.
+// Deep links: #gospel:cross, #david:duel
+const [hashCampaign, hashPart] = location.hash.slice(1).split(':');
+const CAMPAIGN = hashCampaign === 'david' ? 'david' : 'gospel';
+const world = buildWorld(scene, renderer, save.settings.quality, CAMPAIGN);
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const ground = (v) => { v.y = heightAt(v.x, v.z); return v; };
@@ -49,7 +55,11 @@ const G = {
 window.__G = G; // handy for debugging in the console
 
 // ---------------------------------------------------------------- Player (David)
-const david = createHumanoid({ skin: 0xc4926a, robe: 0xcdb58a, sash: 0x7a3326, hair: 0x6b3a1e, height: 1.68, build: 0.92 });
+// The hero. Jesus: off-white linen tunic, sand-coloured mantle, dark shoulder-length hair and beard.
+const JESUS_LOOK = { skin: 0xb08560, robe: 0xe6dccb, sash: 0x6a4a2a, hair: 0x2e1e14, beard: true, height: 1.75, cape: 0xc8b48c };
+let david = CAMPAIGN === 'gospel'
+  ? createHumanoid(JESUS_LOOK)
+  : createHumanoid({ skin: 0xc4926a, robe: 0xcdb58a, sash: 0x7a3326, hair: 0x6b3a1e, height: 1.68, build: 0.92 });
 scene.add(david.root);
 const staff = createStaff();
 staff.position.set(0, -0.05, 0.05); staff.rotation.x = Math.PI / 2 - 0.2;
@@ -66,7 +76,7 @@ david.rig.torso.add(saulArmor);
 const P = {
   h: david, pos: V(), vel: V(), facing: 0, onGround: true, health: 1, lastHurt: -99,
   rollT: 0, rollDir: V(), attackT: 0, attackHitDone: false, aimCharge: 0, aiming: false,
-  stones: 0, slingUnlocked: false, armored: false, invuln: 0, dead: false, stepT: 0,
+  stones: 0, slingUnlocked: false, armored: false, invuln: 0, dead: false, stepT: 0, campaign: CAMPAIGN,
   maxHealth: 1, mount: null, spirit: 0, spiritActive: 0,
 };
 G.player = P;
@@ -76,6 +86,20 @@ G.setPlayer = (pos, facing = P.facing) => {
   david.root.position.copy(P.pos); david.root.rotation.y = facing;
   snapCamera();
 };
+G.campaign = CAMPAIGN;
+G.heroName = CAMPAIGN === 'gospel' ? 'Jesus' : 'David';
+if (CAMPAIGN === 'gospel') staff.visible = false;
+// Swap in the realistic rigged model when it loads (falls back to the procedural figure if it can't).
+G.setHeroModel = (h) => {
+  const old = david;
+  h.root.position.copy(old.root.position); h.root.rotation.copy(old.root.rotation); h.root.visible = old.root.visible;
+  scene.remove(old.root); scene.add(h.root);
+  david = h; P.h = h;
+};
+if (CAMPAIGN === 'gospel') {
+  loadRiggedHumanoid('jesus', JESUS_LOOK).then((h) => { if (h) { G.setHeroModel(h); console.info('Realistic Jesus model loaded'); } })
+    .catch((e) => console.warn('Realistic model unavailable, using the built-in figure.', e));
+}
 G.setArmor = (on) => { P.armored = on; saulArmor.visible = on; };
 G.setSling = (on) => { P.slingUnlocked = on; staff.visible = !on; };
 
@@ -107,6 +131,7 @@ function updatePlayer(dt) {
   let speed = (input.sprint && !P.aiming ? 6.6 * (G.mods?.run ?? 1) : 3.3) * wishLen;
   if (P.aiming) speed = 2.2 * wishLen;
   if (P.armored) speed *= 0.22;
+  if (G.carrySpeed) speed = Math.min(speed, 3.3 * G.carrySpeed * wishLen);
   const inWater = Math.abs(P.pos.z - brookZ(P.pos.x)) < 3.2 && P.pos.y < waterLevel(P.pos.x) + 0.1;
   if (inWater) speed *= 0.65;
 
@@ -119,11 +144,11 @@ function updatePlayer(dt) {
     const k = 1 - Math.exp(-dt * (P.onGround ? 12 : 2.5));
     P.vel.x += (wish.x * speed - P.vel.x) * k;
     P.vel.z += (wish.z * speed - P.vel.z) * k;
-    if (ctl && input.pressed.has('roll') && P.onGround && !P.armored) {
+    if (ctl && input.pressed.has('roll') && P.onGround && !P.armored && !G.carrySpeed && CAMPAIGN === 'david') {
       P.rollT = 0.5; P.rollDir.copy(wishLen > 0.1 ? wish : V(Math.sin(P.facing), 0, Math.cos(P.facing)));
       audio.play('swing');
     }
-    if (ctl && input.pressed.has('jump') && P.onGround && !P.armored) { P.vel.y = 5.2; P.onGround = false; }
+    if (ctl && input.pressed.has('jump') && P.onGround && !P.armored && !G.carrySpeed) { P.vel.y = 5.2; P.onGround = false; }
   }
   P.vel.y -= 16 * dt;
   P.pos.addScaledVector(P.vel, dt);
@@ -157,7 +182,7 @@ function updatePlayer(dt) {
     P.attackT -= dt; pose.swing = 1 - Math.max(0, P.attackT) / 0.45;
     if (!P.attackHitDone && pose.swing > 0.4) { P.attackHitDone = true; G.onStaffStrike?.(); }
     if (P.attackT <= 0) pose.swing = 0;
-  } else if (ctl && !P.aiming && !P.slingUnlocked && input.pressed.has('attack')) {
+  } else if (ctl && !P.aiming && !P.slingUnlocked && CAMPAIGN === 'david' && input.pressed.has('attack')) {
     P.attackT = 0.45; P.attackHitDone = false; audio.play('swing');
   }
 
@@ -180,6 +205,8 @@ function updatePlayer(dt) {
   if (!P.dead && (G.t - P.lastHurt > 4 || P.spiritActive > 0) && P.health < 1) P.health = Math.min(1, P.health + dt * (P.spiritActive > 0 ? 0.3 : 0.15));
   ui.health(P.health);
 
+  david.pose.carry = G.carrySpeed ? 1 : 0;
+  if (G.crossHold) { G.crossHold(); david.pose.cross = 1; } else david.pose.cross = 0;
   david.animate(dt, P.rollT > 0 ? 0 : hs);
   if (P.rollT > 0) { // tuck and roll
     const k = 1 - P.rollT / 0.5;
@@ -510,7 +537,8 @@ function frame() {
   if (input.pressed.has('camera') && !G.cine) G.cycleCamera();
   if (input.pressed.has('pause') && G.control) G.menu.pause();
   G.systems.update(raw, dtW);
-  updatePlayer(dtP);
+  if (G.crossHold && !G.control) { G.crossHold(); david.pose.cross = 1; david.animate(dtP, 0); }
+  else updatePlayer(dtP);
   updateNPCs(dtW);
   updateSheep(dtW);
   for (const u of G.updaters) u(dtW);
@@ -553,7 +581,7 @@ G.menu = createMenu(G, {
   start: (part) => {
     audio.start();
     G.stats.start = performance.now();
-    runStory(G, part);
+    (CAMPAIGN === 'gospel' ? runGospel : runStory)(G, part);
   },
 });
 document.getElementById('again').addEventListener('click', () => location.reload());

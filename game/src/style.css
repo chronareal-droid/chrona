@@ -116,7 +116,7 @@ body.cinema #hud { opacity: 0; }
 .boss .bar { margin-top: 6px; height: 6px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(233, 201, 135, 0.4); }
 .boss .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #6e1b14, #c0392b); }
 .hint {
-  position: absolute; left: 50%; bottom: calc(21vh + env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: min(560px, calc(100% - 32px));
+  position: absolute; left: 50%; bottom: calc(33vh + env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: min(560px, calc(100% - 32px));
   text-align: center; font-size: 1.05rem; padding: 0.5rem 1rem; background: var(--shade); border-radius: 4px; animation: cardIn 0.5s ease both;
 }
 #hud.hurt::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 160px rgba(160, 20, 10, 0.75); animation: hurt 0.6s ease forwards; }
@@ -240,3 +240,26 @@ body.cinema #touch .btns button:not([data-act='interact']), body.cinema #touch .
 #touch .topbtns button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(233, 201, 135, 0.4); background: rgba(0, 0, 0, 0.4); color: var(--ink); }
 #touch .spirit-btn { background: rgba(255, 226, 160, 0.35) !important; }
 @media (max-width: 640px) { .meter { width: 140px; } #toasts { top: auto; bottom: 240px; right: 12px; } }
+
+.ch-h { font-family: var(--display); color: var(--gold); letter-spacing: 0.15em; font-size: 0.9rem; margin: 0.4rem 0 0.8rem; }
+.chapters + .ch-h { margin-top: 1.6rem; }
+
+/* ---------- The Scribe's Riddles (anagram) ---------- */
+#anagram { position: fixed; inset: 0; z-index: 36; display: grid; place-items: center; padding: 16px; background: rgba(10, 7, 4, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.ana-inner { width: min(620px, 100%); text-align: center; padding: 1.6rem 1.4rem; color: #2c1d0e; background: linear-gradient(180deg, #f1e3bf, #ddc68f); border-radius: 3px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); animation: cardIn 0.6s ease both; }
+.ana-inner small { font-family: var(--display); letter-spacing: 0.3em; text-transform: uppercase; font-size: 0.72rem; color: #7a5420; }
+.ana-clue { font-size: clamp(1.1rem, 2.6vw, 1.35rem); margin: 0.6rem 0 0.2rem; line-height: 1.35; }
+.ana-inner cite { color: #7a5420; font-size: 0.9rem; }
+.ana-slots { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin: 1.2rem 0; }
+.ana-slots i { width: 2.4rem; height: 2.8rem; display: grid; place-items: center; font-style: normal; font-family: var(--display); font-weight: 700; font-size: 1.5rem; border-bottom: 3px solid #7a5420; }
+.ana-slots i.lock { color: #8a2a1a; }
+.ana-tiles { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.ana-tiles button { width: 2.6rem; height: 2.6rem; font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: #2c1d0e; background: #fff7e0; border: 1px solid #a8823e; border-radius: 4px; cursor: pointer; box-shadow: 0 3px 0 #a8823e; transition: transform 0.1s; }
+.ana-tiles button:hover:not(:disabled) { transform: translateY(-2px); }
+.ana-tiles button:disabled { opacity: 0.25; cursor: default; box-shadow: none; }
+.ana-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 1.2rem; }
+.ana-actions button { font: inherit; font-size: 0.95rem; color: #2c1d0e; background: transparent; border: 1px solid #a8823e; border-radius: 3px; padding: 0.35em 0.9em; cursor: pointer; }
+.ana-msg { min-height: 1.4em; margin: 0.8rem 0 0; font-style: italic; }
+#anagram.solved .ana-slots i { color: #1f6a2a; border-color: #1f6a2a; }
+#anagram.wrong .ana-slots { animation: shake 0.4s; }
+@keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }

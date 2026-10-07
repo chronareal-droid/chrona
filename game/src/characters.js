@@ -98,7 +98,7 @@ export function createHumanoid(opts = {}) {
   const rig = { hips, torso, neck, head, armL, armR, foreL, foreR, legL, legR, shinL, shinR, handR, handL, scale: s };
 
   let phase = Math.random() * 10, t = 0;
-  const pose = { swing: 0, throw: 0, aim: 0, kneel: 0, sling: 0, fallen: 0, lookUp: 0, talk: 0, cheer: 0, ride: 0, pray: 0, preach: 0, cower: 0 };
+  const pose = { swing: 0, throw: 0, aim: 0, kneel: 0, sling: 0, fallen: 0, lookUp: 0, talk: 0, cheer: 0, ride: 0, pray: 0, preach: 0, cower: 0, cross: 0, carry: 0 };
   const animate = (dt, speed = 0) => {
     t += dt;
     const moving = Math.min(1, speed / 2.2);
@@ -138,6 +138,8 @@ export function createHumanoid(opts = {}) {
     if (pose.pray > 0) { const k = pose.pray; aLx = aLx * (1 - k) - 1.1 * k; aRx = aRx * (1 - k) - 1.1 * k; aLz = 0.12 - 0.5 * k; aRz = -0.12 + 0.5 * k; fLx = fRx = -1.3 * k; }
     if (pose.preach > 0) { const k = pose.preach, w = Math.sin(t * 2.2); aRx = aRx * (1 - k) + (-2.2 + w * 0.5) * k; aRz = aRz * (1 - k) - 0.5 * k; fRx = -0.4 * k; aLx = aLx * (1 - k) + (-0.9 - w * 0.3) * k; aLz = 0.12 + 0.4 * k; }
     if (pose.cower > 0) { const k = pose.cower; aLx = aLx * (1 - k) - 1.6 * k; aRx = aRx * (1 - k) - 1.6 * k; fLx = fRx = -1.8 * k; }
+    if (pose.carry > 0) { aLx = -1.2; aRx = -1.2; aLz = 0.2; aRz = -0.2; fLx = fRx = -1.6; torso.rotation.x += 0.22; } // the beam on his shoulders
+    if (pose.cross > 0) { aLx = 0; aRx = 0; aLz = 1.45; aRz = -1.45; fLx = fRx = 0; legL.rotation.x = legR.rotation.x = 0; shinL.rotation.x = shinR.rotation.x = 0; neck.rotation.x = 0.35; }
     armL.rotation.set(aLx, 0, aLz); armR.rotation.set(aRx, 0, aRz);
     foreL.rotation.x = fLx; foreR.rotation.x = fRx;
     body.rotation.x = pose.fallen * Math.PI / 2; // falls forward, on his face

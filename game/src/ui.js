@@ -158,6 +158,60 @@ export function createUI(input) {
         tick();
       });
     },
+    /** Scrambled-letters riddle. Resolves true if solved, false if the player walks away. */
+    anagram({ clue, word, ref, n, total }) {
+      if (document.pointerLockElement) document.exitPointerLock();
+      const answer = word.toUpperCase();
+      let letters;
+      do { letters = [...answer].sort(() => Math.random() - 0.5); } while (letters.join('') === answer && answer.length > 1);
+      const el = document.createElement('div');
+      el.id = 'anagram';
+      el.innerHTML = `<div class="ana-inner">
+        <small>The Scribe’s Riddles · ${n} of ${total}</small>
+        <p class="ana-clue">${clue}</p><cite>${ref || ''}</cite>
+        <div class="ana-slots">${[...answer].map(() => '<i></i>').join('')}</div>
+        <div class="ana-tiles">${letters.map((l, i) => `<button data-i="${i}">${l}</button>`).join('')}</div>
+        <div class="ana-actions"><button data-a="undo">⌫ Undo</button><button data-a="clear">Clear</button><button data-a="hint">Reveal a letter</button><button data-a="leave">Leave</button></div>
+        <p class="ana-msg"></p></div>`;
+      document.body.appendChild(el);
+      const slots = [...el.querySelectorAll('.ana-slots i')], tiles = [...el.querySelectorAll('.ana-tiles button')], msg = el.querySelector('.ana-msg');
+      const placed = []; // tile indices in slot order
+      let locked = 0;    // letters revealed by hints stay put
+      const render = () => {
+        slots.forEach((sl, k) => { sl.textContent = placed[k] != null ? letters[placed[k]] : ''; sl.classList.toggle('lock', k < locked); });
+        tiles.forEach((t, i) => (t.disabled = placed.includes(i)));
+      };
+      return new Promise((res) => {
+        const finish = (ok) => { removeEventListener('keydown', onKey, true); setTimeout(() => { el.remove(); res(ok); }, ok ? 1300 : 0); };
+        const check = () => {
+          if (placed.length < answer.length) return;
+          if (placed.map((i) => letters[i]).join('') === answer) { el.classList.add('solved'); msg.textContent = `${answer.charAt(0) + answer.slice(1).toLowerCase()}!`; finish(true); }
+          else { el.classList.add('wrong'); msg.textContent = 'Not quite. Try another order.'; setTimeout(() => el.classList.remove('wrong'), 500); }
+        };
+        const put = (i) => { if (placed.length < answer.length && !placed.includes(i)) { placed.push(i); render(); check(); } };
+        const undo = () => { if (placed.length > locked) { placed.pop(); render(); } };
+        tiles.forEach((t) => (t.onclick = () => put(+t.dataset.i)));
+        el.querySelector('[data-a="undo"]').onclick = undo;
+        el.querySelector('[data-a="clear"]').onclick = () => { placed.length = locked; render(); };
+        el.querySelector('[data-a="leave"]').onclick = () => finish(false);
+        el.querySelector('[data-a="hint"]').onclick = () => {
+          if (locked >= answer.length - 1) return;
+          placed.length = locked;
+          const want = answer[locked];
+          const i = letters.findIndex((l, k) => l === want && !placed.includes(k));
+          placed.push(i); locked++; render(); msg.textContent = 'The scribe whispers a letter.';
+        };
+        const onKey = (e) => {
+          e.stopPropagation();
+          if (e.key === 'Backspace') { undo(); e.preventDefault(); return; }
+          if (e.key === 'Escape') { finish(false); return; }
+          const L = e.key.toUpperCase();
+          if (L.length === 1 && L >= 'A' && L <= 'Z') { const i = letters.findIndex((l, k) => l === L && !placed.includes(k)); if (i >= 0) put(i); }
+        };
+        addEventListener('keydown', onKey, true);
+        render();
+      });
+    },
     hint(text, ms = 4500) {
       clearTimeout(hintTimer);
       hint.hidden = !text; hint.textContent = text || '';

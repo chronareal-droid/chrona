@@ -1,0 +1,8 @@
+{
+  "jesus": {
+    "local": "./models/jesus.glb",
+    "remote": "https://d8j0ntlcm91z4.cloudfront.net/user_3FtauoFfi4aiT2rOZozLFkzeELN/hf_20261007_093857_2d7d3598-47ab-4d42-88c7-d6803bed5095.glb",
+    "height": 1.75,
+    "source": "Higgsfield / Meshy 7 image-to-3D, textured + PBR + auto-rigged (job 2d7d3598-47ab-4d42-88c7-d6803bed5095)"
+  }
+}
