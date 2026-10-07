@@ -1,0 +1,18 @@
+{
+  "name": "the-shepherd-king",
+  "version": "0.1.0",
+  "description": "The Shepherd King: a third-person 3D story game of David and Goliath (1 Samuel 16-17)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^6.4.3"
+  }
+}
