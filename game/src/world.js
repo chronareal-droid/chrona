@@ -700,7 +700,11 @@ function buildJerusalem(scene, world) {
   const awningM = [0x8a2a2a, 0x2b4f8a, 0xa8782e].map((c) => new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, roughness: 0.9 }));
   for (let i = 0; i < 90; i++) {
     const x = J.minX + 6 + rand() * (J.maxX - J.minX - 12), z = J.minZ + 6 + rand() * (J.maxZ - J.minZ - 12);
-    if (street(x, z) || Math.hypot(x - T.x, z - T.z) < 15 || Math.hypot(x + 18, z + 8) < 8) continue;
+    // keep the story's open spaces clear: temple courts, the upper room and its terrace, both gates
+    const temple = Math.abs(x - T.x) < 17 && z > T.z - 12 && z < T.z + 36;
+    const upper = Math.hypot(x + 18, z + 8) < 9 || Math.hypot(x + 19, z + 2) < 9;
+    const gates = Math.hypot(x - gateSX, z - J.maxZ) < 10 || Math.hypot(x - gateNX, z - J.minZ) < 10;
+    if (street(x, z) || temple || upper || gates) continue;
     const w = 5 + rand() * 3, d = 4.5 + rand() * 2.5;
     if (world.colliders.some((c) => c.house && Math.hypot(c.x - x, c.z - z) < c.r + Math.max(w, d) * 0.55 + 1)) continue;
     const facing = x < THREE.MathUtils.lerp(gateSX, gateNX, (J.maxZ - z) / (J.maxZ - J.minZ)) ? Math.PI / 2 : -Math.PI / 2;
