@@ -255,7 +255,7 @@ function updatePickups(dt) {
     const pk = G.pickups[i];
     pk.glow.material.opacity = 0.25 + Math.sin(G.t * 4 + i) * 0.12;
     pk.grp.rotation.y += dt;
-    if (G.control && P.pos.distanceTo(pk.grp.position) < 1.5) {
+    if (G.control && hdist(P.pos, pk.grp.position) < 1.5 && Math.abs(P.pos.y - pk.grp.position.y) < 2.2) {
       scene.remove(pk.grp); G.pickups.splice(i, 1);
       P.stones++; ui.stones(P.stones); audio.play('pickup');
       pk.onPick?.();

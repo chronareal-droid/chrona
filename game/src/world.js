@@ -176,7 +176,8 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
     const ACROSS = 10, HALF = 5;
     const pos = [], depth = [], idx = [];
     let rows = 0;
-    for (let x = -330; x <= 330; x += 2, rows++) {
+    // The brook runs between the hills that ring the map; past |x| = 200 the land climbs into mountains.
+    for (let x = -204; x <= 204; x += 2, rows++) {
       const z0 = brookZ(x), y = waterLevel(x);
       for (let k = 0; k <= ACROSS; k++) {
         const z = z0 - HALF + (k / ACROSS) * HALF * 2;
@@ -470,6 +471,9 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
     for (let i = 0; i < 36; i++) {
       const m = new THREE.SpriteMaterial({ map: tex, color: 0xfff1dc, transparent: true, opacity: 0.55 + rand() * 0.3, depthWrite: false, fog: false });
       const sp = new THREE.Sprite(m);
+      // The ambient-occlusion pass hides points from its depth/normal render but not sprites, which it would
+      // draw as solid dark quads. The renderer checks isSprite first, so this flag only affects that pass.
+      sp.isPoints = true;
       const a = rand() * Math.PI * 2, r = 150 + rand() * 650;
       sp.position.set(Math.cos(a) * r, 170 + rand() * 140, Math.sin(a) * r);
       const sc = 140 + rand() * 220; sp.scale.set(sc, sc * 0.45, 1);
