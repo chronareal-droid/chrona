@@ -28,7 +28,7 @@ export function createMenu(G, { start }) {
     document.querySelector('#home .brand small').textContent = 'The Passion of Jesus, from the Gospels';
     document.querySelector('#home .brand h1').innerHTML = 'The Way of<br />the Cross';
     document.querySelector('#home .brand .sub').textContent = 'Jerusalem · the week of the Passover';
-    document.querySelector('#home .tagline').textContent = '“Greater love hath no man than this, that a man lay down his life for his friends.” John 15:13';
+    document.querySelector('#home .tagline').textContent = '“Greater love has no one than this, that someone lay down his life for his friends.” John 15:13';
     document.title = 'The Way of the Cross';
   }
   const home = $('#home'), pauseEl = $('#pause'), panel = $('#panel');

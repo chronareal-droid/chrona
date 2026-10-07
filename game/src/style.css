@@ -264,3 +264,4 @@ body.cinema #touch .btns button:not([data-act='interact']), body.cinema #touch .
 #anagram.solved .ana-slots i { color: #1f6a2a; border-color: #1f6a2a; }
 #anagram.wrong .ana-slots { animation: shake 0.4s; }
 @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.esv { margin-top: 1.4rem; max-width: 52ch; font-size: 0.72rem; line-height: 1.4; opacity: 0.5; }

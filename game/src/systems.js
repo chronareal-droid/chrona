@@ -6,69 +6,69 @@ import { createQuadruped, createSheep, createDove } from './characters.js';
 
 export const SCROLLS = [
   { id: 's1', at: [38, 196], text: 'The LORD is my shepherd; I shall not want.', ref: 'Psalm 23:1' },
-  { id: 's2', at: [-52, 150], text: 'Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.', ref: 'Psalm 23:4' },
+  { id: 's2', at: [-52, 150], text: 'Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me.', ref: 'Psalm 23:4' },
   { id: 's3', at: [72, 128], text: 'The LORD is my light and my salvation; whom shall I fear?', ref: 'Psalm 27:1' },
-  { id: 's4', at: [-34, 96], text: 'The LORD is my rock, and my fortress, and my deliverer.', ref: 'Psalm 18:2' },
-  { id: 's5', at: [46, 62], text: 'Blessed be the LORD my strength, which teacheth my hands to war, and my fingers to fight.', ref: 'Psalm 144:1' },
+  { id: 's4', at: [-34, 96], text: 'The LORD is my rock and my fortress and my deliverer.', ref: 'Psalm 18:2' },
+  { id: 's5', at: [46, 62], text: 'Blessed be the LORD, my rock, who trains my hands for war, and my fingers for battle.', ref: 'Psalm 144:1' },
   { id: 's6', at: [-60, 30], text: 'God is our refuge and strength, a very present help in trouble.', ref: 'Psalm 46:1' },
-  { id: 's7', at: [-110, 120], text: 'The heavens declare the glory of God; and the firmament sheweth his handywork.', ref: 'Psalm 19:1' },
-  { id: 's8', at: [34, -4], text: 'For man looketh on the outward appearance, but the LORD looketh on the heart.', ref: '1 Samuel 16:7' },
-  { id: 's9', at: [-38, -40], text: 'I will lift up mine eyes unto the hills, from whence cometh my help. My help cometh from the LORD.', ref: 'Psalm 121:1–2' },
-  { id: 's10', at: [-70, -78], text: 'When I consider thy heavens, the work of thy fingers… what is man, that thou art mindful of him?', ref: 'Psalm 8:3–4' },
-  { id: 's11', at: [64, -92], text: 'What time I am afraid, I will trust in thee.', ref: 'Psalm 56:3' },
-  { id: 's12', at: [-20, -140], text: 'And all this assembly shall know that the LORD saveth not with sword and spear: for the battle is the LORD’s.', ref: '1 Samuel 17:47' },
+  { id: 's7', at: [-110, 120], text: 'The heavens declare the glory of God, and the sky above proclaims his handiwork.', ref: 'Psalm 19:1' },
+  { id: 's8', at: [34, -4], text: 'For the LORD sees not as man sees: man looks on the outward appearance, but the LORD looks on the heart.', ref: '1 Samuel 16:7' },
+  { id: 's9', at: [-38, -40], text: 'I lift up my eyes to the hills. From where does my help come? My help comes from the LORD.', ref: 'Psalm 121:1–2' },
+  { id: 's10', at: [-70, -78], text: 'When I look at your heavens, the work of your fingers… what is man that you are mindful of him?', ref: 'Psalm 8:3–4' },
+  { id: 's11', at: [64, -92], text: 'When I am afraid, I put my trust in you.', ref: 'Psalm 56:3' },
+  { id: 's12', at: [-20, -140], text: 'That all this assembly may know that the LORD saves not with sword and spear. For the battle is the LORD’s.', ref: '1 Samuel 17:47' },
 ];
 
 export const GOSPEL_SCROLLS = [
-  { id: 'g1', at: [38, 196], text: 'I am the good shepherd: the good shepherd giveth his life for the sheep.', ref: 'John 10:11' },
-  { id: 'g2', at: [-52, 150], text: 'Come unto me, all ye that labour and are heavy laden, and I will give you rest.', ref: 'Matthew 11:28' },
-  { id: 'g3', at: [72, 128], text: 'I am the way, the truth, and the life: no man cometh unto the Father, but by me.', ref: 'John 14:6' },
-  { id: 'g4', at: [-34, 96], text: 'Greater love hath no man than this, that a man lay down his life for his friends.', ref: 'John 15:13' },
-  { id: 'g5', at: [46, 62], text: 'Blessed are the pure in heart: for they shall see God.', ref: 'Matthew 5:8' },
-  { id: 'g6', at: [-60, 30], text: 'I am the light of the world: he that followeth me shall not walk in darkness.', ref: 'John 8:12' },
-  { id: 'g7', at: [-110, 120], text: 'Surely he hath borne our griefs, and carried our sorrows… and with his stripes we are healed.', ref: 'Isaiah 53:4–5' },
-  { id: 'g8', at: [44, -2], text: 'Peace I leave with you, my peace I give unto you… Let not your heart be troubled.', ref: 'John 14:27' },
-  { id: 'g9', at: [-46, -40], text: 'I am the resurrection, and the life: he that believeth in me, though he were dead, yet shall he live.', ref: 'John 11:25' },
-  { id: 'g10', at: [-70, -78], text: 'The Son of man came not to be ministered unto, but to minister, and to give his life a ransom for many.', ref: 'Mark 10:45' },
-  { id: 'g11', at: [64, -92], text: 'But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.', ref: 'Romans 5:8' },
-  { id: 'g12', at: [-60, -140], text: 'O death, where is thy sting? O grave, where is thy victory?', ref: '1 Corinthians 15:55' },
+  { id: 'g1', at: [38, 196], text: 'I am the good shepherd. The good shepherd lays down his life for the sheep.', ref: 'John 10:11' },
+  { id: 'g2', at: [-52, 150], text: 'Come to me, all who labor and are heavy laden, and I will give you rest.', ref: 'Matthew 11:28' },
+  { id: 'g3', at: [72, 128], text: 'I am the way, and the truth, and the life. No one comes to the Father except through me.', ref: 'John 14:6' },
+  { id: 'g4', at: [-34, 96], text: 'Greater love has no one than this, that someone lay down his life for his friends.', ref: 'John 15:13' },
+  { id: 'g5', at: [46, 62], text: 'Blessed are the pure in heart, for they shall see God.', ref: 'Matthew 5:8' },
+  { id: 'g6', at: [-60, 30], text: 'I am the light of the world. Whoever follows me will not walk in darkness.', ref: 'John 8:12' },
+  { id: 'g7', at: [-110, 120], text: 'Surely he has borne our griefs and carried our sorrows… and with his wounds we are healed.', ref: 'Isaiah 53:4–5' },
+  { id: 'g8', at: [44, -2], text: 'Peace I leave with you; my peace I give to you… Let not your hearts be troubled.', ref: 'John 14:27' },
+  { id: 'g9', at: [-46, -40], text: 'I am the resurrection and the life. Whoever believes in me, though he die, yet shall he live.', ref: 'John 11:25' },
+  { id: 'g10', at: [-70, -78], text: 'For even the Son of Man came not to be served but to serve, and to give his life as a ransom for many.', ref: 'Mark 10:45' },
+  { id: 'g11', at: [64, -92], text: 'But God shows his love for us in that while we were still sinners, Christ died for us.', ref: 'Romans 5:8' },
+  { id: 'g12', at: [-60, -140], text: 'O death, where is your victory? O death, where is your sting?', ref: '1 Corinthians 15:55' },
 ];
 
 const QUESTIONS = [
-  { fear: 'Is it lawful to give tribute unto Caesar, or not?', ref: 'Matthew 22:17', who: 'A Pharisee',
-    good: 'Render therefore unto Caesar the things which are Caesar’s; and unto God the things that are God’s.', bad: ['Pay nothing to Rome. Rise up against them.', 'Give Caesar whatever he asks; God does not care.'] },
-  { fear: 'Master, which is the great commandment in the law?', ref: 'Matthew 22:36', who: 'A lawyer',
-    good: 'Thou shalt love the Lord thy God with all thy heart, and with all thy soul, and with all thy mind.', bad: ['Keep the Sabbath and nothing else matters.', 'Bring the largest offering to the temple.'] },
-  { fear: 'And who is my neighbour?', ref: 'Luke 10:29', who: 'A scribe',
-    good: 'A certain Samaritan… had compassion on him. Go, and do thou likewise.', bad: ['Only those of your own house and nation.', 'Those who are good to you first.'] },
-  { fear: 'Lord, how oft shall my brother sin against me, and I forgive him? till seven times?', ref: 'Matthew 18:21', who: 'A disciple',
-    good: 'I say not unto thee, Until seven times: but, Until seventy times seven.', bad: ['Seven times, and then cast him out.', 'Forgive no one who wrongs you twice.'] },
+  { fear: 'Is it lawful to pay taxes to Caesar, or not?', ref: 'Matthew 22:17', who: 'A Pharisee',
+    good: 'Therefore render to Caesar the things that are Caesar’s, and to God the things that are God’s.', bad: ['Pay nothing to Rome. Rise up against them.', 'Give Caesar whatever he asks; God does not care.'] },
+  { fear: 'Teacher, which is the great commandment in the Law?', ref: 'Matthew 22:36', who: 'A lawyer',
+    good: 'You shall love the Lord your God with all your heart and with all your soul and with all your mind.', bad: ['Keep the Sabbath and nothing else matters.', 'Bring the largest offering to the temple.'] },
+  { fear: 'And who is my neighbor?', ref: 'Luke 10:29', who: 'A scribe',
+    good: 'A Samaritan… had compassion. You go, and do likewise.', bad: ['Only those of your own house and nation.', 'Those who are good to you first.'] },
+  { fear: 'Lord, how often will my brother sin against me, and I forgive him? As many as seven times?', ref: 'Matthew 18:21', who: 'A disciple',
+    good: 'I do not say to you seven times, but seventy-seven times.', bad: ['Seven times, and then cast him out.', 'Forgive no one who wrongs you twice.'] },
   { fear: 'Who is the greatest in the kingdom of heaven?', ref: 'Matthew 18:1', who: 'A disciple',
-    good: 'Whosoever shall humble himself as this little child, the same is greatest in the kingdom of heaven.', bad: ['The one with the most learning.', 'The rich, for God has blessed them.'] },
-  { fear: 'By what authority doest thou these things?', ref: 'Matthew 21:23', who: 'A chief priest',
-    good: 'The baptism of John, whence was it? from heaven, or of men?', bad: ['By the authority of the high priest.', 'I need not answer the likes of you.'] },
+    good: 'Whoever humbles himself like this child is the greatest in the kingdom of heaven.', bad: ['The one with the most learning.', 'The rich, for God has blessed them.'] },
+  { fear: 'By what authority are you doing these things?', ref: 'Matthew 21:23', who: 'A chief priest',
+    good: 'The baptism of John, from where did it come? From heaven or from man?', bad: ['By the authority of the high priest.', 'I need not answer the likes of you.'] },
 ];
 
 export const REWARDS = [
   { need: 3, id: 'breath', name: 'Psalmist’s Breath', desc: 'The Spirit gathers 30% faster.' },
   { need: 6, id: 'vigor', name: 'Shepherd’s Vigour', desc: 'Strength +25%: you can take more blows.' },
-  { need: 9, id: 'feet', name: 'Feet like Hinds’ Feet', desc: 'Run 12% faster. (Psalm 18:33)' },
+  { need: 9, id: 'feet', name: 'Feet like the Deer', desc: 'Run 12% faster. (Psalm 18:33)' },
   { need: 12, id: 'golden', name: 'The Golden Sling', desc: 'A gilded sling that whirls to full strength in half the time.' },
 ];
 
 const FEARS = [
-  { fear: 'Have ye seen this man that is come up? Surely to defy Israel is he come up.', ref: '1 Samuel 17:25',
+  { fear: 'Have you seen this man who has come up? Surely he has come up to defy Israel.', ref: '1 Samuel 17:25',
     good: 'Who is this uncircumcised Philistine, that he should defy the armies of the living God?', bad: ['Then let us flee to the hills before he comes.', 'Leave him to me. I alone am stronger than he.'] },
   { fear: 'He is six cubits and a span. No man can stand before such a giant.',
-    good: 'Man looketh on the outward appearance, but the LORD looketh on the heart.', bad: ['Height is nothing. I am greater than all of you.', 'You are right. We are lost.'] },
+    good: 'Man looks on the outward appearance, but the LORD looks on the heart.', bad: ['Height is nothing. I am greater than all of you.', 'You are right. We are lost.'] },
   { fear: 'Even King Saul trembles in his tent. What hope have we?',
-    good: 'The LORD saveth not with sword and spear: for the battle is the LORD’s.', bad: ['Kings are cowards. Follow me instead.', 'Hope is for fools and children.'] },
+    good: 'The LORD saves not with sword and spear. For the battle is the LORD’s.', bad: ['Kings are cowards. Follow me instead.', 'Hope is for fools and children.'] },
   { fear: 'Forty days he has shamed us, morning and evening.', ref: '1 Samuel 17:16',
-    good: 'The LORD that delivered me out of the paw of the lion will deliver us out of his hand.', bad: ['Forty more days and he will surely tire.', 'Shame is better than death.'] },
+    good: 'The LORD who delivered me from the paw of the lion will deliver us from his hand.', bad: ['Forty more days and he will surely tire.', 'Shame is better than death.'] },
   { fear: 'His spear is like a weaver’s beam. It would go clean through us.',
-    good: 'Some trust in chariots, and some in horses: but we will remember the name of the LORD our God.', bad: ['My sling is mightier than any spear.', 'Then let us hide behind the tents.'] },
+    good: 'Some trust in chariots and some in horses, but we trust in the name of the LORD our God.', bad: ['My sling is mightier than any spear.', 'Then let us hide behind the tents.'] },
   { fear: 'If he wins, we shall be the servants of the Philistines.', ref: '1 Samuel 17:9',
-    good: 'Be strong and of a good courage; be not afraid: for the LORD thy God is with thee.', bad: ['Servants eat well enough.', 'Then we must strike a bargain with Gath.'] },
+    good: 'Be strong and courageous. Do not be frightened, for the LORD your God is with you.', bad: ['Servants eat well enough.', 'Then we must strike a bargain with Gath.'] },
 ];
 
 export function createSystems(G) {
@@ -119,7 +119,7 @@ export function createSystems(G) {
     if (P.spirit < 0.5) { ui.hint('The Spirit must gather before you can call upon it. Pray, preach, and seek the scrolls.', 3000); return; }
     P.spiritActive = 3 + P.spirit * 7; P.spirit = 0;
     audio.play('spirit');
-    ui.hint(gospel ? '“The Spirit of the Lord is upon me.”  Luke 4:18' : '“The Spirit of the LORD came upon David.”  1 Samuel 16:13', 3000);
+    ui.hint(gospel ? '“The Spirit of the Lord is upon me.”  Luke 4:18' : '“The Spirit of the LORD rushed upon David.”  1 Samuel 16:13', 3000);
   };
 
   // ------------------------------------------------------------ Prayer altars (stone heaps, "Ebenezer")
@@ -147,7 +147,7 @@ export function createSystems(G) {
     P.h.pose.pray = 0;
     const t0 = G.t;
     audio.play('pickup');
-    ui.hint('“I will lift up mine eyes unto the hills, from whence cometh my help.”', 3200);
+    ui.hint('“I lift up my eyes to the hills. From where does my help come?”', 3200);
     while (G.t - t0 < 2.6) { P.h.pose.pray = Math.min(1, P.h.pose.pray + 0.05); await G.wait(30); }
     G.heal(); G.addSpirit(0.4, 'Prayer');
     while (P.h.pose.pray > 0) { P.h.pose.pray = Math.max(0, P.h.pose.pray - 0.06); await G.wait(30); }
@@ -185,9 +185,9 @@ export function createSystems(G) {
 
   // ------------------------------------------------------------ Side quests
   const questDefs = gospel ? {
-    lostSheep: { title: 'The Lost Sheep', where: 'Bethany', desc: '“What man of you, having an hundred sheep, if he lose one of them, doth not… go after that which is lost?” (Luke 15:4) Help old Nahum find three lost ewes.', reward: 'Shepherd’s Cloak, +Faith' },
+    lostSheep: { title: 'The Lost Sheep', where: 'Bethany', desc: '“What man of you, having a hundred sheep, if he has lost one of them, does not… go after the one that is lost?” (Luke 15:4) Help old Nahum find three lost ewes.', reward: 'Shepherd’s Cloak, +Faith' },
     widow: { title: 'Bread for the Widow', where: 'Bethany', desc: 'Bring a loaf from the oven by the house to the widow Tirzah.', reward: '+Spirit, +Faith' },
-    water: { title: 'A Cup of Cold Water', where: 'Jerusalem', desc: '“Whosoever shall give to drink unto one of these little ones a cup of cold water… shall in no wise lose his reward.” (Matthew 10:42) Bring water from the brook to Ira the beggar.', reward: '+Hearts reached, +Faith' },
+    water: { title: 'A Cup of Cold Water', where: 'Jerusalem', desc: '“Whoever gives one of these little ones even a cup of cold water… will by no means lose his reward.” (Matthew 10:42) Bring water from the brook to Ira the beggar.', reward: '+Hearts reached, +Faith' },
   } : {
     lostSheep: { title: 'The Lost Sheep', where: 'Bethlehem', desc: 'Old Nahum has lost three of his ewes in the hills. Find them and lead them home to his fold.', reward: 'Shepherd’s Cloak: you take 20% less harm. +Faith' },
     widow: { title: 'Bread for the Widow', where: 'Bethlehem', desc: 'Bring a loaf from Jesse’s oven to the widow Tirzah.', reward: '+Spirit, +Faith' },
@@ -219,7 +219,7 @@ export function createSystems(G) {
     talk: async () => {
       if (!Q.lostSheep) {
         await ui.say('Nahum', gospel ? 'Rabbi! Three of my ewes strayed into the hills at dawn. My knees will not carry me so far.' : 'Son of Jesse! Three of my ewes strayed into the hills at dawn. My knees will not carry me so far.');
-        await ui.say(G.heroName, gospel ? 'I will go after that which is lost, until I find it.' : 'I will bring them back. Not one shall be lost.', gospel ? { reference: 'Luke 15:4' } : {});
+        await ui.say(G.heroName, gospel ? 'I will go after the one that is lost, until I find it.' : 'I will bring them back. Not one shall be lost.', gospel ? { reference: 'Luke 15:4' } : {});
         questStep('lostSheep', 'active', 'Find Nahum’s three lost ewes. Walk close and they will follow you home.');
       } else if (Q.lostSheep === 'active') await ui.say('Nahum', `${lost.filter((l) => l.homeFlag).length} of 3 are home. Bless you, boy.`);
       else await ui.say('Nahum', 'Take my old cloak, David. It has turned the teeth of wolves. May it turn worse for you.');
@@ -250,10 +250,10 @@ export function createSystems(G) {
         await ui.say(G.heroName, 'Wait here; I will bring you bread.');
         questStep('widow', 'active', 'Take a loaf from the oven beside Jesse’s house.');
       } else if (Q.widow === 'bread') {
-        await ui.say('Tirzah', 'Warm bread! The LORD reward thee, and a full reward be given thee.');
+        await ui.say('Tirzah', 'Warm bread! The LORD repay you for what you have done, and a full reward be given you.');
         questStep('widow', 'done'); G.addSpirit(0.5, 'Kindness');
       } else if (Q.widow === 'active') await ui.say('Tirzah', 'The oven is by your father’s door.');
-      else await ui.say('Tirzah', 'The LORD watch over thee, son of Jesse.');
+      else await ui.say('Tirzah', 'The LORD watch over you, son of Jesse.');
     } }, V(-34, 0, 192), 1.2);
   const oven = V(-12, 0, 168);
   {
@@ -285,17 +285,17 @@ export function createSystems(G) {
     { word: 'PETER', clue: 'The fisherman Jesus called “the rock”, who walked on the water toward him.', ref: 'Matthew 16:18; 14:29' },
     { word: 'LAZARUS', clue: 'The friend in Bethany who came forth from the tomb after four days.', ref: 'John 11:43–44' },
     { word: 'ZACCHAEUS', clue: 'A little tax collector who climbed a sycamore tree to see Jesus.', ref: 'Luke 19:2–4' },
-    { word: 'NICODEMUS', clue: 'A ruler of the Jews who came to Jesus by night, and was told, “Ye must be born again.”', ref: 'John 3:1–7' },
-    { word: 'BARTIMAEUS', clue: 'The blind beggar of Jericho who cried, “Thou son of David, have mercy on me.”', ref: 'Mark 10:46–47' },
-    { word: 'MARTHA', clue: 'She was “cumbered about much serving” while her sister sat at the Lord’s feet.', ref: 'Luke 10:40' },
-    { word: 'THOMAS', clue: 'The disciple who would not believe until he saw the print of the nails.', ref: 'John 20:25' },
+    { word: 'NICODEMUS', clue: 'A ruler of the Jews who came to Jesus by night, and was told, “You must be born again.”', ref: 'John 3:1–7' },
+    { word: 'BARTIMAEUS', clue: 'The blind beggar of Jericho who cried, “Jesus, Son of David, have mercy on me!”', ref: 'Mark 10:46–47' },
+    { word: 'MARTHA', clue: 'She was “distracted with much serving” while her sister sat at the Lord’s feet.', ref: 'Luke 10:40' },
+    { word: 'THOMAS', clue: 'The disciple who would not believe until he saw the mark of the nails.', ref: 'John 20:25' },
   ] : [
     { word: 'SAMUEL', clue: 'The prophet who anointed the youngest son of Jesse with a horn of oil.', ref: '1 Samuel 16:13' },
     { word: 'JESSE', clue: 'The Bethlehemite who had eight sons, the youngest a shepherd.', ref: '1 Samuel 16:10–11' },
     { word: 'GOLIATH', clue: 'The champion of Gath, six cubits and a span.', ref: '1 Samuel 17:4' },
     { word: 'JONATHAN', clue: 'Saul’s son, whose soul was knit with the soul of David.', ref: '1 Samuel 18:1' },
     { word: 'BETHLEHEM', clue: 'The town of Judah where David kept his father’s sheep.', ref: '1 Samuel 17:15' },
-    { word: 'ELIAB', clue: 'David’s eldest brother, who said, “I know thy pride.”', ref: '1 Samuel 17:28' },
+    { word: 'ELIAB', clue: 'David’s eldest brother, who said, “I know your presumption.”', ref: '1 Samuel 17:28' },
     { word: 'MICHAL', clue: 'King Saul’s daughter, who loved David and became his wife.', ref: '1 Samuel 18:20' },
   ];
   questDefs.riddles = { title: 'The Scribe’s Riddles', where: gospel ? 'Bethany' : 'Bethlehem', desc: 'Shemaiah the scribe has scrambled the letters of names from the Scriptures. Unscramble all seven.', reward: 'Scribe’s Wisdom: +Faith and +Spirit' };
@@ -303,19 +303,19 @@ export function createSystems(G) {
   riddleSave.riddles ||= 0;
   G.addNPC({ name: 'Shemaiah the scribe', skin: 0xb98a64, robe: 0x2b3f6a, sash: 0xd9c08a, hair: 0x9a948c, beard: 0xcfc8bc, headwrap: 0xe8e0cc, height: 1.64,
     talk: async () => {
-      if (Q.riddles === 'done') { await ui.say('Shemaiah the scribe', 'Thou knowest the names of the faithful well. “Search the scriptures.” (John 5:39)'); return; }
+      if (Q.riddles === 'done') { await ui.say('Shemaiah the scribe', 'You know the names of the faithful well. “You search the Scriptures…” (John 5:39)'); return; }
       if (!Q.riddles) {
-        await ui.say('Shemaiah the scribe', 'Peace be with thee. My pupils mix up the letters of names from the Scriptures to test one another. Wilt thou set them right?');
+        await ui.say('Shemaiah the scribe', 'Peace be with you. My pupils mix up the letters of names from the Scriptures to test one another. Will you set them right?');
         questStep('riddles', 'active');
       }
       while (riddleSave.riddles < RIDDLES.length) {
         const r = RIDDLES[riddleSave.riddles];
         const ok = await ui.anagram({ ...r, n: riddleSave.riddles + 1, total: RIDDLES.length });
-        if (!ok) { await ui.say('Shemaiah the scribe', 'Come back when thou art ready. The scroll will wait.'); sys.refreshQuestObjective(); return; }
+        if (!ok) { await ui.say('Shemaiah the scribe', 'Come back when you are ready. The scroll will wait.'); sys.refreshQuestObjective(); return; }
         riddleSave.riddles++; save.faith += 5; save.write(); audio.play('pickup');
         ui.toast(`Riddle solved · ${riddleSave.riddles}/${RIDDLES.length}`);
       }
-      await ui.say('Shemaiah the scribe', 'Every name in its place! “Thy word is a lamp unto my feet, and a light unto my path.”', { reference: 'Psalm 119:105' });
+      await ui.say('Shemaiah the scribe', 'Every name in its place! “Your word is a lamp to my feet and a light to my path.”', { reference: 'Psalm 119:105' });
       questStep('riddles', 'done'); G.addSpirit(0.4, 'Wisdom');
     } }, V(24, 0, 182), -2.2);
 
@@ -387,11 +387,11 @@ export function createSystems(G) {
     n.pose.cower = 1;
     const sk = { n, pos: n.pos, healed: false, kind };
     G.interactables.push({ pos: n.pos, range: 2.6, prompt: kind === 'blind' ? 'Touch his eyes and heal him' : 'Take his hand and raise him up', enabled: () => !sk.healed, talk: async () => {
-      await ui.say(kind === 'blind' ? 'A blind man' : 'A lame man', kind === 'blind' ? 'Thou son of David, have mercy on me. Lord, that I may receive my sight.' : 'Lord, I have no man to put me into the pool.', { reference: kind === 'blind' ? 'Luke 18:38–41' : 'John 5:7' });
+      await ui.say(kind === 'blind' ? 'A blind man' : 'A lame man', kind === 'blind' ? 'Jesus, Son of David, have mercy on me! Lord, let me recover my sight.' : 'Sir, I have no one to put me into the pool.', { reference: kind === 'blind' ? 'Luke 18:38–41' : 'John 5:7' });
       P.h.pose.preach = 1;
       const q = await ui.timing('Pray for him', input);
       audio.play('spirit');
-      await ui.say(G.heroName, kind === 'blind' ? 'Receive thy sight: thy faith hath saved thee.' : 'Rise, take up thy bed, and walk.', { reference: kind === 'blind' ? 'Luke 18:42' : 'John 5:8', auto: 2600 });
+      await ui.say(G.heroName, kind === 'blind' ? 'Recover your sight; your faith has made you well.' : 'Get up, take up your bed, and walk.', { reference: kind === 'blind' ? 'Luke 18:42' : 'John 5:8', auto: 2600 });
       P.h.pose.preach = 0;
       sk.healed = true; n.pose.cower = 0; n.pose.cheer = 1; setTimeout(() => (n.pose.cheer = 0), 3000);
       audio.play('cheer'); save.faith += 10 + Math.round(q * 10); save.write();

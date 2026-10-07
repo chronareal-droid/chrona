@@ -7,7 +7,7 @@ export const GOSPEL_PARTS = [
   { id: 'entry', n: 'Part 1', title: 'Hosanna', blurb: 'Ride into Jerusalem as the crowds spread their garments and palm branches.' },
   { id: 'temple', n: 'Part 2', title: 'The House of Prayer', blurb: 'Teach in the temple courts and heal the blind and the lame.' },
   { id: 'supper', n: 'Part 3', title: 'The Upper Room', blurb: 'Wash the disciples’ feet. Bread and the cup.' },
-  { id: 'gethsemane', n: 'Part 4', title: 'Gethsemane', blurb: '“Not as I will, but as thou wilt.”' },
+  { id: 'gethsemane', n: 'Part 4', title: 'Gethsemane', blurb: '“Not as I will, but as you will.”' },
   { id: 'cross', n: 'Part 5', title: 'The Way of the Cross', blurb: 'From Pilate’s judgment seat to Golgotha.' },
   { id: 'risen', n: 'Part 6', title: 'He Is Risen', blurb: 'The third day. The garden. The commission.' },
 ];

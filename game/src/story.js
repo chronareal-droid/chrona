@@ -1,4 +1,4 @@
-// The story of 1 Samuel 16–17, told as playable parts. Scripture quoted from the King James Version.
+// The story of 1 Samuel 16–17, told as playable parts. Scripture quotations are from the ESV® Bible.
 import * as THREE from 'three';
 import { PLACES, heightAt, brookZ, pathX } from './world.js';
 import { spawnLion, spawnGoliath } from './enemies.js';
@@ -116,15 +116,15 @@ export async function runStory(G, startPart = 'prologue') {
     G.shot(at(70, 200, 34), at(30, 196, 14), at(0, 170), at(-18, 178), 12, { ease: true });
     await ui.fadeIn(1800);
     await ui.card('Bethlehem of Judah', 'The Anointing', 'About a thousand years before Christ', 3800);
-    await narrate('And the LORD said unto Samuel… fill thine horn with oil, and go, I will send thee to Jesse the Bethlehemite: for I have provided me a king among his sons.', '1 Samuel 16:1');
+    await narrate('The LORD said to Samuel… Fill your horn with oil, and go. I will send you to Jesse the Bethlehemite, for I have provided for myself a king among his sons.', '1 Samuel 16:1');
     G.focus = 4;
     G.shot(at(-13, 192, 2.1), at(-14.5, 191.5, 1.9), head(cast.samuel), head(cast.samuel), 6);
-    await narrate('Seven sons of Jesse passed before Samuel. Eliab, the eldest, was tall and fair to look upon.', '1 Samuel 16:6–10');
+    await narrate('Seven sons of Jesse passed before Samuel. Eliab, the eldest, was tall and handsome.', '1 Samuel 16:6–10');
     G.shot(at(-24, 189.5, 1.9), at(-26, 190, 2.1), head(cast.eliab, 1.75), head(cast.eliab, 1.75), 6);
-    await say('The LORD', 'Look not on his countenance, or on the height of his stature… for man looketh on the outward appearance, but the LORD looketh on the heart.', '1 Samuel 16:7');
-    await say('Samuel', 'Are here all thy children?', '1 Samuel 16:11');
-    await say('Jesse', 'There remaineth yet the youngest, and, behold, he keepeth the sheep.', '1 Samuel 16:11');
-    await say('Samuel', 'Send and fetch him: for we will not sit down till he come hither.', '1 Samuel 16:11');
+    await say('The LORD', 'Do not look on his appearance or on the height of his stature… For the LORD sees not as man sees: man looks on the outward appearance, but the LORD looks on the heart.', '1 Samuel 16:7');
+    await say('Samuel', 'Are all your sons here?', '1 Samuel 16:11');
+    await say('Jesse', 'There remains yet the youngest, but behold, he is keeping the sheep.', '1 Samuel 16:11');
+    await say('Samuel', 'Send and get him, for we will not sit down till he comes here.', '1 Samuel 16:11');
     G.shot(at(40, 160, 6), at(32, 166, 2.4), at(26, 172, 1.2), at(26, 172, 1.4), 4);
     await G.wait(3600);
     G.cinemaOff();
@@ -137,12 +137,12 @@ export async function runStory(G, startPart = 'prologue') {
     P.pos.copy(at(cast.samuel.pos.x - 1.4, cast.samuel.pos.z)); P.facing = Math.PI / 2;
     cast.samuel.facing = -Math.PI / 2; cast.samuel.lookAtPlayer = false;
     G.shot(at(cast.samuel.pos.x - 0.7, cast.samuel.pos.z + 3.2, 1.7), at(cast.samuel.pos.x - 0.6, cast.samuel.pos.z + 2.4, 1.5), head(cast.samuel), () => P.pos.clone().add(V(0, 1.2, 0)), 5);
-    await say('The LORD', 'Arise, anoint him: for this is he.', '1 Samuel 16:12');
+    await say('The LORD', 'Arise, anoint him, for this is he.', '1 Samuel 16:12');
     P.h.pose.pray = 1;
     const horn = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.4, 8, 1, true), new THREE.MeshStandardMaterial({ color: 0xe8dcc0, side: THREE.DoubleSide }));
     horn.rotation.z = 2.3; horn.position.y = -0.1; cast.samuel.rig.handR.add(horn);
     cast.samuel.rig.armR.rotation.x = -2;
-    await narrate('Then Samuel took the horn of oil, and anointed him in the midst of his brethren…', '1 Samuel 16:13');
+    await narrate('Then Samuel took the horn of oil and anointed him in the midst of his brothers…', '1 Samuel 16:13');
     // The Spirit descends
     const dove = S.dove;
     dove.root.visible = true;
@@ -161,7 +161,7 @@ export async function runStory(G, startPart = 'prologue') {
       };
       G.updaters.push(u);
     });
-    await narrate('…and the Spirit of the LORD came upon David from that day forward.', '1 Samuel 16:13');
+    await narrate('…And the Spirit of the LORD rushed upon David from that day forward.', '1 Samuel 16:13');
     dove.root.visible = false;
     cast.samuel.rig.handR.remove(horn);
     P.h.pose.pray = 0;
@@ -198,7 +198,7 @@ export async function runStory(G, startPart = 'prologue') {
     const lion = spawnLion(G, at(54, 148), lamb, at(110, 92));
     G.cinemaOn(); G.focus = 8;
     await G.shot(G.camera.position.clone(), P.pos.clone().add(V(-2, 2.4, 3)), () => lion.pos.clone().add(V(0, 1, 0)), null, 1.6);
-    await say('', 'There came a lion, and took a lamb out of the flock…', '1 Samuel 17:34', { auto: 3200 });
+    await say('', 'There came a lion… and took a lamb from the flock…', '1 Samuel 17:34', { auto: 3200 });
     G.cinemaOff();
     audio.music('battle');
     G.setObjective('Go after the lion and save the lamb', () => lion.pos);
@@ -213,7 +213,7 @@ export async function runStory(G, startPart = 'prologue') {
     await G.wait(800);
     G.cinemaOn(); G.focus = 4;
     await G.shot(G.camera.position.clone(), P.pos.clone().add(V(2.5, 1.4, 2.5)), P.pos.clone().add(V(0, 1, 0)), null, 2);
-    await narrate('And I went out after him, and smote him, and delivered it out of his mouth.', '1 Samuel 17:35');
+    await narrate('I went after him and struck him and delivered it out of his mouth.', '1 Samuel 17:35');
     G.cinemaOff();
     lion.remove();
     lamb.follow = { pos: P.pos };
@@ -236,10 +236,10 @@ export async function runStory(G, startPart = 'prologue') {
     G.setObjective('Your father is calling. Speak with Jesse', () => cast.jesse.pos);
     await new Promise((res) => {
       cast.jesse.talk = async () => {
-        await say('Jesse', 'Take now for thy brethren an ephah of this parched corn, and these ten loaves, and run to the camp to thy brethren;', '1 Samuel 17:17');
-        await say('Jesse', 'And carry these ten cheeses unto the captain of their thousand, and look how thy brethren fare.', '1 Samuel 17:18');
+        await say('Jesse', 'Take for your brothers an ephah of this parched grain, and these ten loaves, and carry them quickly to the camp to your brothers.', '1 Samuel 17:17');
+        await say('Jesse', 'Also take these ten cheeses to the commander of their thousand. See if your brothers are well.', '1 Samuel 17:18');
         await say('David', 'I will rise early and go, my father. Who will keep the sheep?');
-        await say('Jesse', 'Leave them with a keeper. Take the donkey, it bears the bread. And David… the LORD go with thee.');
+        await say('Jesse', 'Leave them with a keeper. Take the donkey, it bears the bread. And David… the LORD go with you.');
         cast.jesse.talk = async () => { await say('Jesse', 'Go in peace, my son. Greet your brothers for me.'); };
         res();
       };
@@ -263,24 +263,24 @@ export async function runStory(G, startPart = 'prologue') {
     await ui.fadeIn(600);
     G.cinemaOn();
     audio.play('horn'); audio.music('battle');
-    await narrate('And David… came to the trench, as the host was going forth to the fight, and shouted for the battle.', '1 Samuel 17:20', { auto: 4200 });
+    await narrate('And David… came to the encampment as the host was going out to the battle line, shouting the war cry.', '1 Samuel 17:20', { auto: 4200 });
     // The champion steps out
     G.focus = 30;
     G.shot(at(0, -42, 9), at(4, -50, 6), at(0, -120, 3), () => gol.pos.clone().add(V(0, 4, 0)), 9);
     gol.walkTo(at(0, -118), 1.6); bearer.walkTo(at(0, -114), 1.6);
-    await narrate('And there went out a champion out of the camp of the Philistines, named Goliath, of Gath, whose height was six cubits and a span.', '1 Samuel 17:4');
-    await narrate('He had an helmet of brass upon his head, and he was armed with a coat of mail… and the staff of his spear was like a weaver’s beam.', '1 Samuel 17:5–7');
+    await narrate('And there came out from the camp of the Philistines a champion named Goliath of Gath, whose height was six cubits and a span.', '1 Samuel 17:4');
+    await narrate('He had a helmet of bronze on his head, and he was armed with a coat of mail… The shaft of his spear was like a weaver’s beam.', '1 Samuel 17:5–7');
     G.focus = 6;
     G.shot(at(3, -108, 2.5), at(1, -110, 3.2), () => gol.pos.clone().add(V(0, 4.8, 0)), null, 6);
     audio.play('roar', 0.7); G.shake(0.4);
-    await say('Goliath', 'Why are ye come out to set your battle in array? Am not I a Philistine, and ye servants to Saul? Choose you a man for you, and let him come down to me.', '1 Samuel 17:8');
-    await say('Goliath', 'I defy the armies of Israel this day; give me a man, that we may fight together.', '1 Samuel 17:10');
+    await say('Goliath', 'Why have you come out to draw up for battle? Am I not a Philistine, and are you not servants of Saul? Choose a man for yourselves, and let him come down to me.', '1 Samuel 17:8');
+    await say('Goliath', 'I defy the ranks of Israel this day. Give me a man, that we may fight together.', '1 Samuel 17:10');
     ranks.forEach((r, i) => { r.pose.cower = 0; setTimeout(() => r.walkTo(r.pos.clone().add(V((Math.random() - 0.5) * 6, 0, 12 + Math.random() * 6)), 3.5).then(() => { r.pose.cower = 1; r.facing = Math.PI; }), i * 90); });
     G.focus = 12;
     G.shot(at(14, -20, 5), at(10, -24, 4), at(0, -38, 1), at(0, -30, 1), 5);
-    await narrate('And all the men of Israel, when they saw the man, fled from him, and were sore afraid.', '1 Samuel 17:24');
+    await narrate('All the men of Israel, when they saw the man, fled from him and were much afraid.', '1 Samuel 17:24');
     G.shot(P.pos.clone().add(V(2, 1.8, 2.5)), P.pos.clone().add(V(1.5, 1.7, 2)), P.pos.clone().add(V(0, 1.5, 0)), null, 4);
-    await say('David', 'What shall be done to the man that killeth this Philistine, and taketh away the reproach from Israel? For who is this uncircumcised Philistine, that he should defy the armies of the living God?', '1 Samuel 17:26');
+    await say('David', 'What shall be done for the man who kills this Philistine and takes away the reproach from Israel? For who is this uncircumcised Philistine, that he should defy the armies of the living God?', '1 Samuel 17:26');
     G.cinemaOff();
     gol.walkTo(at(0, -140), 1.6); bearer.walkTo(at(0, -136), 1.6);
     audio.music('calm');
@@ -289,8 +289,8 @@ export async function runStory(G, startPart = 'prologue') {
     G.setObjective('Find your brothers in the camp', () => cast.eliab.pos);
     await new Promise((res) => {
       cast.eliab.talk = async () => {
-        await say('Eliab', 'Why camest thou down hither? and with whom hast thou left those few sheep in the wilderness? I know thy pride, and the naughtiness of thine heart; for thou art come down that thou mightest see the battle.', '1 Samuel 17:28');
-        await say('David', 'What have I now done? Is there not a cause?', '1 Samuel 17:29');
+        await say('Eliab', 'Why have you come down? And with whom have you left those few sheep in the wilderness? I know your presumption and the evil of your heart, for you have come down to see the battle.', '1 Samuel 17:28');
+        await say('David', 'What have I done now? Was it not but a word?', '1 Samuel 17:29');
         cast.eliab.talk = async () => { await say('Eliab', 'Go home, little brother.'); };
         res();
       };
@@ -302,11 +302,11 @@ export async function runStory(G, startPart = 'prologue') {
     // Saul
     await new Promise((res) => {
       cast.saul.talk = async () => {
-        await say('David', 'Let no man’s heart fail because of him; thy servant will go and fight with this Philistine.', '1 Samuel 17:32');
-        await say('King Saul', 'Thou art not able to go against this Philistine to fight with him: for thou art but a youth, and he a man of war from his youth.', '1 Samuel 17:33');
-        await say('David', 'Thy servant kept his father’s sheep, and there came a lion, and took a lamb out of the flock… The LORD that delivered me out of the paw of the lion, and out of the paw of the bear, he will deliver me out of the hand of this Philistine.', '1 Samuel 17:34–37');
-        await say('King Saul', 'Go, and the LORD be with thee.', '1 Samuel 17:37');
-        await say('King Saul', 'But take my armour. A helmet of brass, a coat of mail, and my own sword.', '1 Samuel 17:38');
+        await say('David', 'Let no man’s heart fail because of him. Your servant will go and fight with this Philistine.', '1 Samuel 17:32');
+        await say('King Saul', 'You are not able to go against this Philistine to fight with him, for you are but a youth, and he has been a man of war from his youth.', '1 Samuel 17:33');
+        await say('David', 'Your servant used to keep sheep for his father. And when there came a lion… and took a lamb from the flock… The LORD who delivered me from the paw of the lion and from the paw of the bear will deliver me from the hand of this Philistine.', '1 Samuel 17:34–37');
+        await say('King Saul', 'Go, and the LORD be with you!', '1 Samuel 17:37');
+        await say('King Saul', 'But take my armor. A helmet of bronze, a coat of mail, and my own sword.', '1 Samuel 17:38');
         const c = await ui.choose('David', 'The king offers his armour.', ['Put on Saul’s armour', 'Refuse it']);
         if (c === 0) {
           G.setArmor(true);
@@ -314,13 +314,13 @@ export async function runStory(G, startPart = 'prologue') {
           ui.hint('Try to walk in the king’s armour…', 3000);
           await G.wait(4500);
           G.control = false;
-          await say('David', 'I cannot go with these; for I have not proved them.', '1 Samuel 17:39');
+          await say('David', 'I cannot go with these, for I have not tested them.', '1 Samuel 17:39');
           G.setArmor(false);
           ui.toast('David put them off him', 2500);
         } else {
-          await say('David', 'I cannot go with these; for I have not proved them. My staff, my sling, and the LORD my God.', '1 Samuel 17:39');
+          await say('David', 'I cannot go with these, for I have not tested them. My staff, my sling, and the LORD my God.', '1 Samuel 17:39');
         }
-        cast.saul.talk = async () => { await say('King Saul', 'The LORD be with thee, shepherd.'); };
+        cast.saul.talk = async () => { await say('King Saul', 'The LORD be with you, shepherd.'); };
         res();
       };
     });
@@ -334,7 +334,7 @@ export async function runStory(G, startPart = 'prologue') {
     setOutfitForCamp();
     G.flags.anointed = true; G.flags.canPreach = true;
     if (P.pos.z > 20 || P.pos.z < -60) G.setPlayer(at(10, -30), Math.PI);
-    cast.saul.talk = cast.saul.talk || (async () => say('King Saul', 'The LORD be with thee, shepherd.'));
+    cast.saul.talk = cast.saul.talk || (async () => say('King Saul', 'The LORD be with you, shepherd.'));
     await ui.fadeIn(400);
     ui.stones(P.stones, true);
     let picked = 0;
@@ -373,18 +373,18 @@ export async function runStory(G, startPart = 'prologue') {
     G.focus = 14;
     G.shot(at(14, -92, 3), at(10, -96, 4), () => gol.pos.clone().add(V(0, 4, 0)), null, 8);
     gol.walkTo(at(0, -114), 1.8); bearer.walkTo(at(-2, -110), 1.8);
-    await narrate('And the Philistine came on and drew near unto David; and the man that bare the shield went before him.', '1 Samuel 17:41');
+    await narrate('And the Philistine moved forward and came near to David, with his shield-bearer in front of him.', '1 Samuel 17:41');
     await G.wait(1500);
     G.focus = 6;
     G.shot(at(3, -104, 2.4), at(2, -106, 3), () => gol.pos.clone().add(V(0, 4.8, 0)), null, 5);
     audio.play('roar', 0.7);
-    await say('Goliath', 'Am I a dog, that thou comest to me with staves? Come to me, and I will give thy flesh unto the fowls of the air, and to the beasts of the field.', '1 Samuel 17:43–44');
+    await say('Goliath', 'Am I a dog, that you come to me with sticks?… Come to me, and I will give your flesh to the birds of the air and to the beasts of the field.', '1 Samuel 17:43–44');
     // David's proclamation: a moment of preaching before the whole host
     G.shot(P.pos.clone().add(V(-1.5, 1.6, -2.6)), P.pos.clone().add(V(-1.2, 1.7, -2.1)), P.pos.clone().add(V(0, 1.5, 0)), null, 6);
     P.facing = Math.atan2(gol.pos.x - P.pos.x, gol.pos.z - P.pos.z); P.h.pose.preach = 1;
     const q = await ui.timing('Proclaim the name of the LORD', G.input);
-    await say('David', 'Thou comest to me with a sword, and with a spear, and with a shield: but I come to thee in the name of the LORD of hosts, the God of the armies of Israel, whom thou hast defied.', '1 Samuel 17:45');
-    await say('David', '…that all the earth may know that there is a God in Israel. And all this assembly shall know that the LORD saveth not with sword and spear: for the battle is the LORD’s.', '1 Samuel 17:46–47');
+    await say('David', 'You come to me with a sword and with a spear and with a javelin, but I come to you in the name of the LORD of hosts, the God of the armies of Israel, whom you have defied.', '1 Samuel 17:45');
+    await say('David', '…that all the earth may know that there is a God in Israel, and that all this assembly may know that the LORD saves not with sword and spear. For the battle is the LORD’s.', '1 Samuel 17:46–47');
     P.h.pose.preach = 0;
     if (q > 0.5) { G.addSpirit(1, 'Proclamation'); save.courage = Math.min(100, save.courage + 10); ui.courage(save.courage); }
     bearer.walkTo(at(-14, -126), 3);
@@ -407,7 +407,7 @@ export async function runStory(G, startPart = 'prologue') {
     await G.shot(G.camera.position.clone(), gol.pos.clone().add(V(4, 4.5, 6)), gol.headPos(), gol.headPos(), 1.4);
     G.timeScale = 1;
     G.shot(gol.pos.clone().add(V(6, 3, 8)), gol.pos.clone().add(V(9, 2, 11)), gol.pos.clone().add(V(0, 2, 0)), gol.pos.clone().add(V(0, 0.4, 2)), 4.5);
-    await narrate('And David put his hand in his bag, and took thence a stone, and slang it, and smote the Philistine in his forehead, that the stone sunk into his forehead; and he fell upon his face to the earth.', '1 Samuel 17:49');
+    await narrate('And David put his hand in his bag and took out a stone and slung it and struck the Philistine on his forehead. The stone sank into his forehead, and he fell on his face to the ground.', '1 Samuel 17:49');
     ui.boss(false);
     audio.music('triumph');
     const brave = save.courage >= 40;
@@ -417,11 +417,11 @@ export async function runStory(G, startPart = 'prologue') {
     if (brave) {
       audio.play('cheer'); setTimeout(() => audio.play('cheer'), 900);
       ranks.forEach((r, i) => setTimeout(() => { r.pose.cheer = 0; r.walkTo(at(r.pos.x, -150), 5.5); }, 600 + i * 120));
-      await narrate('And the men of Israel and of Judah arose, and shouted, and pursued the Philistines.', '1 Samuel 17:52');
+      await narrate('And the men of Israel and Judah rose with a shout and pursued the Philistines.', '1 Samuel 17:52');
       ui.toast('Israel’s courage was roused by your preaching', 4000, true);
     } else {
       audio.play('cheer');
-      await narrate('And when the Philistines saw their champion was dead, they fled.', '1 Samuel 17:51');
+      await narrate('When the Philistines saw that their champion was dead, they fled.', '1 Samuel 17:51');
       ui.toast('Tip: preach to more soldiers to see Israel rise up and pursue', 5000);
     }
     await G.wait(1500);

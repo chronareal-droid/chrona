@@ -118,9 +118,9 @@ export function spawnLion(G, pos, lamb, lair) {
 
 // ---------------------------------------------------------------- Goliath
 const TAUNTS = [
-  ['Am I a dog, that thou comest to me with staves?', '1 Samuel 17:43'],
-  ['Come to me, and I will give thy flesh unto the fowls of the air.', '1 Samuel 17:44'],
-  ['I defy the armies of Israel this day!', '1 Samuel 17:10'],
+  ['Am I a dog, that you come to me with sticks?', '1 Samuel 17:43'],
+  ['Come to me, and I will give your flesh to the birds of the air.', '1 Samuel 17:44'],
+  ['I defy the ranks of Israel this day!', '1 Samuel 17:10'],
 ];
 
 export function spawnGoliath(G, pos, facing = 0) {

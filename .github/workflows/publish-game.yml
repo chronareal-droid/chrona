@@ -1,7 +1,6 @@
 name: Publish game
 
-# Publishes the spa site (unchanged) with the game alongside it at /game/ on GitHub Pages,
-# so the game has a public link anyone can open.
+# Publishes the game to GitHub Pages so it has a public link anyone can open.
 on:
   push:
     branches: [claude/exciting-galileo-xpka2j]
@@ -25,31 +24,26 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Build the spa site
-        run: |
-          npm ci
-          npm run media:fetch
-          npm run build
-      - name: Build the game into /game
+          cache-dependency-path: game/package-lock.json
+      - name: Build the game
         working-directory: game
         run: |
           npm ci
           npm run build
-          cp -r dist ../dist/game
       - uses: actions/configure-pages@v5
         continue-on-error: true
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: game/dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}game/
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
