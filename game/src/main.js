@@ -540,7 +540,8 @@ G.cinemaOff = () => {
 const clock = new THREE.Clock();
 function frame() {
   requestAnimationFrame(frame);
-  const raw = Math.min(clock.getDelta(), 1 / 20);
+  // settings.debugFast (test harness only) lets slow software renderers run game time faster.
+  const raw = Math.min(clock.getDelta(), save.settings.debugFast ? 0.3 : 1 / 20);
   if (G.paused) { input.endFrame(); post.render(G.t, { spirit: 0 }); return; }
   // The Spirit slows the world; David moves almost at full speed.
   const dtW = raw * G.timeScale, dtP = raw * Math.max(G.timeScale, 0.85);
