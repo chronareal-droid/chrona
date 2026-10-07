@@ -35,8 +35,8 @@ const input = createInput(canvas);
 const ui = createUI(input);
 const audio = createAudio();
 // Campaign: the Gospel ("The Way of the Cross", Jesus) is the main story; David is the Old Testament campaign.
-// Deep links: #gospel:cross, #david:duel
-const [hashCampaign, hashPart] = location.hash.slice(1).split(':');
+// Deep links: #gospel.cross, #david.duel
+const [hashCampaign, hashPart] = location.hash.slice(1).split('.');
 const CAMPAIGN = hashCampaign === 'david' ? 'david' : 'gospel';
 const world = buildWorld(scene, renderer, save.settings.quality, CAMPAIGN);
 

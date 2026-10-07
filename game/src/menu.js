@@ -22,7 +22,7 @@ export function createMenu(G, { start }) {
   // Switching campaign rebuilds the world, so it goes through a reload with a deep link.
   const go = (c, part) => {
     if (c === C) return begin(part);
-    location.hash = `${c}:${part}`; location.reload();
+    location.hash = `${c}.${part}`; location.reload();
   };
   if (C === 'gospel') {
     document.querySelector('#home .brand small').textContent = 'The Passion of Jesus, from the Gospels';
@@ -68,7 +68,7 @@ export function createMenu(G, { start }) {
       <button class="chapter" disabled><small>Chapter II</small><b>The Fugitive</b><span>Coming later</span></button></div>`, back);
     body.querySelectorAll('[data-part]').forEach((b) => (b.onclick = () => {
       panel.hidden = true;
-      if (G.inGame || b.dataset.c !== C) { location.hash = `${b.dataset.c}:${b.dataset.part}`; location.reload(); } else begin(b.dataset.part);
+      if (G.inGame || b.dataset.c !== C) { location.hash = `${b.dataset.c}.${b.dataset.part}`; location.reload(); } else begin(b.dataset.part);
     }));
   };
   const rewards = (back) => {
@@ -166,7 +166,7 @@ export function createMenu(G, { start }) {
     if (n === 'rewards') { pauseEl.hidden = true; rewards(showPause); }
     if (n === 'settings') { pauseEl.hidden = true; settings(showPause); }
     if (n === 'camera') { G.cycleCamera(); }
-    if (n === 'checkpoint') { location.hash = `${C}:${slot(C).part || partsOf(C)[0].id}`; location.reload(); }
+    if (n === 'checkpoint') { location.hash = `${C}.${slot(C).part || partsOf(C)[0].id}`; location.reload(); }
     if (n === 'quit') { location.hash = ''; location.reload(); }
   }));
   // Losing pointer lock mid-play (Esc) opens the pause menu, like a console game.
@@ -175,7 +175,7 @@ export function createMenu(G, { start }) {
   });
 
   // Deep link from chapter select / restart: #partId
-  const hash = location.hash.slice(1).split(':')[1];
+  const hash = location.hash.slice(1).split('.')[1];
   if (hash && partsOf(C).some((p) => p.id === hash) && slot(C).reached.includes(hash)) {
     history.replaceState(null, '', location.pathname);
     home.hidden = true;
