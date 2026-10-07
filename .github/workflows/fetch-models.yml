@@ -1,0 +1,33 @@
+name: Fetch game models
+
+# Downloads the AI-generated character models listed in game/public/models/models.json
+# and commits them, so the game can serve them itself.
+on:
+  push:
+    branches: [claude/exciting-galileo-xpka2j]
+    paths:
+      - game/public/models/models.json
+      - .github/workflows/fetch-models.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download models
+        run: node game/scripts/fetch-models.mjs
+      - name: Commit models
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add game/public/models/*.glb
+          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
+          git commit -m "Add fetched character models"
+          git push
