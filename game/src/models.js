@@ -83,6 +83,11 @@ function fromGLTF(gltf, height, fallbackOpts) {
     const n = norm(o.name);
     for (const [slot, names] of Object.entries(BONE_ALIASES)) if (!bones[slot] && names.includes(n)) bones[slot] = o;
   });
+  // The torso pivot is the lowest spine bone (rigs disagree on whether that is Spine, Spine01 or Spine02).
+  if (bones.hips) {
+    const low = bones.hips.children.find((c) => c.isBone && /spine/i.test(c.name));
+    if (low) bones.torso = low;
+  }
   const ok = ['hips', 'armL', 'armR', 'legL', 'legR'].every((s) => bones[s]);
   if (!ok) console.warn('Rig bones not recognised; the model will stand still.', Object.keys(bones));
 
