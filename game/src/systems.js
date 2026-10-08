@@ -215,7 +215,7 @@ export function createSystems(G) {
 
   // Lost sheep — Nahum by his fold east of the pasture
   const fold = V(40, 0, 174);
-  const nahum = G.addNPC({ name: 'Nahum', skin: 0xa77a58, robe: 0x7a6a52, sash: 0x3e3a30, hair: 0xd8d2c8, beard: 0xe8e2d8, headwrap: 0x9a8a6a, height: 1.62,
+  const nahum = G.addNPC({ local: true, name: 'Nahum', skin: 0xa77a58, robe: 0x7a6a52, sash: 0x3e3a30, hair: 0xd8d2c8, beard: 0xe8e2d8, headwrap: 0x9a8a6a, height: 1.62,
     talk: async () => {
       if (!Q.lostSheep) {
         await ui.say('Nahum', gospel ? 'Rabbi! Three of my ewes strayed into the hills at dawn. My knees will not carry me so far.' : 'Son of Jesse! Three of my ewes strayed into the hills at dawn. My knees will not carry me so far.');
@@ -224,7 +224,7 @@ export function createSystems(G) {
       } else if (Q.lostSheep === 'active') await ui.say('Nahum', `${lost.filter((l) => l.homeFlag).length} of 3 are home. Bless you, boy.`);
       else await ui.say('Nahum', 'Take my old cloak, David. It has turned the teeth of wolves. May it turn worse for you.');
     } }, V(46, 0, 168), -2);
-  const lost = [[-90, 196], [96, 104], [-72, 64]].map(([x, z]) => Object.assign(G.addSheep(V(x, 0, z)), { following: false, homeFlag: false }));
+  const lost = [[-90, 196], [96, 104], [-72, 64]].map(([x, z]) => Object.assign(G.addSheep(V(x, 0, z)), { following: false, homeFlag: false, local: true }));
   const updateLost = () => {
     if (Q.lostSheep !== 'active') return;
     for (const s of lost) {
@@ -243,7 +243,7 @@ export function createSystems(G) {
   };
 
   // Widow's bread
-  const tirzah = G.addNPC({ name: 'Tirzah', skin: 0xb88a66, robe: 0x4a3a5a, sash: 0x2a2030, hair: 0x9a948c, headwrap: 0x3a2e48, height: 1.58,
+  const tirzah = G.addNPC({ local: true, name: 'Tirzah', skin: 0xb88a66, robe: 0x4a3a5a, sash: 0x2a2030, hair: 0x9a948c, headwrap: 0x3a2e48, height: 1.58,
     talk: async () => {
       if (!Q.widow) {
         await ui.say('Tirzah', gospel ? 'Shalom, Rabbi. Since my husband died, the cruse runs low and the meal barrel is near empty.' : 'Shalom, David. Since my husband died, the cruse runs low and the meal barrel is near empty.');
@@ -265,7 +265,7 @@ export function createSystems(G) {
   G.interactables.push({ pos: oven, range: 2.4, prompt: 'Take a loaf of bread', enabled: () => Q.widow === 'active', talk: async () => { audio.play('pickup'); questStep('widow', 'bread', 'Bring the bread to Tirzah.'); } });
 
   // Water for the wounded
-  const ira = G.addNPC({ name: 'Ira', skin: 0xa77a58, robe: 0x8a7a5a, sash: 0x5a2a20, hair: 0x2a1a10, beard: true, height: 1.74,
+  const ira = G.addNPC({ local: true, name: 'Ira', skin: 0xa77a58, robe: 0x8a7a5a, sash: 0x5a2a20, hair: 0x2a1a10, beard: true, height: 1.74,
     talk: async () => {
       if (!Q.water) {
         await ui.say('Ira', gospel ? 'Water… I have sat by this wall since I was a boy. No one stops for a beggar.' : 'Water… I was struck by a Philistine arrow at the ford. No one dares go down to the brook while the giant walks.');
@@ -301,7 +301,7 @@ export function createSystems(G) {
   questDefs.riddles = { title: 'The Scribe’s Riddles', where: gospel ? 'Bethany' : 'Bethlehem', desc: 'Shemaiah the scribe has scrambled the letters of names from the Scriptures. Unscramble all seven.', reward: 'Scribe’s Wisdom: +Faith and +Spirit' };
   const riddleSave = gospel ? save.gospel : save;
   riddleSave.riddles ||= 0;
-  G.addNPC({ name: 'Shemaiah the scribe', skin: 0xb98a64, robe: 0x2b3f6a, sash: 0xd9c08a, hair: 0x9a948c, beard: 0xcfc8bc, headwrap: 0xe8e0cc, height: 1.64,
+  G.addNPC({ local: true, name: 'Shemaiah the scribe', skin: 0xb98a64, robe: 0x2b3f6a, sash: 0xd9c08a, hair: 0x9a948c, beard: 0xcfc8bc, headwrap: 0xe8e0cc, height: 1.64,
     talk: async () => {
       if (Q.riddles === 'done') { await ui.say('Shemaiah the scribe', 'You know the names of the faithful well. “You search the Scriptures…” (John 5:39)'); return; }
       if (!Q.riddles) {
@@ -362,7 +362,7 @@ export function createSystems(G) {
       await ui.say(f.who || 'Soldier', f.fear, { reference: f.ref || '' });
       speaker.talking = false;
       const opts = [f.good, ...f.bad].sort(() => Math.random() - 0.5);
-      const pick = await ui.choose(G.heroName, gospel ? 'How will you answer?' : 'What will you say?', opts);
+      const pick = await ui.choose(G.heroName, gospel ? 'How will you answer?' : 'What will you say?', opts, { auto: opts.indexOf(f.good) });
       if (opts[pick] !== f.good) {
         await ui.say(gospel ? 'Narrator' : 'Soldier', gospel ? 'That is not how the Lord answered. (Answer with his words.)' : rnd(['Words. Only a boy’s words.', 'That is pride talking, shepherd.', 'Then we are truly lost.']));
         continue;
@@ -505,7 +505,7 @@ export function createSystems(G) {
   let bleatT = 4;
   sys.update = (raw, dt) => {
     // Interact while riding = dismount
-    if (P.mount && G.control && input.pressed.has('interact')) { input.pressed.delete('interact'); sys.dismount(); }
+    if (P.mount && G.control && !G.autoHero && input.pressed.has('interact')) { input.pressed.delete('interact'); sys.dismount(); }
     if (input.pressed.has('spirit')) activateSpirit();
     if (input.pressed.has('journal') && G.control) G.menu.journal();
     // Spirit

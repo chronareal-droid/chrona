@@ -11,9 +11,11 @@
     "models:fetch": "node scripts/fetch-models.mjs"
   },
   "dependencies": {
+    "peerjs": "^1.5.5",
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "peer": "^1.0.2",
     "vite": "^6.4.3"
   }
 }

@@ -61,6 +61,7 @@ export async function runStory(G, startPart = 'prologue') {
   const waitFor = (fn, poll = 100) => new Promise((res) => { const iv = setInterval(() => { if (fn()) { clearInterval(iv); res(); } }, poll); });
   const near = (p, r) => () => G.control && G.hdist(P.pos, typeof p === 'function' ? p() : p) < r;
   const reach = (part) => {
+    G.part = part;
     save.part = part;
     if (!save.reached.includes(part)) save.reached.push(part);
     save.write();

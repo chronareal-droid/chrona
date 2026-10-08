@@ -13,6 +13,13 @@ import { createSystems } from './systems.js';
 import { createMenu } from './menu.js';
 import { save } from './save.js';
 import { createPhysics } from './physics.js';
+import { createNet } from './net.js';
+import { lookToOpts } from './profile.js';
+import { createLobby, installGuest } from './lobby.js';
+import { PARTS } from './menu.js';
+import { GOSPEL_PARTS } from './gospel.js';
+import { enableAutoHero } from './hero.js';
+import { createAsk } from './ask.js';
 
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -88,6 +95,7 @@ G.setPlayer = (pos, facing = P.facing) => {
   P.pos.copy(pos); ground(P.pos); P.vel.set(0, 0, 0); P.facing = facing;
   G.cam.yaw = facing + Math.PI; G.cam.pitch = 0.28;
   david.root.position.copy(P.pos); david.root.rotation.y = facing;
+  if (G.follow && hdist(G.follow.pos, P.pos) > 25) G.follow.near(P);
   snapCamera();
 };
 G.campaign = CAMPAIGN;
@@ -408,6 +416,7 @@ function updateProjectiles(dt) {
 }
 
 // ---------------------------------------------------------------- NPCs
+let npcSerial = 0;
 G.addNPC = (opts, pos, facing = 0) => {
   const h = opts.humanoid || createHumanoid(opts);
   const n = {
@@ -418,7 +427,9 @@ G.addNPC = (opts, pos, facing = 0) => {
   n.root.position.copy(n.pos); n.root.rotation.y = facing;
   scene.add(n.root);
   n.walkTo = (p, speed = n.walkSpeed) => new Promise((res) => { n.target = ground(p.clone()); n.walkSpeed = speed; n.arrive = res; });
-  n.remove = () => { scene.remove(n.root); G.npcs.splice(G.npcs.indexOf(n), 1); };
+  n.remove = () => { scene.remove(n.root); G.npcs.splice(G.npcs.indexOf(n), 1); G.net?.unregisterNPC(n); };
+  n.netId = ++npcSerial;
+  if (!opts.local) G.net?.registerNPC(n, opts, n.pos, facing);
   G.npcs.push(n);
   return n;
 };
@@ -445,7 +456,7 @@ function updateNPCs(dt) {
     n.root.position.copy(n.pos);
     n.root.rotation.y = n.facing;
     n.pose.talk += ((n.talking ? 1 : 0) - n.pose.talk) * Math.min(1, dt * 8);
-    n.animate(dt, sp);
+    n.animate(dt, n.mirrorSpeed ?? sp);
     if (n.talk && G.control && !G.interactBusy) {
       const d = hdist(n.pos, P.pos);
       if (d < bestD) { best = n; bestD = d; }
@@ -459,16 +470,19 @@ function updateNPCs(dt) {
       if (d < bestD) { best = it; bestD = d; }
     }
   }
-  ui.prompt(P.mount && G.control ? 'Dismount' : best ? best.prompt : null);
-  if (best && input.pressed.has('interact') && !P.mount) {
-    input.pressed.delete('advance');
-    G.interactBusy = true; G.control = false;
-    best.talking = true;
-    const t = best.talk;
-    if (best.h || best.rig) best.facing = Math.atan2(P.pos.x - best.pos.x, P.pos.z - best.pos.z);
-    Promise.resolve(t(best)).finally(() => { best.talking = false; G.interactBusy = false; if (!G.cine) G.control = true; });
-  }
+  G.best = best;
+  // online, Jesus acts by himself; the players only follow
+  ui.prompt(G.autoHero ? null : P.mount && G.control ? 'Dismount' : best ? best.prompt : null);
+  if (best && input.pressed.has('interact') && !P.mount && !G.autoHero) G.interact(best);
 }
+G.interact = (best) => {
+  input.pressed.delete('advance');
+  G.interactBusy = true; G.control = false;
+  best.talking = true;
+  const t = best.talk;
+  if (best.h || best.rig) best.facing = Math.atan2(P.pos.x - best.pos.x, P.pos.z - best.pos.z);
+  Promise.resolve(t(best)).finally(() => { best.talking = false; G.interactBusy = false; if (!G.cine) G.control = true; });
+};
 
 // Sheep flock
 G.addSheep = (pos, scale = 1) => {
@@ -513,7 +527,7 @@ const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 60, 16, 1, tr
 beacon.visible = false; scene.add(beacon);
 G.setObjective = (text, target = null) => {
   G.objective = target ? { text, target } : null;
-  ui.objective(text);
+  ui.objective(G.autoHero && text ? `Follow Jesus · ${text}` : text);
 };
 const proj = V();
 function updateObjective() {
@@ -522,7 +536,7 @@ function updateObjective() {
   if (!tgt && G.systems?.sideTarget) tgt = G.systems.sideTarget;
   if (!tgt || G.cine) { ui.marker(0, 0, 0, false); beacon.visible = false; ui.objectiveDist(null); return; }
   tgt = V(tgt.x, heightAt(tgt.x, tgt.z), tgt.z); // markers always sit on the ground, never under it
-  const d = hdist(P.pos, tgt);
+  const d = hdist((G.follow || P).pos, tgt);
   ui.objectiveDist(d);
   beacon.visible = d > 8; beacon.position.set(tgt.x, heightAt(tgt.x, tgt.z) + 30, tgt.z);
   beacon.material.opacity = 0.08 + Math.sin(G.t * 2) * 0.03;
@@ -544,13 +558,14 @@ function updateHouses(dt) {
     if (d > 45) { if (H.interior) { H.group.remove(H.interior); H.interior.traverse((m) => m.geometry?.dispose()); H.interior = null; } continue; }
     if (d < 28 && !H.interior) { H.interior = H.buildInterior(); H.group.add(H.interior); }
     // Doors swing open for anyone who walks up to them
-    let want = hdist(H.doorPos, P.pos) < 2.6 ? 1 : 0;
+    let want = hdist(H.doorPos, P.pos) < 2.6 || (G.follow && hdist(H.doorPos, G.follow.pos) < 2.6) ? 1 : 0;
     if (!want) for (const n of G.npcs) if (n.root.visible && hdist(H.doorPos, n.pos) < 1.8) { want = 1; break; }
     const before = H.open;
     H.open += (want - H.open) * Math.min(1, dt * 4);
     if (before < 0.05 && H.open >= 0.05) audio.play('door');
     H.door.rotation.y = H.open * 1.65;
-    const lx = (P.pos.x - H.x) * H.cs - (P.pos.z - H.z) * H.sn, lz = (P.pos.x - H.x) * H.sn + (P.pos.z - H.z) * H.cs;
+    const me = (G.follow || P).pos;
+    const lx = (me.x - H.x) * H.cs - (me.z - H.z) * H.sn, lz = (me.x - H.x) * H.sn + (me.z - H.z) * H.cs;
     if (Math.abs(lx) < H.w / 2 - H.T && Math.abs(lz) < H.d / 2 - H.T) inside = H;
   }
   G.insideHouse = inside;
@@ -560,6 +575,7 @@ function updateHouses(dt) {
 
 // ---------------------------------------------------------------- Camera
 const camTarget = V(), camWanted = V();
+G.camLookAt = () => camTarget;
 // Keep the camera on the player's side of house walls and ceilings.
 const camRay = new THREE.Raycaster();
 function cameraCollide(look, out) {
@@ -574,7 +590,8 @@ function cameraCollide(look, out) {
 }
 function cameraWanted(out, look) {
   const c = G.cam;
-  const aimK = david.pose.aim;
+  const P = G.follow || G.player; // online in the Gospel the camera follows your disciple
+  const aimK = G.follow ? 0 : david.pose.aim;
   const mounted = P.mount ? P.mount.saddleHeight : 0;
   if (G.camMode === 'first') {
     // Through David's eyes
@@ -647,9 +664,24 @@ function updateCamera(dt) {
   }
   camera.lookAt(camTarget);
   // Hide David's own body in first person (keep the arms' sling visible via the crosshair)
-  david.root.visible = !(G.camMode === 'first' && !G.cine);
+  if (G.follow) G.follow.h.root.visible = !(G.camMode === 'first' && !G.cine) && !G.hideSelf;
+  else david.root.visible = !(G.camMode === 'first' && !G.cine) && !G.hideSelf;
   const targetFov = (G.camMode === 'first' ? 70 : 58) - david.pose.aim * 12 + (P.spiritActive > 0 ? 6 : 0);
   if (Math.abs(camera.fov - targetFov) > 0.05) { camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 8); camera.updateProjectionMatrix(); }
+}
+// Ambience follows where you are: the brook, crowds, night, indoors.
+let ambT = 0;
+function ambience(dt) {
+  if ((ambT -= dt) > 0) return; ambT = 0.4;
+  const me = (G.follow || P).pos;
+  let crowd = 0;
+  for (const n of G.npcs) if (n.root.visible && hdist(n.pos, me) < 18) crowd++;
+  audio.ambience({
+    brook: Math.max(0, 1 - Math.abs(me.z - brookZ(me.x)) / 35),
+    crowd: G.inGame ? Math.min(1, crowd / 10) : 0,
+    night: world.time === 'night' || world.time === 'darkness',
+    indoor: !!G.insideHouse,
+  });
 }
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -668,7 +700,7 @@ G.cinemaOn = () => { G.control = false; ui.cinema(true); if (document.pointerLoc
 G.cinemaOff = () => {
   // Hand the camera back smoothly from wherever the shot left it.
   G.cam.pos.copy(camera.position);
-  const d = V().subVectors(camera.position, P.pos);
+  const d = V().subVectors(camera.position, (G.follow || P).pos);
   G.cam.yaw = Math.atan2(d.x, d.z);
   G.cine = null; G.control = true; ui.cinema(false);
 };
@@ -712,23 +744,29 @@ function frame() {
   G.t += dtW;
   input.poll();
   if (input.pressed.has('camera') && !G.cine) G.cycleCamera();
+  if (input.pressed.has('chat') && G.net?.role) G.net.openChat();
+  G.playerList?.(input.held?.('KeyL'));
   if (input.pressed.has('pause') && G.control) G.menu.pause();
   G.systems.update(raw, dtW);
   if (G.crossHold && !G.control) { G.crossHold(); david.pose.cross = 1; david.animate(dtP, 0); }
+  else if (G.autoHero) G.autoHero.drive(dtP);
   else updatePlayer(dtP);
+  G.follow?.update(dtP);
   updateNPCs(dtW);
   updateSheep(dtW);
   G.physics?.update(dtW);
   updateHouses(raw);
+  G.net?.update(dtW);
   for (const u of G.updaters) u(dtW);
   updatePickups(dtW);
   updateProjectiles(dtW);
   world.update(G.t, dtW);
-  world.followShadow(G.cine ? camTarget : P.pos);
+  world.followShadow(G.cine ? camTarget : (G.follow || P).pos);
   world.followDust?.(camera.position);
-  world.grassFollow?.(camera.position, P.pos);
+  world.grassFollow?.(camera.position, (G.follow || P).pos);
   updateCamera(raw);
   updateObjective();
+  ambience(raw);
   G.hurtFx = Math.max(0, G.hurtFx - raw * 2);
   post.render(G.t, { spirit: G.spiritFx || 0, hurt: G.hurtFx, cine: !!G.cine && !G.cine.title, focus: G.focus });
   input.endFrame();
@@ -745,9 +783,12 @@ G.cycleCamera = (mode) => {
 
 // ---------------------------------------------------------------- Boot
 G.updateObjective = updateObjective;
+G.updatePlayer = updatePlayer;
 G.snapCamera = snapCamera;
 G.sling = sling;
+G.net = createNet(G);
 G.systems = createSystems(G);
+G.loadHeroModel = () => loadRiggedHumanoid('jesus', JESUS_LOOK).catch(() => null);
 G.physics = createPhysics(G);
 G.setPlayer(V(10, 0, 170), Math.PI);
 post.apply(save.settings.quality, world.sun);
@@ -761,8 +802,16 @@ G.titleCam();
 G.menu = createMenu(G, {
   start: (part) => {
     audio.start();
+    // online, nobody plays Jesus: he walks the story and the leader follows as a disciple
+    if (CAMPAIGN === 'gospel' && (G.net.role === 'host' || G.onlineHost)) enableAutoHero(G);
     G.stats.start = performance.now();
     (CAMPAIGN === 'gospel' ? runGospel : runStory)(G, part);
   },
 });
+G.currentPart = () => G.part || null;
+G.chapterTitle = () => (CAMPAIGN === 'gospel' ? GOSPEL_PARTS : PARTS).find((p) => p.id === G.part)?.title || 'In the story';
+G.lobby = createLobby(G, G.menu);
+installGuest(G);
+createAsk(G);
+G.menu.boot();
 document.getElementById('again').addEventListener('click', () => location.reload());

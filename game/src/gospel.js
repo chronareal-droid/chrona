@@ -1,6 +1,7 @@
 // "The Way of the Cross": the final week of Jesus, from the triumphal entry to the empty tomb.
 // Scripture quotations are from the ESV® Bible (see the notice in the README and on the title screen). Told reverently: no combat, nothing graphic.
 import * as THREE from 'three';
+import { dressForPassion, carriedCross } from './passion.js';
 import { PLACES, heightAt, brookZ, pathX, GOLGOTHA, TOMB, GETHSEMANE, JERUSALEM } from './world.js';
 
 export const GOSPEL_PARTS = [
@@ -35,6 +36,7 @@ export async function runGospel(G, startPart = 'entry') {
   const robes = [0x7a5a3a, 0x8a3a2a, 0x4a5a3a, 0x6a5a48, 0x3a4a6a, 0x5a3a5a, 0x7a6a4a, 0x4a4a4a, 0x6a4a3a, 0x5a5a3a, 0x3a5a5a, 0x5a4a2a];
   const disciples = names.map((name, i) => G.addNPC(robe({ name, robe: robes[i], hair: i === 1 ? 0x5a3a1e : 0x2a1a10, beard: i !== 1, height: 1.68 + (i % 4) * 0.04, headwrap: i % 3 === 0 ? 0xcfc4ae : null, lookAtPlayer: true }), at(4 + (i % 4) * 1.4, 176 + Math.floor(i / 4) * 1.4), Math.PI));
   const [peter, john] = disciples; const judas = disciples[11];
+  G.disciples = disciples; // friends online each take the place of one of the Twelve
   const follow = (on) => disciples.forEach((d, i) => { d.followP = on ? i : null; });
   // Disciples walk a few paces behind Jesus.
   G.updaters.push(() => {
@@ -69,7 +71,7 @@ export async function runGospel(G, startPart = 'entry') {
   const narrate = (line, ref, o) => say('', line, ref, o);
   const waitFor = (fn, poll = 100) => new Promise((res) => { const iv = setInterval(() => { if (fn()) { clearInterval(iv); res(); } }, poll); });
   const near = (p, r) => () => G.control && G.hdist(P.pos, typeof p === 'function' ? p() : p) < r;
-  const reach = (part) => { gs.part = part; if (!gs.reached.includes(part)) gs.reached.push(part); save.write(); };
+  const reach = (part) => { G.part = part; gs.part = part; if (!gs.reached.includes(part)) gs.reached.push(part); save.write(); };
   const clearCrowd = () => { crowd.splice(0).forEach((c) => c.remove()); };
   const placeDisciples = (cx, cz, faceTo) => disciples.forEach((d, i) => { d.followP = null; d.target = null; d.pos.copy(at(cx + (i % 4) * 1.5 - 2.2, cz + Math.floor(i / 4) * 1.5)); d.facing = faceTo ?? Math.PI; d.root.visible = true; d.pose.cower = 0; d.pose.pray = 0; });
   G.onPlayerDeath = async () => { G.heal(); };
@@ -445,18 +447,12 @@ export async function runGospel(G, startPart = 'entry') {
     await say('The crowd', 'Crucify him, crucify him!', 'John 19:6');
     await narrate('And the soldiers twisted together a crown of thorns and put it on his head and arrayed him in a purple robe.', 'John 19:2');
     mob.forEach((m) => (m.pose.cheer = 0));
-    // Crown of thorns
-    const crown = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.015, 5, 18), new THREE.MeshStandardMaterial({ color: 0x4a3a20, roughness: 1 }));
-    crown.rotation.x = Math.PI / 2; crown.position.y = 0.2;
-    (P.h.rig.bones?.head || P.h.rig.neck).add(crown);
-    if (P.h.rig.bones?.head) crown.scale.setScalar(1 / P.h.rig.bones.head.getWorldScale(V()).x);
+    // The purple robe and the crown of thorns
+    P.h.animate(0, 0);
+    const passion = dressForPassion(P.h);
     await narrate('And he went out, bearing his own cross, to the place called The Place of a Skull, which in Aramaic is called Golgotha.', 'John 19:17');
     // Carry the cross
-    const crossM = new THREE.MeshStandardMaterial({ color: 0x5a3e26, roughness: 0.9 });
-    const carried = new THREE.Group();
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.24, 4.6, 0.24), crossM); post.position.set(0, 0.6, -1.1); post.rotation.x = -1.05;
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.22, 0.22), crossM); beam.position.set(0, 1.45, 0.05);
-    carried.add(post, beam); carried.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+    const carried = carriedCross(P.h.rig.scale || 1);
     P.h.root.add(carried);
     G.cinemaOff();
     G.setPlayer(at(world.gates.north.x, JERUSALEM.minZ + 4), Math.PI);
@@ -480,13 +476,13 @@ export async function runGospel(G, startPart = 'entry') {
           G.flags.fallen = true; falls++; G.control = false; P.h.pose.kneel = 1; P.h.pose.pray = 1; G.shake(0.3); audio.play('thud');
           await narrate(falls === 1 ? 'He fell beneath the weight of the cross.' : 'He fell again.', '', { auto: 2600 });
           G.control = true;
-          await new Promise((r2) => { const it = { pos: () => P.pos, range: 3, prompt: 'Rise', talk: async () => { G.interactables.splice(G.interactables.indexOf(it), 1); r2(); } }; G.interactables.push(it); });
+          await new Promise((r2) => { const it = { pos: () => P.pos, range: 3, prompt: 'Rise', auto: true, talk: async () => { G.interactables.splice(G.interactables.indexOf(it), 1); r2(); } }; G.interactables.push(it); });
           P.h.pose.kneel = 0; P.h.pose.pray = 0; strength = 0.6; G.flags.fallen = false;
           if (falls >= 2 && !simonTook) {
             simonTook = true; G.control = false;
             simon.pos.copy(P.pos.clone().add(V(2, 0, -1)));
             await narrate('And as they led him away, they seized one Simon of Cyrene, who was coming in from the country, and laid on him the cross, to carry it behind Jesus.', 'Luke 23:26');
-            P.h.root.remove(carried); simon.root.add(carried);
+            P.h.root.remove(carried); simon.root.add(carried); simon.pose.carry = 1;
             G.carrySpeed = 0.7; G.control = true;
             G.updaters.push(() => { const goal = P.pos.clone().add(V(0, 0, 2.6)); if (simon.pos.distanceTo(goal) > 1.4) simon.walkTo(goal, 2); });
           }
@@ -504,7 +500,8 @@ export async function runGospel(G, startPart = 'entry') {
     G.flags.carrying = false; G.carrySpeed = null;
     // The crucifixion: told from a distance, under a darkened sky.
     await ui.fadeOut(1500);
-    simon.root.remove(carried); P.h.root.remove(carried);
+    simon.root.remove(carried); P.h.root.remove(carried); simon.pose.carry = 0;
+    passion.removeRobe(); // “they took his garments” (John 19:23)
     guards.forEach((g) => (g.followP = false));
     world.crosses.visible = true;
     const centre = world.crosses.children[1];
@@ -549,7 +546,7 @@ export async function runGospel(G, startPart = 'entry') {
     await ui.card('', 'It is finished', '“For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.” John 3:16', 7000);
     await narrate('And Joseph took the body and wrapped it in a clean linen shroud and laid it in his own new tomb… And he rolled a great stone to the entrance of the tomb.', 'Matthew 27:59–60');
     await ui.card('', 'The third day', '', 3200);
-    crown.parent?.remove(crown);
+    passion.remove();
     mob.forEach((m) => m.remove()); women.forEach((w) => w.remove()); simon.remove(); guards.forEach((g) => g.remove()); centurion.remove();
     world.crosses.visible = false;
     return 'risen';

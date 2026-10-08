@@ -73,8 +73,14 @@ export function createPhysics(G) {
     // Lean forward when speeding up, back when stopping; bank into turns like a runner.
     const leanT = THREE.MathUtils.clamp(fwd * 0.012, -0.12, 0.12) + Math.min(speed, 7) * 0.008;
     const sideT = THREE.MathUtils.clamp(-turnRate * speed * 0.02, -0.22, 0.22);
-    [s.lean, s.leanV] = spring(s.lean, s.leanV, leanT, 60, 9, dt);
-    [s.side, s.sideV] = spring(s.side, s.sideV, sideT, 50, 8, dt);
+    // springs stepped in small slices so a long frame (a slow PC, a hitch) can never make them explode
+    for (let left = dt; left > 1e-5; left -= 1 / 60) {
+      const h = Math.min(left, 1 / 60);
+      [s.lean, s.leanV] = spring(s.lean, s.leanV, leanT, 60, 9, h);
+      [s.side, s.sideV] = spring(s.side, s.sideV, sideT, 50, 8, h);
+    }
+    if (!Number.isFinite(s.lean + s.side + s.leanV + s.sideV)) { s.lean = s.side = s.leanV = s.sideV = 0; }
+    s.lean = THREE.MathUtils.clamp(s.lean, -0.3, 0.3); s.side = THREE.MathUtils.clamp(s.side, -0.3, 0.3);
     if (quad) {
       // Body follows the ground: pitch along the facing direction, roll across it.
       const L = 0.9, x = o.pos.x, z = o.pos.z, sf = Math.sin(f), cf = Math.cos(f);

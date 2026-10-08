@@ -52,7 +52,7 @@ export function createUI(input) {
       sub.hidden = true;
     },
 
-    async choose(speaker, text, options) {
+    async choose(speaker, text, options, { auto = -1 } = {}) {
       input.clearUI();
       sub.hidden = false; sub.classList.remove('ready');
       who.textContent = speaker || ''; line.textContent = text; ref.textContent = '';
@@ -73,6 +73,8 @@ export function createUI(input) {
           raf = requestAnimationFrame(tick);
         };
         tick();
+        // online, Jesus answers by himself: his words light up, then he speaks them
+        if (ui.auto && auto >= 0) { setTimeout(() => choices.children[auto]?.classList.add('picked'), 1400); setTimeout(() => done(auto), 2600); return; }
         if (document.pointerLockElement) document.exitPointerLock();
       });
     },
@@ -147,7 +149,8 @@ export function createUI(input) {
           const t = (performance.now() - t0) / 1000;
           const x = 0.5 + 0.5 * Math.sin(t * 3.4 * df.timing - Math.PI / 2);
           mark.style.left = x * 100 + '%';
-          if (inp.pressed.has('advance') || inp.pressed.has('attack') || t > 6 / df.timing) {
+          const autoHit = ui.auto && t > 0.8 && Math.abs(x - zc) < zw * 0.25;
+          if (autoHit || inp.pressed.has('advance') || inp.pressed.has('attack') || t > 6 / df.timing) {
             inp.clearUI(); inp.pressed.delete('attack');
             const q = Math.max(0, 1 - Math.abs(x - zc) / (zw * 1.5));
             timing.classList.add(q > 0.6 ? 'good' : 'meh');
@@ -213,7 +216,8 @@ export function createUI(input) {
         render();
       });
     },
-    hint(text, ms = 4500) {
+    hint(text, ms = 4500, force = false) {
+      if (ui.auto && text && !force) return; // online, Jesus's own control hints are not for his disciples
       clearTimeout(hintTimer);
       hint.hidden = !text; hint.textContent = text || '';
       hint.style.animation = 'none'; void hint.offsetWidth; hint.style.animation = '';

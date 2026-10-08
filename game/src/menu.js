@@ -34,7 +34,7 @@ export function createMenu(G, { start }) {
   const home = $('#home'), pauseEl = $('#pause'), panel = $('#panel');
   const body = panel.querySelector('.panel-body'), head = panel.querySelector('h2');
   let panelBack = null;
-  audio.vol = save.settings.volume;
+  audio.vol = save.settings.volume; audio.musicVol = save.settings.musicVolume ?? 0.8; audio.sfxVol = save.settings.sfxVolume ?? 1;
 
   const contBtn = home.querySelector('[data-nav="continue"]');
   const lastC = save.lastCampaign || 'gospel';
@@ -46,12 +46,22 @@ export function createMenu(G, { start }) {
   const davidBtn = document.createElement('button');
   davidBtn.dataset.nav = 'david'; davidBtn.textContent = 'Old Testament · The Shepherd King';
   newBtn.after(davidBtn);
+  const onlineBtn = document.createElement('button');
+  onlineBtn.dataset.nav = 'online'; onlineBtn.className = 'online-btn'; onlineBtn.textContent = 'Play Online · with friends';
+  davidBtn.after(onlineBtn);
+  const charBtn = document.createElement('button');
+  charBtn.dataset.nav = 'character'; charBtn.textContent = save.profile?.name ? `Your Character · ${save.profile.name}` : 'Create Your Character';
+  onlineBtn.after(charBtn);
 
+  let closers = [];
+  const runClosers = () => { const c = closers; closers = []; c.forEach((f) => { try { f(); } catch {} }); };
   const openPanel = (title, html, back) => {
+    runClosers();
     head.textContent = title; body.innerHTML = html; panel.hidden = false; panelBack = back;
     panel.querySelector('.close').focus();
+    audio.ui?.('open');
   };
-  const closePanel = () => { panel.hidden = true; panelBack?.(); };
+  const closePanel = () => { runClosers(); panel.hidden = true; const b = panelBack; panelBack = null; b?.(); };
   panel.querySelector('.close').onclick = closePanel;
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && !panel.hidden) { e.stopPropagation(); closePanel(); } }, true);
 
@@ -105,7 +115,9 @@ export function createMenu(G, { start }) {
       <label>Show FPS<div class="seg" data-k="showFps"><button data-v="false" class="${!st.showFps ? 'on' : ''}">Off</button><button data-v="true" class="${st.showFps ? 'on' : ''}">On</button></div></label>
       <label>Camera view<div class="seg" data-k="camMode"><button data-v="third" class="${G.camMode === 'third' ? 'on' : ''}">Third person</button><button data-v="first" class="${G.camMode === 'first' ? 'on' : ''}">First person</button><button data-v="second" class="${G.camMode === 'second' ? 'on' : ''}">Second person</button></div></label>
       <p class="note">Second person is the Witness view: you see David through the eyes of someone walking ahead of him. Press V in play to cycle views.</p>
-      <label>Volume<input type="range" min="0" max="1" step="0.05" value="${st.volume}" data-r="volume" /></label>
+      <label>Master volume<input type="range" min="0" max="1" step="0.05" value="${st.volume}" data-r="volume" /></label>
+      <label>Music<input type="range" min="0" max="1" step="0.05" value="${st.musicVolume ?? 0.8}" data-r="musicVolume" /></label>
+      <label>Sound effects &amp; ambience<input type="range" min="0" max="1.5" step="0.05" value="${st.sfxVolume ?? 1}" data-r="sfxVolume" /></label>
       <label>Look sensitivity<input type="range" min="0.3" max="2.5" step="0.05" value="${st.sensitivity}" data-r="sensitivity" /></label>
       <label>Invert look<div class="seg" data-k="invertY"><button data-v="false" class="${!st.invertY ? 'on' : ''}">Off</button><button data-v="true" class="${st.invertY ? 'on' : ''}">On</button></div></label>
       <label>Progress<div class="seg"><button data-reset>Erase saved progress</button></div></label>
@@ -122,6 +134,8 @@ export function createMenu(G, { start }) {
     body.querySelectorAll('[data-r]').forEach((r) => (r.oninput = () => {
       st[r.dataset.r] = parseFloat(r.value); save.write();
       if (r.dataset.r === 'volume') audio.volume(st.volume);
+      if (r.dataset.r === 'musicVolume') audio.setMusicVolume(st.musicVolume);
+      if (r.dataset.r === 'sfxVolume') { audio.setSfxVolume(st.sfxVolume); audio.play('pickup'); }
     }));
     body.querySelector('[data-reset]').onclick = (e) => {
       if (e.target.dataset.armed) { save.reset(); location.hash = ''; location.reload(); }
@@ -146,13 +160,18 @@ export function createMenu(G, { start }) {
       <kbd>E</kbd><span>Talk · ride · pray · preach · pick up</span><kbd>Left click</kbd><span>Strike with staff / release sling</span>
       <kbd>Right mouse / F</kbd><span>Whirl the sling (aim)</span><kbd>Q</kbd><span>Call upon the Holy Spirit</span>
       <kbd>V</kbd><span>Camera: third → first → second person</span><kbd>Tab</kbd><span>Journal</span><kbd>Esc / P</kbd><span>Pause</span>
-      <kbd>1 2 3</kbd><span>Choose a reply</span></div>`, back);
+      <kbd>1 2 3</kbd><span>Choose a reply</span>
+      <kbd>T</kbd><span>Online: chat with your party</span><kbd>B</kbd><span>Online: hold to talk (voice chat)</span>
+      <kbd>J</kbd><span>Online: hold and ask Jesus a question out loud</span><kbd>L</kbd><span>Online: who is playing</span></div>`, back);
 
   // ---------- Home
   const showHome = () => { home.hidden = false; G.menuOpen = true; };
   home.querySelectorAll('.mainnav [data-nav]').forEach((b) => (b.onclick = () => {
-    audio.start(); audio.volume(save.settings.volume);
+    audio.start(); audio.volume(save.settings.volume); audio.ui?.('click');
+    if (!G.inGame) audio.music('calm');
     const n = b.dataset.nav;
+    if (n === 'online') { home.hidden = true; G.lobby.open(showHome); }
+    if (n === 'character') { home.hidden = true; G.lobby.editCharacter(() => { charBtn.textContent = save.profile?.name ? `Your Character · ${save.profile.name}` : 'Create Your Character'; showHome(); }); }
     if (n === 'continue') go(lastC, lastPart);
     if (n === 'new') { home.hidden = true; chooseDifficulty(() => { save.gospel.part = null; save.write(); go('gospel', 'entry'); }, showHome); }
     if (n === 'david') { home.hidden = true; chooseDifficulty(() => { save.part = null; save.write(); go('david', 'prologue'); }, showHome); }
@@ -163,7 +182,13 @@ export function createMenu(G, { start }) {
   }));
 
   // ---------- Pause
-  const menu = { open: false };
+  const menu = {
+    open: false, openPanel, begin, showHome,
+    panelBody: () => body,
+    onPanelClose: (f) => closers.push(f),
+    hideHome: () => { home.hidden = true; G.menuOpen = false; },
+    closeAll: () => { runClosers(); panelBack = null; panel.hidden = true; home.hidden = true; G.menuOpen = false; },
+  };
   const resume = () => {
     pauseEl.hidden = true; G.paused = false; menu.open = false;
     if (!G.input.touch) G.renderer.domElement.requestPointerLock?.();
@@ -191,6 +216,8 @@ export function createMenu(G, { start }) {
   });
 
   // Deep link from chapter select / restart: #partId
+  menu.boot = () => {
+  if (G.lobby?.resume()) { history.replaceState(null, '', location.pathname); return; }
   const hash = location.hash.slice(1).split('.')[1];
   if (hash && partsOf(C).some((p) => p.id === hash) && slot(C).reached.includes(hash)) {
     history.replaceState(null, '', location.pathname);
@@ -201,5 +228,6 @@ export function createMenu(G, { start }) {
     addEventListener('keydown', () => audio.start(), { once: true });
     setTimeout(go, 50);
   } else showHome();
+  };
   return menu;
 }

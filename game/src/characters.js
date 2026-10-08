@@ -286,7 +286,7 @@ export function createHumanoid(opts = {}) {
     if (pose.shove > 0) { const k = Math.sin(Math.min(1, pose.shove) * Math.PI); aLx = -1.5 * k + aLx * (1 - k); aRx = -1.5 * k + aRx * (1 - k); aLz = 0.15; aRz = -0.15; fLx = fRx = -0.15; torso.rotation.x += 0.25 * k; } // both arms drive forward
     if (pose.bless > 0) { const k = pose.bless; aLx = aLx * (1 - k) - 2.4 * k; aRx = aRx * (1 - k) - 2.4 * k; aLz = 0.12 + 0.5 * k; aRz = -0.12 - 0.5 * k; fLx = fRx = -0.2 * k; } // hands raised
     if (pose.sit > 0) { const k = pose.sit; legL.rotation.x = legR.rotation.x = -1.4 * k; shinL.rotation.x = shinR.rotation.x = 1.5 * k; hips.position.y = 0.95 - 0.55 * k; } // sitting on the ground
-    if (pose.carry > 0) { aLx = -0.25; aRx = -0.25; aLz = 1.3; aRz = -1.3; fLx = fRx = -1.0; torso.rotation.x += 0.28; } // arms along the beam across his shoulders
+    if (pose.carry > 0) { aRx = -2.25; aRz = -0.32; fRx = -1.75; aLx = -0.75; aLz = 0.1; fLx = -1.5; torso.rotation.x += 0.24; torso.rotation.z -= 0.07; } // the cross on his right shoulder: right hand steadies it above, left holds the beam across his chest
     if (pose.cross > 0) { aLx = 0; aRx = 0; aLz = 1.45; aRz = -1.45; fLx = fRx = 0; legL.rotation.x = legR.rotation.x = 0; shinL.rotation.x = shinR.rotation.x = 0; neck.rotation.x = 0.35; }
     armL.rotation.set(aLx, 0, aLz); armR.rotation.set(aRx, 0, aRz);
     foreL.rotation.x = fLx; foreR.rotation.x = fRx;

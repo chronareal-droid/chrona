@@ -15,6 +15,7 @@ export function spawnLion(G, pos, lamb, lair) {
   const L = createLion();
   scene.add(L.root);
   const lion = { ...L, pos: G.ground(pos.clone()), facing: 0, state: 'carry', t: 0, hp: 4, lamb, lair: lair.clone(), pounceFrom: V(), pounceTo: V(), knock: V() };
+  G.lion = lion;
   lamb.carried = true;
   lamb.root.position.set(0, -0.35, 0.55); lamb.root.rotation.set(0, Math.PI / 2, 0);
   L.headG.add(lamb.root);
@@ -112,7 +113,7 @@ export function spawnLion(G, pos, lamb, lair) {
     L.animate(dt, speed);
   };
   G.updaters.push(update);
-  lion.remove = () => { scene.remove(L.root); G.updaters.splice(G.updaters.indexOf(update), 1); G.onStaffStrike = null; G.sheep.forEach((s) => (s.fleeFrom = null)); };
+  lion.remove = () => { G.lion = null; scene.remove(L.root); G.updaters.splice(G.updaters.indexOf(update), 1); G.onStaffStrike = null; G.sheep.forEach((s) => (s.fleeFrom = null)); };
   return lion;
 }
 
@@ -183,6 +184,7 @@ export function spawnGoliath(G, pos, facing = 0) {
     },
   };
   G.targets.push(target);
+  G.goliath = gol; G.goliathTarget = target;
 
   const throwSpear = () => {
     const from = V(); wp(H.rig.handR, from);

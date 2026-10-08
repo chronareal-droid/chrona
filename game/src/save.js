@@ -3,7 +3,7 @@ const KEY = 'shepherd-king-save-v1';
 const defaults = () => ({
   part: null, reached: ['prologue'], scrolls: [], quests: {}, faith: 0, courage: 0,
   gospel: { part: null, reached: ['entry'], quests: {} },
-  settings: { quality: matchMedia('(pointer: coarse)').matches ? 'medium' : 'high', volume: 0.8, sensitivity: 1, invertY: false, camMode: 'third', difficulty: 'normal', showFps: false },
+  settings: { quality: matchMedia('(pointer: coarse)').matches ? 'medium' : 'high', volume: 0.8, musicVolume: 0.8, sfxVolume: 1, sensitivity: 1, invertY: false, camMode: 'third', difficulty: 'normal', showFps: false },
 });
 let data = defaults();
 try {

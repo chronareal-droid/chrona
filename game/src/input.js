@@ -22,6 +22,7 @@ export function createInput(canvas) {
     if (e.code === 'KeyQ') press('spirit');
     if (e.code === 'Tab') { press('journal'); e.preventDefault(); }
     if (e.code === 'KeyR') press('pray');
+    if (e.code === 'KeyT') press('chat');
     if (e.code === 'Digit1') press('choice1');
     if (e.code === 'Digit2') press('choice2');
     if (e.code === 'Digit3') press('choice3');
@@ -104,6 +105,7 @@ export function createInput(canvas) {
   };
   // UI-consumed presses (advance/choice) survive the frame; the dialogue code consumes them.
   const keep = new Set(['advance', 'choice1', 'choice2', 'choice3']);
+  input.held = (code) => keys.has(code);
   input.endFrame = () => {
     for (const a of input.pressed) if (!keep.has(a)) input.pressed.delete(a);
     input.lookDX = 0; input.lookDY = 0;
