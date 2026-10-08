@@ -443,6 +443,7 @@ export function createSystems(G) {
       const dx = m.pos.x - c.x, dz = m.pos.z - c.z, d = Math.hypot(dx, dz), r = c.r + 0.9;
       if (d < r && d > 1e-4) { m.pos.x += dx / d * (r - d); m.pos.z += dz / d * (r - d); m.vel *= 0.95; }
     }
+    G.resolveWalls(m.pos, 0.8);
     m.pos.x = THREE.MathUtils.clamp(m.pos.x, BOUNDS.minX, BOUNDS.maxX); m.pos.z = THREE.MathUtils.clamp(m.pos.z, BOUNDS.minZ, BOUNDS.maxZ);
     G.ground(m.pos);
     m.root.position.copy(m.pos); m.root.rotation.y = m.facing;

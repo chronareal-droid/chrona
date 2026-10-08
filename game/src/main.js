@@ -1,6 +1,6 @@
 // The Shepherd King: engine core. Renderer, player controller, camera, NPCs, pickups, projectiles.
 import * as THREE from 'three';
-import { buildWorld, heightAt, waterLevel, brookZ, BOUNDS } from './world.js';
+import { buildWorld, heightAt, waterLevel, brookZ, BOUNDS, surfaceAt } from './world.js';
 import { createHumanoid, createSheep, createStaff } from './characters.js';
 import { createInput } from './input.js';
 import { createUI, wait } from './ui.js';
@@ -45,7 +45,7 @@ const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 // Mission distances are measured across the ground: many story points are stored at y = 0, and on the
 // hills (Jerusalem's ridge, Golgotha) a 3D distance would never come within a trigger radius.
 const hdist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
-const ground = (v) => { v.y = heightAt(v.x, v.z); return v; };
+const ground = (v) => { v.y = surfaceAt(world, v.x, v.z); return v; };
 
 // ---------------------------------------------------------------- Game context
 const G = {
@@ -236,11 +236,12 @@ function updatePlayer(dt) {
 
   // Collisions: trees, rocks, tents, NPCs
   for (const c of world.colliders) resolveCircle(P.pos, c.x, c.z, c.r + 0.35);
+  resolveWalls(P.pos, 0.32);
   for (const n of G.npcs) if (n.solid !== false && n.root.visible) resolveCircle(P.pos, n.pos.x, n.pos.z, (n.radius || 0.4) + 0.35);
   P.pos.x = THREE.MathUtils.clamp(P.pos.x, BOUNDS.minX, BOUNDS.maxX);
   P.pos.z = THREE.MathUtils.clamp(P.pos.z, BOUNDS.minZ, BOUNDS.maxZ);
-  const gy = heightAt(P.pos.x, P.pos.z);
-  if (P.pos.y <= gy) { P.pos.y = gy; P.vel.y = 0; P.onGround = true; } else if (P.pos.y > gy + 0.15) P.onGround = false;
+  const gy = surfaceAt(world, P.pos.x, P.pos.z);
+  if (P.pos.y <= gy + (P.onGround ? 0.3 : 0)) { P.pos.y = gy; P.vel.y = Math.max(0, P.vel.y); P.onGround = true; } // steps up to 30 cm else if (P.pos.y > gy + 0.15) P.onGround = false;
 
   // Facing
   const hs = Math.hypot(P.vel.x, P.vel.z);
@@ -294,6 +295,17 @@ function updatePlayer(dt) {
     david.rig.hips.rotation.x = k * Math.PI * 2; david.rig.hips.position.y = 0.6;
   } else david.rig.hips.rotation.x = 0;
 }
+
+/** Push a body of radius r out of house walls (line segments with thickness). */
+function resolveWalls(p, r) {
+  for (const w of world.walls) {
+    const dx = w.x2 - w.x1, dz = w.z2 - w.z1, L2 = dx * dx + dz * dz;
+    let t = ((p.x - w.x1) * dx + (p.z - w.z1) * dz) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const cx = w.x1 + dx * t, cz = w.z1 + dz * t, ox = p.x - cx, oz = p.z - cz, d2 = ox * ox + oz * oz, rr = r + w.r;
+    if (d2 < rr * rr && d2 > 1e-8) { const d = Math.sqrt(d2), k = (rr - d) / d; p.x += ox * k; p.z += oz * k; }
+  }
+}
+G.resolveWalls = resolveWalls;
 
 function resolveCircle(p, x, z, r) {
   const dx = p.x - x, dz = p.z - z, d2 = dx * dx + dz * dz;
@@ -521,8 +533,45 @@ function updateObjective() {
   ui.marker((x * 0.5 + 0.5) * innerWidth, (-y * 0.5 + 0.5) * innerHeight, d, d > 3);
 }
 
+// ---------------------------------------------------------------- Houses: doors, interiors, room light
+const roomLight = new THREE.PointLight(0xffb468, 0, 9, 1.4);
+roomLight.castShadow = false; scene.add(roomLight);
+G.insideHouse = null;
+function updateHouses(dt) {
+  let inside = null;
+  for (const H of world.houses) {
+    const d = hdist(H, P.pos);
+    if (d > 45) { if (H.interior) { H.group.remove(H.interior); H.interior.traverse((m) => m.geometry?.dispose()); H.interior = null; } continue; }
+    if (d < 28 && !H.interior) { H.interior = H.buildInterior(); H.group.add(H.interior); }
+    // Doors swing open for anyone who walks up to them
+    let want = hdist(H.doorPos, P.pos) < 2.6 ? 1 : 0;
+    if (!want) for (const n of G.npcs) if (n.root.visible && hdist(H.doorPos, n.pos) < 1.8) { want = 1; break; }
+    const before = H.open;
+    H.open += (want - H.open) * Math.min(1, dt * 4);
+    if (before < 0.05 && H.open >= 0.05) audio.play('door');
+    H.door.rotation.y = H.open * 1.65;
+    const lx = (P.pos.x - H.x) * H.cs - (P.pos.z - H.z) * H.sn, lz = (P.pos.x - H.x) * H.sn + (P.pos.z - H.z) * H.cs;
+    if (Math.abs(lx) < H.w / 2 - H.T && Math.abs(lz) < H.d / 2 - H.T) inside = H;
+  }
+  G.insideHouse = inside;
+  if (inside) roomLight.position.copy(inside.lamp);
+  roomLight.intensity += ((inside ? 14 : 0) - roomLight.intensity) * Math.min(1, dt * 4);
+}
+
 // ---------------------------------------------------------------- Camera
 const camTarget = V(), camWanted = V();
+// Keep the camera on the player's side of house walls and ceilings.
+const camRay = new THREE.Raycaster();
+function cameraCollide(look, out) {
+  const dir = V().subVectors(out, look); const len = dir.length(); if (len < 0.01) return;
+  dir.divideScalar(len);
+  const meshes = [];
+  for (const H of world.houses) if (hdist(H, look) < 14) meshes.push(H.group);
+  if (!meshes.length) return;
+  camRay.set(look, dir); camRay.far = len;
+  const hit = camRay.intersectObjects(meshes, true)[0];
+  if (hit) out.copy(look).addScaledVector(dir, Math.max(0.3, hit.distance - 0.25));
+}
 function cameraWanted(out, look) {
   const c = G.cam;
   const aimK = david.pose.aim;
@@ -550,6 +599,7 @@ function cameraWanted(out, look) {
   out.set(Math.sin(c.yaw) * Math.cos(c.pitch), Math.sin(c.pitch), Math.cos(c.yaw) * Math.cos(c.pitch)).multiplyScalar(dist).add(look);
   const gy = heightAt(out.x, out.z) + 0.5;
   if (out.y < gy) out.y = gy;
+  cameraCollide(look, out);
 }
 function snapCamera() { cameraWanted(G.cam.pos, G.cam.look); }
 
@@ -654,6 +704,7 @@ function frame() {
   updateNPCs(dtW);
   updateSheep(dtW);
   G.physics?.update(dtW);
+  updateHouses(raw);
   for (const u of G.updaters) u(dtW);
   updatePickups(dtW);
   updateProjectiles(dtW);

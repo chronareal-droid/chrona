@@ -105,6 +105,13 @@ export function createAudio() {
     hurt: () => noise(0.3, 600, 0.4, 'lowpass'),
     thud: () => { drum(0.9); noise(0.8, 120, 0.6, 'lowpass'); },
     step: () => noise(0.06, 500, 0.03, 'lowpass'),
+    door: () => { // wooden creak and knock
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(140, t); o.frequency.linearRampToValueAtTime(95, t + 0.45);
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 6;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.04, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.connect(f).connect(g).connect(master); o.start(t); o.stop(t + 0.55);
+    },
     splash: () => { const f = noise(0.35, 1800, 0.12, 'bandpass', 0.8); f.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.3); noise(0.2, 300, 0.05, 'lowpass'); },
     spirit: () => {
       const t = ctx.currentTime;

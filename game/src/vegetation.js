@@ -160,7 +160,8 @@ export function buildVegetation(scene, world, { quality = 'high', campaign = 'go
     if (inCity(x, z)) return true;
     for (const p of Object.values(PLACES)) if (Math.hypot(p.x - x, p.z - z) < 12) return true;
     if (campaign === 'gospel' && (Math.hypot(x - GOLGOTHA.x, z - GOLGOTHA.z) < 13 || Math.hypot(x - TOMB.x, z - TOMB.z) < 10)) return true;
-    for (const c of world.colliders) if ((c.house || c.building) && Math.hypot(c.x - x, c.z - z) < c.r + pad) return true;
+    for (const c of world.colliders) if (c.building && Math.hypot(c.x - x, c.z - z) < c.r + pad) return true;
+    for (const c of world.footprints) if (Math.hypot(c.x - x, c.z - z) < c.r + pad + 0.8) return true;
     return false;
   };
   const tmp = new THREE.Object3D();

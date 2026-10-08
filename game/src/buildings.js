@@ -70,6 +70,12 @@ export function materials() {
     stone: new THREE.MeshStandardMaterial({ map: stone, bumpMap: bump(stone), bumpScale: 1.6, roughness: 0.88 }),
     wood: new THREE.MeshStandardMaterial({ map: wood, bumpMap: bump(wood), bumpScale: 1.5, roughness: 0.85 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x1a120a, roughness: 1 }),
+    floor: new THREE.MeshStandardMaterial({ map: plaster, color: 0x9c8466, roughness: 1 }),
+    iron: new THREE.MeshStandardMaterial({ color: 0x3a3430, metalness: 0.7, roughness: 0.5 }),
+    clay: new THREE.MeshStandardMaterial({ color: 0xa8603a, roughness: 0.8 }),
+    rugs: [0x8a2a2a, 0x2b4f8a, 0xb07a2a, 0x5a6a3a].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 1 })),
+    linen: new THREE.MeshStandardMaterial({ color: 0xe2d6bc, roughness: 1 }),
+    flame: new THREE.MeshBasicMaterial({ color: 0xffb35a }),
   };
   return MATS;
 }
@@ -108,10 +114,35 @@ export function adobeHouse(x, z, opts = {}) {
   const add = (geo, mat, px, py, pz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; group.add(m); return m; };
 
   // Stone plinth showing where the hill falls away
-  if (drop > 0.5) add(wallBox(w + 0.3, drop + 0.4, d + 0.3, 0.02), M.stone, 0, (drop + 0.4) / 2 - 0.2, 0);
+  // (its top stops just under the floor, so it never shows through indoors)
+  if (drop > 0.5) add(wallBox(w + 0.3, drop + 0.4, d + 0.3, 0.02), M.stone, 0, drop - 0.03 - (drop + 0.4) / 2, 0);
   const wallH = h + drop;
   const WM = opts.stone ? M.stone : M.wall;
-  add(wallBox(w, wallH, d), WM, 0, wallH / 2, 0);
+  // Hollow shell: four walls around a doorway, an earthen floor, and a beamed roof.
+  const T = 0.35, DW = 1.3, DH = 2.25, floorY = drop, fzW = d / 2 - T / 2;
+  const doorX = THREE.MathUtils.clamp((opts.doorX ?? 0) * w / 2, -w / 2 + DW / 2 + T + 0.2, w / 2 - DW / 2 - T - 0.2);
+  add(wallBox(w, wallH, T), WM, 0, wallH / 2, -d / 2 + T / 2);                         // back
+  add(wallBox(T, wallH, d - 2 * T), WM, -w / 2 + T / 2, wallH / 2, 0);                   // left
+  add(wallBox(T, wallH, d - 2 * T), WM, w / 2 - T / 2, wallH / 2, 0);                    // right
+  const lw = doorX - DW / 2 + w / 2, rw = w / 2 - (doorX + DW / 2);
+  add(wallBox(lw, wallH, T), WM, -w / 2 + lw / 2, wallH / 2, fzW);                       // front, left of the door
+  add(wallBox(rw, wallH, T), WM, w / 2 - rw / 2, wallH / 2, fzW);                        // front, right of the door
+  add(wallBox(DW, wallH - floorY - DH, T), WM, doorX, floorY + DH + (wallH - floorY - DH) / 2, fzW); // lintel
+  add(new THREE.BoxGeometry(w - 2 * T, 0.2, d - 2 * T), M.floor, 0, floorY - 0.1, 0);   // floor
+  add(new THREE.BoxGeometry(w, 0.3, d), WM, 0, wallH - 0.15, 0);                          // roof slab
+  for (let bx = -w / 2 + 0.9; bx < w / 2 - 0.5; bx += 1.1) add(new THREE.CylinderGeometry(0.08, 0.09, d - 2 * T, 7).rotateX(Math.PI / 2), M.wood, bx, wallH - 0.38, 0); // ceiling beams
+  // door frame on the outside
+  add(new THREE.BoxGeometry(0.16, DH + 0.1, T + 0.08), M.trim, doorX - DW / 2 - 0.06, floorY + DH / 2, fzW);
+  add(new THREE.BoxGeometry(0.16, DH + 0.1, T + 0.08), M.trim, doorX + DW / 2 + 0.06, floorY + DH / 2, fzW);
+  add(new THREE.BoxGeometry(DW + 0.4, 0.22, T + 0.1), M.wood, doorX, floorY + DH + 0.08, fzW);
+  // Steps up to the threshold where the ground falls away in front of the house
+  const fx = x + doorX * Math.cos(facing) + (d / 2 + 0.6) * Math.sin(facing), fzz = z - doorX * Math.sin(facing) + (d / 2 + 0.6) * Math.cos(facing);
+  const outside = heightAt(fx, fzz) - base;
+  const rise = floorY - outside, nSteps = rise > 0.2 ? Math.ceil(rise / 0.22) : 0;
+  for (let k = 0; k < nSteps; k++) {
+    const top = floorY - k * (rise / nSteps);
+    add(wallBox(DW + 0.3, Math.max(0.05, top - outside + 0.3), 0.36, 0.01), M.stone, doorX, outside - 0.3 + (top - outside + 0.3) / 2, d / 2 + 0.18 + k * 0.36);
+  }
   // Parapet: a low, rounded lip around the flat roof
   const top = wallH;
   const lip = 0.45;
@@ -127,17 +158,13 @@ export function adobeHouse(x, z, opts = {}) {
   }
   if (vigas.length) add(mergeGeometries(vigas), M.wood, 0, 0, 0);
 
-  // Front facade (+z): door, framed windows, triangular vents
+  // Front facade (+z): framed windows, triangular vents
   const fz = d / 2;
-  const doorX = (opts.doorX ?? 0) * w / 2;
-  add(new THREE.BoxGeometry(1.4, 2.35, 0.12), M.trim, doorX, drop + 1.17, fz + 0.03);   // door surround
-  add(new THREE.BoxGeometry(1.0, 2.05, 0.2), M.dark, doorX, drop + 1.02, fz - 0.02);    // recess
-  add(new THREE.BoxGeometry(0.92, 1.95, 0.06), M.wood, doorX, drop + 0.98, fz - 0.06);  // plank door
   const winY = drop + Math.min(2.0, h - 1.1);
   const nWin = opts.windows ?? Math.max(1, Math.floor(w / 3));
   for (let i = 0; i < nWin; i++) {
     const wx = -w / 2 + (w / (nWin + 1)) * (i + 1);
-    if (Math.abs(wx - doorX) < 1.2) continue;
+    if (Math.abs(wx - doorX) < 1.5) continue;
     window_(group, M, wx, winY, fz);
     vent(add, M, wx, winY + 0.85, fz);
   }
@@ -166,7 +193,33 @@ export function adobeHouse(x, z, opts = {}) {
   const merged = mergeByMaterial(group);
   merged.position.set(x, base, z);
   merged.rotation.y = facing;
-  return { group: merged, footprint: { x, z, r: Math.max(w, d) * 0.55 } };
+  // The door: planks on a hinge at the left jamb; it swings inward.
+  const pivot = new THREE.Group(); pivot.position.set(doorX - DW / 2 + 0.03, floorY, fzW);
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(DW - 0.06, DH - 0.04, 0.08), M.wood); plank.position.set((DW - 0.06) / 2, DH / 2, 0); plank.castShadow = true;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 12), M.iron); ring.position.set(DW / 2 - 0.2, -0.05, 0.06); plank.add(ring);
+  [0.4, DH - 0.5].forEach((yy) => { const b = new THREE.Mesh(new THREE.BoxGeometry(DW - 0.12, 0.08, 0.1), M.wood); b.position.set(0, yy - DH / 2, 0.02); plank.add(b); });
+  pivot.add(plank); merged.add(pivot);
+  // World-space data for collisions, floors, the door and the interior.
+  const cs = Math.cos(facing), sn = Math.sin(facing);
+  const toWorld = (lx, lz) => [x + lx * cs + lz * sn, z - lx * sn + lz * cs];
+  const seg = (ax, az, bx, bz) => { const [x1, z1] = toWorld(ax, az), [x2, z2] = toWorld(bx, bz); return { x1, z1, x2, z2, r: T / 2 }; };
+  const walls = [
+    seg(-w / 2, -d / 2 + T / 2, w / 2, -d / 2 + T / 2),
+    seg(-w / 2 + T / 2, -d / 2, -w / 2 + T / 2, d / 2),
+    seg(w / 2 - T / 2, -d / 2, w / 2 - T / 2, d / 2),
+    seg(-w / 2, fzW, doorX - DW / 2, fzW),
+    seg(doorX + DW / 2, fzW, w / 2, fzW),
+  ];
+  const [dx, dz] = toWorld(doorX, d / 2), [lxw, lzw] = toWorld(w / 2 - T - 0.4, -d / 2 + T + 0.5);
+  const house = {
+    x, z, cs, sn, w, d, T, base, floorY: base + floorY, doorX, door: pivot, open: 0,
+    doorPos: new THREE.Vector3(dx, base + floorY, dz),
+    ramp: nSteps ? { lx0: doorX - DW / 2 - 0.15, lx1: doorX + DW / 2 + 0.15, lz0: d / 2 - T, lz1: d / 2 + nSteps * 0.36, y0: base + outside, y1: base + floorY } : null,
+    lamp: new THREE.Vector3(lxw, base + floorY + 1.6, lzw),
+    group: merged, interior: null,
+    buildInterior: () => furnish(w, d, T, floorY, doorX, rnd),
+  };
+  return { group: merged, footprint: { x, z, r: Math.max(w, d) * 0.55 }, walls, house };
 }
 
 // Collapse a house's many parts into one mesh per material (a handful of draw calls per house).
@@ -213,3 +266,44 @@ function vent(add, M, x, y, z) {
 export const stoneMaterial = () => materials().stone;
 export const plasterMaterial = () => materials().wall;
 export { wallBox };
+
+/** Furnishings for a one-room house (local coordinates; the floor top is at y = floorY). Built only when the
+ * player comes near, and merged per material, so a whole city of interiors costs almost nothing. */
+function furnish(w, d, T, floorY, doorX, r) {
+  const M = materials();
+  const g = new THREE.Group();
+  const add = (geo, mat, px, py, pz, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, floorY + py, pz); m.rotation.y = ry; g.add(m); return m; };
+  const iw = w - 2 * T, id = d - 2 * T;
+  // woven rug in the middle of the room
+  add(new THREE.BoxGeometry(Math.min(2.6, iw * 0.5), 0.02, Math.min(1.8, id * 0.45)), M.rugs[Math.floor(r() * 4)], 0, 0.01, -0.1);
+  // low table with bread and a cup
+  add(new THREE.BoxGeometry(1.2, 0.08, 0.7), M.wood, 0, 0.36, -0.1);
+  [[-0.5, -0.25], [0.5, -0.25], [-0.5, 0.25], [0.5, 0.25]].forEach(([a, b]) => add(new THREE.BoxGeometry(0.07, 0.34, 0.07), M.wood, a, 0.17, -0.1 + b));
+  add(new THREE.SphereGeometry(0.14, 10, 6).scale(1, 0.5, 1), M.floor, -0.2, 0.44, -0.1);
+  add(new THREE.CylinderGeometry(0.05, 0.04, 0.12, 10), M.clay, 0.25, 0.46, -0.05);
+  // sleeping mats with folded blankets along the back wall
+  for (let k = 0; k < 2; k++) {
+    add(new THREE.BoxGeometry(0.8, 0.06, 1.9), M.linen, -iw / 2 + 0.6 + k * 0.95, 0.03, -id / 2 + 1.05);
+    add(new THREE.BoxGeometry(0.7, 0.12, 0.4), M.rugs[(k + 1) % 4], -iw / 2 + 0.6 + k * 0.95, 0.12, -id / 2 + 0.3);
+  }
+  // water jars and a bread oven (tabun) in the corner
+  for (let k = 0; k < 3; k++) { const j = add(new THREE.SphereGeometry(0.22, 12, 10), M.clay, iw / 2 - 0.35 - k * 0.45, 0.28, id / 2 - 0.5); j.scale.y = 1.35; }
+  if (Math.abs(-iw / 2 + 0.7 - doorX) > 1.3) { const oven = add(new THREE.SphereGeometry(0.55, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), M.floor, -iw / 2 + 0.7, 0, id / 2 - 0.8); oven.scale.y = 1.1; }
+  // shelf with pottery on the right wall
+  add(new THREE.BoxGeometry(0.3, 0.05, 1.6), M.wood, iw / 2 - 0.15, 1.5, -0.6);
+  for (let k = 0; k < 4; k++) add(new THREE.CylinderGeometry(0.07 + r() * 0.04, 0.06, 0.18 + r() * 0.1, 10), M.clay, iw / 2 - 0.15, 1.62, -1.2 + k * 0.4);
+  // oil lamp in a wall niche
+  add(new THREE.BoxGeometry(0.3, 0.35, 0.15), M.dark, iw / 2 - 0.4, 1.45, -id / 2 + 0.02);
+  add(new THREE.SphereGeometry(0.06, 8, 6).scale(1.6, 0.6, 1), M.clay, iw / 2 - 0.4, 1.32, -id / 2 + 0.1);
+  add(new THREE.ConeGeometry(0.025, 0.08, 6), M.flame, iw / 2 - 0.4, 1.4, -id / 2 + 0.1);
+  // a loom by the left wall
+  if (r() < 0.5) {
+    add(new THREE.BoxGeometry(0.06, 1.8, 0.06), M.wood, -iw / 2 + 0.25, 0.9, -0.6);
+    add(new THREE.BoxGeometry(0.06, 1.8, 0.06), M.wood, -iw / 2 + 0.25, 0.9, 0.4);
+    add(new THREE.BoxGeometry(0.05, 0.05, 1.1), M.wood, -iw / 2 + 0.25, 1.75, -0.1);
+    add(new THREE.PlaneGeometry(0.9, 1.3), M.linen, -iw / 2 + 0.3, 1.0, -0.1, Math.PI / 2);
+  }
+  const merged = mergeByMaterial(g);
+  merged.traverse((m) => { if (m.isMesh) { m.castShadow = false; m.receiveShadow = true; } });
+  return merged;
+}

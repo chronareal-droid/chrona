@@ -56,7 +56,9 @@ export function heightAt(x, z) {
 export const waterLevel = (x) => baseHeight(x, brookZ(x)) - 1.7;
 
 export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel') {
-  const world = { update: () => {}, colliders: [], sun: null, campaign };
+  const world = { update: () => {}, colliders: [], sun: null, campaign, walls: [], footprints: [], houses: [] };
+  // Houses are hollow: their walls collide as segments, their floors can be stood on, and their doors open.
+  world.registerHouse = (hs) => { scene.add(hs.group); world.walls.push(...hs.walls); world.footprints.push({ ...hs.footprint, house: true }); world.houses.push(hs.house); };
 
   // --- Sky & light. Presets: golden (late afternoon), day, dawn, night, darkness (the sixth hour) ---
   const sky = new Sky();
@@ -516,12 +518,11 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
   {
     const p = PLACES.jesse;
     const hs = adobeHouse(p.x - 6, p.z - 8, { w: 9, d: 7, h: 3.6, upper: true, facing: 0, windows: 2 });
-    scene.add(hs.group);
-    world.colliders.push({ x: p.x - 6, z: p.z - 8, r: 5.5, building: true });
+    world.registerHouse(hs);
     // A few more homes make a village (Bethlehem / Bethany)
     [[-34, 172, 0.3], [-44, 186, 1.2], [-6, 200, Math.PI], [-30, 204, Math.PI * 0.9], [-52, 168, 0.8]].forEach(([vx, vz, f]) => {
       const v = adobeHouse(vx, vz, { w: 6 + rand() * 2, d: 5 + rand(), h: 3.2, upper: rand() < 0.4, facing: f });
-      scene.add(v.group); world.colliders.push({ ...v.footprint, building: true });
+      world.registerHouse(v);
     });
     // low stone wall of the sheepfold
     const wallM = new THREE.MeshStandardMaterial({ color: 0xa8957a, roughness: 1, flatShading: true });
@@ -537,6 +538,22 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
   const veg = buildVegetation(scene, world, { quality, campaign, inCity });
   { const prev = world.update; world.update = (t, dt) => { prev(t, dt); veg.update(t); }; }
   return world;
+}
+
+/** Height of whatever you stand on: terrain, a house floor, or the steps up to a door. */
+export function surfaceAt(world, x, z) {
+  let h = heightAt(x, z);
+  for (const H of world.houses) {
+    const dx = x - H.x, dz = z - H.z;
+    if (dx * dx + dz * dz > (H.w + H.d) * (H.w + H.d) * 0.3) continue;
+    const lx = dx * H.cs - dz * H.sn, lz = dx * H.sn + dz * H.cs; // into the house's own frame
+    if (Math.abs(lx) < H.w / 2 - H.T + 0.05 && Math.abs(lz) < H.d / 2 - H.T + 0.05) h = Math.max(h, H.floorY);
+    else if (H.ramp && lx > H.ramp.lx0 && lx < H.ramp.lx1 && lz > H.ramp.lz0 && lz < H.ramp.lz1) {
+      const k = 1 - (lz - H.ramp.lz0) / (H.ramp.lz1 - H.ramp.lz0);
+      h = Math.max(h, THREE.MathUtils.lerp(H.ramp.y0, H.ramp.y1, Math.min(1, k * 1.15)));
+    }
+  }
+  return h;
 }
 
 export function pathX(z) {
@@ -583,7 +600,7 @@ function buildCamp(scene, world, center, { cloth, banner, spread, count }) {
     if (Math.abs(x - pathX(z)) < 6 && center.z > -50) continue;
     const sc = 0.9 + rand() * 0.5, tr = 2.4 * sc;
     // no tent overlaps another tent or building
-    if (world.colliders.some((c) => (c.building || c.house) && Math.hypot(c.x - x, c.z - z) < c.r + tr + 0.6)) continue;
+    if ([...world.colliders, ...world.footprints].some((c) => (c.building || c.house) && Math.hypot(c.x - x, c.z - z) < c.r + tr + 0.6)) continue;
     const t = tent(cloth[i % cloth.length], sc);
     // sit on the lowest point of its footprint so no edge hangs in the air on a slope
     let lo = Infinity; for (let k = 0; k < 6; k++) { const a2 = (k / 6) * Math.PI * 2; lo = Math.min(lo, heightAt(x + Math.cos(a2) * tr, z + Math.sin(a2) * tr)); }
@@ -698,21 +715,19 @@ function buildJerusalem(scene, world) {
     const gates = Math.hypot(x - gateSX, z - J.maxZ) < 10 || Math.hypot(x - gateNX, z - J.minZ) < 10;
     if (street(x, z) || temple || upper || gates) continue;
     const w = 5 + rand() * 3, d = 4.5 + rand() * 2.5;
-    if (world.colliders.some((c) => c.house && Math.hypot(c.x - x, c.z - z) < c.r + Math.max(w, d) * 0.55 + 1)) continue;
+    if (world.footprints.some((c) => Math.hypot(c.x - x, c.z - z) < c.r + Math.max(w, d) * 0.55 + 1)) continue;
     const facing = x < THREE.MathUtils.lerp(gateSX, gateNX, (J.maxZ - z) / (J.maxZ - J.minZ)) ? Math.PI / 2 : -Math.PI / 2;
     const hs = adobeHouse(x, z, { w, d, h: 3 + rand() * 1.2, upper: rand() < 0.35, facing, stone: rand() < 0.4, doorX: (rand() - 0.5) * 0.6 });
-    scene.add(hs.group);
+    world.registerHouse(hs);
     if (rand() < 0.35) { const aw = add(new THREE.Mesh(new THREE.PlaneGeometry(w * 0.5, 1.4), awningM[i % 3])); aw.position.set(x + Math.sin(facing) * (d / 2 + 0.7), heightAt(x, z) + 2.3, z + Math.cos(facing) * (d / 2 + 0.7)); aw.rotation.set(-Math.PI / 2 + 0.3, facing, 0, 'YXZ'); }
-    world.colliders.push({ ...hs.footprint, house: true });
   }
   // The upper room: a two-storey house with an outside stair
   {
     const U = new THREE.Vector3(-18, 0, -8);
     const hs = adobeHouse(U.x, U.z, { w: 9, d: 7, h: 3.6, upper: true, facing: 0, windows: 2, doorX: -0.4 });
-    scene.add(hs.group);
+    world.registerHouse(hs);
     const y = heightAt(U.x + 5.1, U.z);
     for (let k = 0; k < 8; k++) { const st = add(new THREE.Mesh(wallBox(1.2, 0.45, 0.8, 0.01), stoneMaterial())); st.position.set(U.x + 5.1, y + 0.2 + k * 0.45, U.z + 3 - k * 0.8); }
-    world.colliders.push({ x: U.x, z: U.z, r: 4.6, building: true });
     world.upperRoom = new THREE.Vector3(U.x + 1, 0, U.z + 5.5);
   }
   // Palms along the road up to the south gate (for the triumphal entry)
