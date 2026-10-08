@@ -122,6 +122,8 @@ export function createMenu(G, { start }) {
       <label>Sound effects &amp; ambience<input type="range" min="0" max="1.5" step="0.05" value="${st.sfxVolume ?? 1}" data-r="sfxVolume" /></label>
       <label>Voice chat<div class="seg" data-k="voiceMode"><button data-v="proximity" class="${(st.voiceMode || 'proximity') === 'proximity' ? 'on' : ''}">Proximity</button><button data-v="party" class="${st.voiceMode === 'party' ? 'on' : ''}">Whole party</button></div></label>
       <p class="note">Proximity: online, you hear friends from where they stand, fading out by 40 m. Nearby text chat (T) reaches 30 m; press Tab in the chat box to message the whole party.</p>
+      <label>Ask Jesus (online)<div class="seg" data-k="askMode"><button data-v="verses" class="${st.askMode !== 'ai' ? 'on' : ''}">Gospel verses</button><button data-v="ai" class="${st.askMode === 'ai' ? 'on' : ''}">AI Jesus (free)</button></div></label>
+      <p class="note" id="ai-note">${G.jesusAI?.supported ? 'AI Jesus runs a small AI on this computer’s graphics card: free, private, no account. It downloads about 1 GB the first time, then starts in seconds. Its answers are written by the AI in the spirit of the Gospels and are marked as such; Gospel verses answer only with his real words.' : 'AI Jesus needs Chrome or Edge on a computer with WebGPU; on this device Jesus answers with Gospel verses.'}</p>
       <label>Look sensitivity<input type="range" min="0.3" max="2.5" step="0.05" value="${st.sensitivity}" data-r="sensitivity" /></label>
       <label>Invert look<div class="seg" data-k="invertY"><button data-v="false" class="${!st.invertY ? 'on' : ''}">Off</button><button data-v="true" class="${st.invertY ? 'on' : ''}">On</button></div></label>
       <label>Progress<div class="seg"><button data-reset>Erase saved progress</button></div></label>
@@ -135,6 +137,7 @@ export function createMenu(G, { start }) {
       if (k === 'quality') { st.qualityChosen = true; save.write(); post.apply(v, G.world.sun); }
       if (k === 'showFps') G.stats?.show(v);
       if (k === 'voiceMode') G.net?.voice.setMode(v);
+      if (k === 'askMode' && v === 'ai') { const ai = G.jesusAI; const note = body.querySelector('#ai-note'); if (ai) { ai.onChange = () => { if (note) note.textContent = document.getElementById('aistatus')?.textContent || note.textContent; }; ai.load(); } }
     }));
     body.querySelectorAll('[data-r]').forEach((r) => (r.oninput = () => {
       st[r.dataset.r] = parseFloat(r.value); save.write();

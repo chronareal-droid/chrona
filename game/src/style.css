@@ -355,3 +355,6 @@ body.online .vitals { display: none; }
 #chatbox .scope { flex: none; display: grid; place-items: center; padding: 0 0.6em; border-radius: 3px; font-family: var(--display); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
 #chatbox .scope.near { background: #2f5a2a; color: #d8ffcf; } #chatbox .scope.party { background: #6a4a1a; color: #ffe7b5; }
 #chatlog p.near b { color: #a9f09a; }
+#aistatus { position: fixed; right: 16px; bottom: 60px; z-index: 16; background: rgba(14, 10, 6, 0.85); border: 1px solid rgba(233, 201, 135, 0.4); border-radius: 14px; padding: 0.3rem 0.8rem; font-size: 0.9rem; pointer-events: none; }
+#askjesus.thinking .ask-a span { animation: blink 1s infinite; }
+#askjesus.ai .ask-a cite { font-size: 0.85rem; }

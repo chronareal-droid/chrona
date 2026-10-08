@@ -206,7 +206,7 @@ export function installGuest(G) {
     const [x, y, z] = welcome.hostSpawn || [0, 0, 0];
     G.setPlayer(V(x + 2, 0, z + 2), 0);
     net.startGuest(welcome, profile);
-    setTimeout(() => net.voice.restore(), 1200);
+    setTimeout(() => { net.voice.restore(); G.ask?.prepare(); }, 1200);
     G.armGuestSling = () => { // friends can help against Goliath
       if (G.player.slingUnlocked) return;
       G.setSling(true); G.player.stones = 5; ui.stones(5, true);

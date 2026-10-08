@@ -111,6 +111,7 @@ export function enableAutoHero(G) {
   document.body.classList.add('online');
   G.net?.announceHostMe?.();
   G.net?.voice?.restore();
+  G.ask?.prepare();
   const role = G.net?.myRole;
   setTimeout(() => {
     if (role) G.ui.card('You walk with Jesus', role, `${profile.name}, you are ${role}, one of the Twelve. Follow the Master; in each scene you take your place among the disciples.`, 5200);

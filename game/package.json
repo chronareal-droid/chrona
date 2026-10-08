@@ -11,6 +11,7 @@
     "models:fetch": "node scripts/fetch-models.mjs"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.79",
     "peerjs": "^1.5.5",
     "three": "^0.170.0"
   },

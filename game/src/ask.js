@@ -70,8 +70,12 @@ export function answerFor(question) {
   return best ? { line: best.a, ref: best.r } : (() => { const f = FALLBACK[Math.floor(Math.random() * FALLBACK.length)]; return { line: f.a, ref: f.r }; })();
 }
 
+import { createJesusAI } from './ai.js';
+
 export function createAsk(G) {
   const { ui, net } = G;
+  const ai = G.jesusAI = createJesusAI(G);
+  const useAI = () => G.save.settings.askMode === 'ai';
   const box = document.createElement('div'); box.id = 'askjesus'; box.hidden = true;
   box.innerHTML = '<div class="ask-q"></div><div class="ask-a"><b>Jesus</b><span></span><cite></cite></div>';
   document.body.appendChild(box);
@@ -104,26 +108,52 @@ export function createAsk(G) {
     box.querySelector('.ask-q').textContent = `${asker}: “${q}”`;
     box.querySelector('.ask-a span').textContent = a.line;
     box.querySelector('.ask-a cite').textContent = a.ref;
+    box.classList.toggle('thinking', !!a.thinking); box.classList.toggle('ai', !!a.ai);
     box.hidden = false; box.classList.remove('out');
+    if (a.thinking) { clearTimeout(hideT); return; }
     clearTimeout(hideT); hideT = setTimeout(() => { box.classList.add('out'); setTimeout(() => (box.hidden = true), 800); }, Math.max(6000, a.line.length * 75));
     speak(a.line);
   };
   /** Host: Jesus turns to whoever asked and answers; everyone sees and hears it. */
-  const answer = (askerName, q, posOf) => {
-    const a = answerFor(q);
+  /** His answer: the AI's words (if AI Jesus is on and ready) steered by a fitting Gospel saying, else that saying. */
+  const compose = async (asker, q) => {
+    const ground = answerFor(q);
+    if (!useAI() || ai.state !== 'ready') return ground;
+    const text = await ai.reply(asker, q, ground);
+    return text ? { line: text, ref: `AI-written, in the spirit of ${ground.ref}`, ai: true } : ground;
+  };
+  const turnAndSpeak = (a, posOf) => {
     const P = G.player, at = posOf?.();
     if (at && G.control && !G.interactBusy) { P.facing = Math.atan2(at.x - P.pos.x, at.z - P.pos.z); }
-    if (G.autoHero) G.autoHero.pauseUntil = G.t + Math.min(9, 2 + a.line.length * 0.05);
-    P.h.pose.talk = 1; setTimeout(() => (P.h.pose.talk = 0), Math.min(8000, a.line.length * 60));
-    net.broadcastAnswer?.({ who: askerName, q, line: a.line, ref: a.ref });
+    if (G.autoHero) G.autoHero.pauseUntil = G.t + Math.min(10, 2 + a.line.length * 0.05);
+    P.h.pose.talk = 1; setTimeout(() => (P.h.pose.talk = 0), Math.min(9000, a.line.length * 60));
+  };
+  const thinking = (who, q) => { show(who, q, { line: '…', ref: 'Jesus is answering', thinking: true }); if (G.autoHero) G.autoHero.pauseUntil = G.t + 12; };
+  /** Host: Jesus turns to whoever asked and answers; everyone sees and hears it. */
+  const answer = async (askerName, q, posOf, role) => {
+    if (useAI() && ai.state === 'ready') { thinking(askerName, q); net.broadcastAnswer?.({ who: askerName, q, line: '…', ref: 'Jesus is answering', thinking: true }); }
+    const a = await compose({ name: askerName, role }, q);
+    turnAndSpeak(a, posOf);
+    net.broadcastAnswer?.({ who: askerName, q, line: a.line, ref: a.ref, ai: !!a.ai });
     show(askerName, q, a);
   };
-  const send = (q) => {
+  /** The host shows an answer a friend's own AI wrote, and passes it on. */
+  const relayed = (askerName, q, a, posOf) => { turnAndSpeak(a, posOf); show(askerName, q, a); };
+  const send = async (q) => {
     q = q.slice(0, 140);
-    if (net.role === 'guest') net.askHost?.(q);
-    else answer(net.me?.name || 'You', q, () => G.follow?.pos);
+    const me = net.me?.name || 'You';
+    if (net.role === 'guest') {
+      // a friend with AI Jesus on their own computer writes the answer there; otherwise the host answers
+      if (useAI() && ai.state === 'ready') {
+        thinking(me, q);
+        const a = await compose({ name: me, role: net.myRole }, q);
+        show(me, q, a); net.relayAnswer?.(q, a);
+      } else net.askHost?.(q);
+    } else answer(me, q, () => G.follow?.pos, net.myRole);
   };
-  G.ask = { answer, show, answerFor };
+  /** Start loading the AI when it is switched on (the download is cached after the first time). */
+  const prepare = () => { if (useAI() && ai.supported && ai.state === 'off') ai.load(); };
+  G.ask = { answer, relayed, show, answerFor, prepare, ai };
 
   const start = () => {
     if (!can() || listening || G.chatting) return;

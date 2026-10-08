@@ -234,7 +234,15 @@ export function createNet(G) {
     if (m.t === 'ready') { const p = net.players.get(id); if (p) { p.ready = !!m.on; broadcast({ t: 'ready', id, on: p.ready }); net.onPlayers?.(); } return; }
     if (m.t === 'chat') { const text = String(m.text || '').slice(0, 140); const from = net.players.get(id)?.name || '?'; const msg = { t: 'chat', from, text, id, scope: m.scope === 'near' ? 'near' : 'party', p: Array.isArray(m.p) ? m.p.slice(0, 3).map(Number) : null }; hearChat(msg); broadcast(msg, conn); return; }
     if (m.t === 'hit' && G.goliathTarget) { G.goliathTarget.onHit(m.part, {}); return; }
-    if (m.t === 'ask') { const p = net.players.get(id); if (p && G.ask) G.ask.answer(p.name, String(m.q || '').slice(0, 140), () => avatars.get(id)?.pos); return; }
+    if (m.t === 'ask') { const p = net.players.get(id); if (p && G.ask) G.ask.answer(p.name, String(m.q || '').slice(0, 140), () => avatars.get(id)?.pos, p.role); return; }
+    if (m.t === 'ansrelay') {
+      const p = net.players.get(id); if (!p || !G.ask) return;
+      const a = { line: String(m.line || '').slice(0, 360), ref: String(m.ref || '').slice(0, 80), ai: !!m.ai };
+      const q = String(m.q || '').slice(0, 140);
+      G.ask.relayed(p.name, q, a, () => avatars.get(id)?.pos);
+      broadcast({ t: 'ans', who: p.name, q, ...a }, conn);
+      return;
+    }
     if (m.t === 'role') {
       const p = net.players.get(id); if (!p) return;
       const want = DISCIPLES.includes(m.role) && ![...net.players.values()].some((q) => q !== p && q.role === m.role) ? m.role : p.role;
@@ -420,7 +428,7 @@ export function createNet(G) {
       }
       case 'hostme': if (net.inGameGuest) { const old = avatars.get('hostme'); makeAvatar('hostme', m.p); if (old) { avatars.get('hostme').pos.copy(old.pos); avatars.get('hostme').first = false; } const hero = avatars.get('host'); if (hero && m.p.auto && !hero.auto) makeAvatar('host', { name: net.hostName, campaign: G.campaign, auto: true }, true); } break;
       case 'hostrole': net.hostRole = m.role; net.onPlayers?.(); break;
-      case 'ans': G.ask?.show(m.who, m.q, { line: m.line, ref: m.ref }); break;
+      case 'ans': G.ask?.show(m.who, m.q, { line: m.line, ref: m.ref, ai: m.ai, thinking: m.thinking }); break;
       case 'camp': net.partyCampaign = m.c; net.onPlayers?.(); break;
       case 'tp': G.setPlayer(V(m.p[0], m.p[1], m.p[2]), m.f); G.snapCamera?.(); break;
     }
@@ -524,6 +532,7 @@ export function createNet(G) {
   /** Party leader: everyone loads into the chosen story together. */
   net.startParty = (campaign, part) => { net.inGame = true; broadcast({ t: 'start', campaign, part }); };
   net.askHost = (q) => send(net.host, { t: 'ask', q });
+  net.relayAnswer = (q, a) => send(net.host, { t: 'ansrelay', q, line: a.line, ref: a.ref, ai: !!a.ai });
   net.broadcastAnswer = (m) => broadcast({ t: 'ans', ...m });
   net.setReady = (on) => send(net.host, { t: 'ready', on });
   net.setCampaign = (c) => { net.partyCampaign = c; broadcast({ t: 'camp', c }); };
