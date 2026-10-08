@@ -79,7 +79,9 @@ export function createPost(renderer, scene, camera) {
   const smaa = new SMAAPass(innerWidth, innerHeight);
   composer.addPass(smaa);
 
-  const post = { composer, bloom, ao, dof, grade, preset: 'high', cineFocus: null, scale: 1, autoRes: true };
+  // Names over heads, speech bubbles and icons are drawn after the film grade, so they stay sharp.
+  const overlay = new THREE.Scene();
+  const post = { composer, bloom, ao, dof, grade, overlay, preset: 'high', cineFocus: null, scale: 1, autoRes: true };
   const setRatio = () => {
     const p = PRESETS[post.preset] || PRESETS.high;
     // Ultra renders at up to 2.5× CSS pixels, so a 1080p-CSS window on a 4K display renders native 4K.
@@ -125,6 +127,12 @@ export function createPost(renderer, scene, camera) {
     if (dof.enabled) dof.uniforms.focus.value = focus;
     bloom.strength = 0.32 + spirit * 0.5;
     composer.render();
+    if (overlay.children.length) {
+      const ac = renderer.autoClear; renderer.autoClear = false;
+      renderer.setRenderTarget(null); renderer.clearDepth();
+      renderer.render(overlay, camera);
+      renderer.autoClear = ac;
+    }
   };
   return post;
 }

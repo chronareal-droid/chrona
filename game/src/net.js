@@ -40,22 +40,58 @@ const applyPose = (pose, o) => { for (const k of POSE_KEYS) pose[k] = o?.[k] || 
 
 /** A floating name above someone's head. */
 function nameplate(text, color = '#f6eedc') {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 80;
-  const g = c.getContext('2d');
-  g.font = '600 34px "EB Garamond", Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  const w = Math.min(500, g.measureText(text).width + 32);
-  g.fillStyle = 'rgba(10,8,6,0.78)'; g.beginPath(); g.roundRect ? g.roundRect(256 - w / 2, 14, w, 52, 14) : g.rect(256 - w / 2, 14, w, 52); g.fill();
-  g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,0.6)'; g.strokeText(text, 256, 41);
-  g.fillStyle = color; g.fillText(text, 256, 41);
+  const c = document.createElement('canvas'), g = c.getContext('2d');
+  const font = '600 40px "EB Garamond", Georgia, serif';
+  g.font = font; const tw = Math.ceil(g.measureText(text).width);
+  c.width = Math.max(140, tw + 44); c.height = 64;
+  g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(10,8,6,0.72)'; g.beginPath(); g.roundRect ? g.roundRect(2, 2, c.width - 4, 60, 16) : g.rect(2, 2, c.width - 4, 60); g.fill();
+  g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,0.7)'; g.strokeText(text, c.width / 2, 34);
+  g.fillStyle = color; g.fillText(text, c.width / 2, 34);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
   // always drawn on top, so you can pick out your friends in a crowd
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, depthTest: false, transparent: true, fog: false, toneMapped: false }));
-  s.scale.set(2.4, 0.375, 1); s.renderOrder = 10;
+  s.userData.aspect = c.width / c.height; s.renderOrder = 10;
   return s;
 }
 
+/** A little speaker with sound waves, shown over whoever is talking. */
+function speakerIcon() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgba(10,8,6,0.7)'; g.beginPath(); g.arc(32, 32, 30, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#7dff8a'; g.beginPath(); g.moveTo(14, 26); g.lineTo(22, 26); g.lineTo(32, 16); g.lineTo(32, 48); g.lineTo(22, 38); g.lineTo(14, 38); g.closePath(); g.fill();
+  g.strokeStyle = '#7dff8a'; g.lineWidth = 3.5; g.lineCap = 'round';
+  [8, 15].forEach((r) => { g.beginPath(); g.arc(34, 32, r, -0.8, 0.8); g.stroke(); });
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, depthTest: false, transparent: true, fog: false, toneMapped: false }));
+  s.scale.set(0.42, 0.42, 1); s.renderOrder = 11; s.visible = false;
+  return s;
+}
+/** A speech bubble for a chat line said out loud nearby. */
+function bubble(text) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const g = c.getContext('2d');
+  g.font = '500 34px "EB Garamond", Georgia, serif';
+  const words = text.split(' '), lines = []; let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > 450 && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  const shown = lines.slice(0, 2); if (lines.length > 2) shown[1] += '…';
+  const w = Math.min(500, Math.max(...shown.map((l) => g.measureText(l).width)) + 36), h = 28 + shown.length * 34;
+  g.fillStyle = 'rgba(246,238,220,0.94)'; g.beginPath(); g.roundRect ? g.roundRect(256 - w / 2, 4, w, h, 16) : g.rect(256 - w / 2, 4, w, h); g.fill();
+  g.beginPath(); g.moveTo(244, h + 4); g.lineTo(256, h + 18); g.lineTo(268, h + 4); g.fill();
+  g.font = '500 34px "EB Garamond", Georgia, serif'; g.fillStyle = '#1d1309'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  shown.forEach((l, i) => g.fillText(l, 256, 4 + 14 + 17 + i * 34));
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, depthTest: false, transparent: true, fog: false, toneMapped: false }));
+  s.scale.set(2.6, 0.65, 1); s.renderOrder = 12;
+  return s;
+}
+const NEAR = 30; // metres: nearby chat reaches this far
+
 export function createNet(G) {
   const { scene, ui, audio, save, V } = G;
+  const hud = G.post?.overlay || scene; // drawn sharp, on top of the film grade
   const net = { role: null, code: null, name: '', players: new Map(), peer: null, conns: new Map(), host: null, onChat: null };
   G.net = net;
   net.voice = createVoice(G, net);
@@ -65,6 +101,7 @@ export function createNet(G) {
   // ------------------------------------------------------------ Avatars for other players
   const avatars = new Map(); // id -> { h, plate, pos, tgt, facing, tf, speed, pose, isHero }
   net.avatars = avatars;
+  net.debug = { makeAvatar: (...a) => makeAvatar(...a), hearChat: (m) => hearChat(m) };
   function makeAvatar(id, info, isHero = false) {
     removeAvatar(id);
     let h;
@@ -73,35 +110,59 @@ export function createNet(G) {
     else h = createHumanoid(lookToOpts(info.look || {}, info.name));
     if (isHero && info.campaign !== 'gospel') { const st = createStaff(); st.position.set(0, -0.05, 0.05); st.rotation.x = Math.PI / 2 - 0.2; h.rig.handR.add(st); }
     scene.add(h.root);
+    const icon = speakerIcon(); hud.add(icon);
     const plate = nameplate(isHero ? (info.campaign === 'gospel' ? (info.auto ? 'Jesus' : `Jesus · ${info.name}`) : `David · ${info.name}`) : info.role && G.campaign === 'gospel' ? `${info.role} · ${info.name}` : info.name || 'Pilgrim', isHero ? '#ffd889' : info.role ? '#e8dcff' : '#f6eedc');
-    scene.add(plate);
-    const a = { h, plate, pos: V(), tgt: V(), facing: 0, tf: 0, speed: 0, pose: {}, isHero, auto: !!info.auto, name: info.name, role: info.role || null, first: true };
+    hud.add(plate);
+    const a = { h, plate, icon, pos: V(), tgt: V(), facing: 0, tf: 0, speed: 0, pose: {}, isHero, auto: !!info.auto, name: info.name, role: info.role || null, first: true };
     avatars.set(id, a);
     // the hero as seen by friends uses the realistic model when it is available
     if (isHero && info.campaign === 'gospel' && G.loadHeroModel) G.loadHeroModel().then((m) => { if (m && avatars.get(id) === a) { scene.remove(a.h.root); a.h = m; scene.add(m.root); } });
     return a;
   }
-  function removeAvatar(id) { const a = avatars.get(id); if (!a) return; scene.remove(a.h.root); scene.remove(a.plate); avatars.delete(id); }
+  function removeAvatar(id) { const a = avatars.get(id); if (!a) return; scene.remove(a.h.root); hud.remove(a.plate); hud.remove(a.icon); avatars.delete(id); }
+  /** Which voice-chat peer an avatar belongs to. */
+  const voiceIdOf = (id) => (id === 'host' || id === 'hostme' ? (net.role === 'guest' ? net.hostId : null) : id);
+  const myPos = () => (G.follow || G.player).pos;
   function moveAvatar(id, d) {
     const a = avatars.get(id); if (!a) return;
     a.tgt.set(d[0], d[1], d[2]); a.tf = d[3]; a.speed = d[4]; a.pose = d[5] || {}; a.ride = d[6] || 0;
     if (a.first) { a.pos.copy(a.tgt); a.facing = a.tf; a.first = false; }
   }
   function updateAvatars(dt) {
-    for (const a of avatars.values()) {
+    for (const [id, a] of avatars) {
       a.pos.lerp(a.tgt, 1 - Math.exp(-dt * 12));
       a.facing = G.lerpAngle(a.facing, a.tf, 1 - Math.exp(-dt * 12));
       a.h.root.position.copy(a.pos); a.h.root.rotation.y = a.facing;
       applyPose(a.h.pose, a.pose);
       a.h.animate(dt, a.speed);
       a.plate.position.copy(a.pos).add(V(0, 2.15 + (a.ride ? 1 : 0), 0));
-      const k = Math.min(3, Math.max(1, a.pos.distanceTo(G.camera.position) / 12)); // stays readable far away
-      a.plate.scale.set(2.4 * k, 0.375 * k, 1);
+      const k = Math.min(4, Math.max(1, a.pos.distanceTo(G.camera.position) / 9)); // stays readable far away
+      a.plate.scale.set(0.36 * a.plate.userData.aspect * k, 0.36 * k, 1);
       // a friend playing a disciple steps into that disciple during cutscenes
       const inScene = a.role && G.campaign === 'gospel' && G.cine && !G.cine.title;
       a.h.root.visible = !inScene;
       a.plate.visible = (!G.cine || G.cine.net) && !inScene && a.pos.distanceTo(G.camera.position) < 70;
+      // the speaker icon: over the leader's disciple rather than over Jesus when Jesus walks by himself
+      const vid = voiceIdOf(id);
+      const talker = id !== 'host' || !avatars.has('hostme');
+      a.icon.visible = !!(vid && talker && net.voice.speaking.get(vid)) && a.plate.visible;
+      a.icon.position.copy(a.plate.position).add(V(0, 0.4 * k, 0)); a.icon.scale.setScalar(0.4 * k);
     }
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const b = bubbles[i], p = b.at();
+      if (!p || G.t > b.until) { hud.remove(b.s); bubbles.splice(i, 1); continue; }
+      const k = Math.min(3, Math.max(1, p.distanceTo(G.camera.position) / 10));
+      b.s.position.copy(p).add(V(0, 2.2 + 0.75 * k + b.lift * 0.85 * k, 0)); b.s.scale.set(3.2 * k, 0.8 * k, 1);
+      b.s.visible = (!G.cine || G.cine.net) && !(b.key === 'me' && G.camMode === 'first');
+    }
+  }
+  const bubbles = [];
+  /** Show a chat line as a bubble over the speaker's head for a few seconds. */
+  function say(key, at, text) {
+    for (const b of bubbles) if (b.key === key) b.lift++;
+    const s = bubble(text); hud.add(s);
+    bubbles.push({ s, key, at, until: G.t + 4 + text.length * 0.06, lift: 0 });
+    while (bubbles.length > 12) { hud.remove(bubbles[0].s); bubbles.shift(); }
   }
 
   // ------------------------------------------------------------ HOST
@@ -171,7 +232,7 @@ export function createNet(G) {
     const id = conn.peer;
     if (m.t === 'p') { moveAvatar(id, m.d); return; }
     if (m.t === 'ready') { const p = net.players.get(id); if (p) { p.ready = !!m.on; broadcast({ t: 'ready', id, on: p.ready }); net.onPlayers?.(); } return; }
-    if (m.t === 'chat') { const text = String(m.text || '').slice(0, 140); const from = net.players.get(id)?.name || '?'; showChat(from, text); broadcast({ t: 'chat', from, text }, conn); return; }
+    if (m.t === 'chat') { const text = String(m.text || '').slice(0, 140); const from = net.players.get(id)?.name || '?'; const msg = { t: 'chat', from, text, id, scope: m.scope === 'near' ? 'near' : 'party', p: Array.isArray(m.p) ? m.p.slice(0, 3).map(Number) : null }; hearChat(msg); broadcast(msg, conn); return; }
     if (m.t === 'hit' && G.goliathTarget) { G.goliathTarget.onHit(m.part, {}); return; }
     if (m.t === 'ask') { const p = net.players.get(id); if (p && G.ask) G.ask.answer(p.name, String(m.q || '').slice(0, 140), () => avatars.get(id)?.pos); return; }
     if (m.t === 'role') {
@@ -346,7 +407,7 @@ export function createNet(G) {
       case 'boss': ui.boss(m.show, m.f); if (m.show) G.armGuestSling?.(); break;
       case 'cinema': ui.cinema(m.on); if (!m.on && G.cine?.net) { G.cine = null; G.control = true; } break;
       case 'time': G.world.setTime(m.n); break;
-      case 'chat': showChat(m.from, m.text); break;
+      case 'chat': hearChat(m); break;
       case 's': if (net.inGameGuest) guestState(m); break;
       case 'ready': { const p = net.players.get(m.id); if (p) p.ready = m.on; net.onPlayers?.(); break; }
       case 'start': net.onStart?.(m); break;
@@ -421,28 +482,42 @@ export function createNet(G) {
   // ------------------------------------------------------------ Chat
   const log = document.createElement('div'); log.id = 'chatlog'; document.body.appendChild(log);
   const box = document.createElement('form'); box.id = 'chatbox'; box.hidden = true;
-  box.innerHTML = '<input id="chat-input" maxlength="140" autocomplete="off" placeholder="Say something… (Enter to send, Esc to close)" />';
+  box.innerHTML = '<span class="scope"></span><input id="chat-input" maxlength="140" autocomplete="off" placeholder="Say something… (Enter to send · Tab: nearby / party · Esc to close)" />';
   document.body.appendChild(box);
   const input = box.querySelector('input');
-  function showChat(from, text) {
+  // Text chat is nearby by default in the story: only players within 30 m read it, and it appears over your head.
+  net.chatScope = 'near';
+  const scopeEl = box.querySelector('.scope');
+  const drawScope = () => { const near = net.chatScope === 'near' && G.inGame; scopeEl.textContent = near ? 'Nearby' : 'Party'; scopeEl.className = 'scope ' + (near ? 'near' : 'party'); };
+  const avatarFor = (m) => (m.id === 'host' ? (avatars.has('hostme') ? 'hostme' : 'host') : m.id);
+  function hearChat(m) {
+    const me = myPos();
+    if (m.scope === 'near' && G.inGame && m.p && G.hdist({ x: m.p[0], z: m.p[2] }, me) > NEAR) return; // too far away to hear
+    showChat(m.from, m.text, m.scope === 'near' && G.inGame);
+    const key = avatarFor(m);
+    if (G.inGame && avatars.has(key)) say(key, () => avatars.get(key)?.pos, m.text);
+  }
+  function showChat(from, text, near = false) {
     const line = document.createElement('p'); line.innerHTML = '<b></b> <span></span>';
-    line.querySelector('b').textContent = from + ':'; line.querySelector('span').textContent = text;
+    if (near) line.classList.add('near');
+    line.querySelector('b').textContent = (near ? '(nearby) ' : '') + from + ':'; line.querySelector('span').textContent = text;
     log.appendChild(line); while (log.children.length > 8) log.firstChild.remove();
     setTimeout(() => line.classList.add('old'), 12000);
     audio.play('chat');
     net.onChatLine?.(from, text);
   }
-  net.openChat = () => { if (!net.role) return; box.hidden = false; input.value = ''; input.focus(); if (document.pointerLockElement) document.exitPointerLock(); G.chatting = true; };
+  net.openChat = () => { if (!net.role) return; drawScope(); box.hidden = false; input.value = ''; input.focus(); if (document.pointerLockElement) document.exitPointerLock(); G.chatting = true; };
   const closeChat = () => { box.hidden = true; input.blur(); G.chatting = false; };
-  input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') closeChat(); });
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Escape') closeChat();
+    if (e.key === 'Tab') { e.preventDefault(); net.chatScope = net.chatScope === 'near' ? 'party' : 'near'; drawScope(); }
+  });
   input.addEventListener('keyup', (e) => e.stopPropagation());
   box.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = input.value.trim().slice(0, 140);
-    if (text) {
-      showChat(net.me?.name || 'Me', text);
-      if (net.role === 'host') broadcast({ t: 'chat', from: net.me.name, text }); else send(net.host, { t: 'chat', text });
-    }
+    if (text) net.sendChat(text, net.chatScope);
     closeChat();
   });
 
@@ -460,7 +535,13 @@ export function createNet(G) {
   const hostMe = () => ({ id: 'hostme', name: net.me?.name, look: save.profile?.look || {}, role: net.myRole, auto: !!G.autoHero });
   net.announceHostMe = () => { if (net.role === 'host') broadcast({ t: 'hostme', p: hostMe() }); };
   net.avatarPositions = () => [...avatars.entries()].filter(([id]) => id !== 'host').map(([, a]) => a.pos);
-  net.sendChat = (text) => { showChat(net.me?.name || 'Me', text); if (net.role === 'host') broadcast({ t: 'chat', from: net.me.name, text }); else send(net.host, { t: 'chat', text }); };
+  net.sendChat = (text, scope = 'party') => {
+    const near = scope === 'near' && G.inGame, p = myPos(), at = [r2(p.x), r2(p.y), r2(p.z)];
+    showChat(net.me?.name || 'Me', text, near);
+    if (G.inGame) say('me', () => myPos(), text);
+    const msg = { t: 'chat', text, scope: near ? 'near' : 'party', p: at };
+    if (net.role === 'host') broadcast({ ...msg, from: net.me.name, id: 'host' }); else send(net.host, msg);
+  };
   net.memberList = () => [
     { id: net.role === 'host' ? 'host' : net.hostId, name: net.role === 'host' ? net.me?.name : net.hostName, leader: true, ready: true, role: net.role === 'host' ? net.myRole : net.hostRole, me: net.role === 'host' },
     ...[...net.players.values()].map((p) => ({ id: p.id, name: p.name, ready: !!p.ready, look: p.look, role: p.role })),
@@ -469,6 +550,6 @@ export function createNet(G) {
   net.playerNames = () => [net.role === 'host' ? `${net.me?.name} (host)` : null, ...[...net.players.values()].map((p) => p.name), net.role === 'guest' ? `${net.me?.name} (you)` : null].filter(Boolean);
   net.leave = () => { try { broadcast({ t: 'bye' }); net.peer?.destroy(); } catch {} net.role = null; };
   addEventListener('beforeunload', () => net.leave());
-  net.update = (dt) => { roleTick(); updateAvatars(dt); net.voice.update((id) => (id === net.hostId ? (avatars.get('hostme') || avatars.get('host')) : avatars.get(id))?.pos); };
+  net.update = (dt) => { roleTick(); updateAvatars(dt); net.voice.update((id) => (id === net.hostId ? (avatars.get('hostme') || avatars.get('host')) : avatars.get(id))?.pos, myPos()); };
   return net;
 }

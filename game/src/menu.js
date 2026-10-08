@@ -118,6 +118,8 @@ export function createMenu(G, { start }) {
       <label>Master volume<input type="range" min="0" max="1" step="0.05" value="${st.volume}" data-r="volume" /></label>
       <label>Music<input type="range" min="0" max="1" step="0.05" value="${st.musicVolume ?? 0.8}" data-r="musicVolume" /></label>
       <label>Sound effects &amp; ambience<input type="range" min="0" max="1.5" step="0.05" value="${st.sfxVolume ?? 1}" data-r="sfxVolume" /></label>
+      <label>Voice chat<div class="seg" data-k="voiceMode"><button data-v="proximity" class="${(st.voiceMode || 'proximity') === 'proximity' ? 'on' : ''}">Proximity</button><button data-v="party" class="${st.voiceMode === 'party' ? 'on' : ''}">Whole party</button></div></label>
+      <p class="note">Proximity: online, you hear friends from where they stand, fading out by 40 m. Nearby text chat (T) reaches 30 m; press Tab in the chat box to message the whole party.</p>
       <label>Look sensitivity<input type="range" min="0.3" max="2.5" step="0.05" value="${st.sensitivity}" data-r="sensitivity" /></label>
       <label>Invert look<div class="seg" data-k="invertY"><button data-v="false" class="${!st.invertY ? 'on' : ''}">Off</button><button data-v="true" class="${st.invertY ? 'on' : ''}">On</button></div></label>
       <label>Progress<div class="seg"><button data-reset>Erase saved progress</button></div></label>
@@ -130,6 +132,7 @@ export function createMenu(G, { start }) {
       st[k] = v; save.write();
       if (k === 'quality') post.apply(v, G.world.sun);
       if (k === 'showFps') G.stats?.show(v);
+      if (k === 'voiceMode') G.net?.voice.setMode(v);
     }));
     body.querySelectorAll('[data-r]').forEach((r) => (r.oninput = () => {
       st[r.dataset.r] = parseFloat(r.value); save.write();
@@ -161,7 +164,7 @@ export function createMenu(G, { start }) {
       <kbd>Right mouse / F</kbd><span>Whirl the sling (aim)</span><kbd>Q</kbd><span>Call upon the Holy Spirit</span>
       <kbd>V</kbd><span>Camera: third → first → second person</span><kbd>Tab</kbd><span>Journal</span><kbd>Esc / P</kbd><span>Pause</span>
       <kbd>1 2 3</kbd><span>Choose a reply</span>
-      <kbd>T</kbd><span>Online: chat with your party</span><kbd>B</kbd><span>Online: hold to talk (voice chat)</span>
+      <kbd>T</kbd><span>Online: chat with players nearby (Tab in the box: whole party)</span><kbd>B</kbd><span>Online: hold to talk (proximity voice chat)</span>
       <kbd>J</kbd><span>Online: hold and ask Jesus a question out loud</span><kbd>L</kbd><span>Online: who is playing</span></div>`, back);
 
   // ---------- Home

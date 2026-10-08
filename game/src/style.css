@@ -351,3 +351,7 @@ button.small { font-size: 0.8rem; padding: 0.2em 0.6em; }
 #askbox label { display: grid; gap: 0.5rem; font-family: var(--display); color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; font-size: 0.8rem; }
 #askbox input { font: inherit; font-size: 1.05rem; text-transform: none; letter-spacing: 0; color: var(--ink); background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(233, 201, 135, 0.4); border-radius: 3px; padding: 0.45em 0.7em; }
 body.online .vitals { display: none; }
+#chatbox { display: flex; gap: 6px; align-items: stretch; }
+#chatbox .scope { flex: none; display: grid; place-items: center; padding: 0 0.6em; border-radius: 3px; font-family: var(--display); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+#chatbox .scope.near { background: #2f5a2a; color: #d8ffcf; } #chatbox .scope.party { background: #6a4a1a; color: #ffe7b5; }
+#chatlog p.near b { color: #a9f09a; }

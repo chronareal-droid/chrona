@@ -115,6 +115,7 @@ export function createLobby(G, menu) {
             <div class="story-pick">${leader ? `<small>Story</small><div class="seg" data-k="campaign">${Object.entries(CAMPAIGNS).map(([k, c]) => `<button data-v="${k}" class="${(net.partyCampaign || 'gospel') === k ? 'on' : ''}">${c.title}</button>`).join('')}</div>` : `<small>Story</small><b>${esc(CAMPAIGNS[net.partyCampaign]?.title || 'Chosen by the leader')}</b>`}</div>
             ${'<div class="role-pick"><small>Your disciple · in The Way of the Cross you walk with Jesus as one of the Twelve</small><div class="roles"></div></div>'}
             <div class="voice-row"><button data-a="voice" class="ghost">${net.voice.enabled ? 'Voice on' : 'Turn on voice chat'}</button><label class="mic"><input type="checkbox" id="mp-open" ${net.voice.openMic ? 'checked' : ''}/> Open mic (otherwise hold B to talk)</label></div>
+            <div class="voice-row"><small>Hear others</small><div class="seg" data-k="vmode"><button data-v="proximity" class="${net.voice.mode !== 'party' ? 'on' : ''}">Proximity (nearby, from where they stand)</button><button data-v="party" class="${net.voice.mode === 'party' ? 'on' : ''}">Whole party, full volume</button></div></div>
             <form class="party-chat"><div class="lines"></div><input maxlength="140" placeholder="Message the party…" autocomplete="off" /></form>
             ${leader ? '<button class="primary" data-a="start">Start the story</button>' : `<button class="primary" data-a="ready">${'Ready'}</button>`}
           </div>
@@ -139,6 +140,7 @@ export function createLobby(G, menu) {
     body.querySelectorAll('.story-pick .seg button').forEach((b) => (b.onclick = () => { net.setCampaign(b.dataset.v); b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); drawMembers(); }));
     body.querySelector('[data-a="voice"]').onclick = async (e) => { const ok = await net.voice.enable(); e.target.textContent = ok ? 'Voice on' : 'Listening only (no mic)'; };
     body.querySelector('#mp-open').onchange = (e) => net.voice.setOpenMic(e.target.checked);
+    body.querySelectorAll('[data-k="vmode"] button').forEach((b) => (b.onclick = () => { net.voice.setMode(b.dataset.v); b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); }));
     const chatForm = body.querySelector('.party-chat'), chatIn = chatForm.querySelector('input');
     chatIn.addEventListener('keydown', (e) => e.stopPropagation());
     chatForm.onsubmit = (e) => { e.preventDefault(); const t = chatIn.value.trim(); if (t) net.sendChat(t); chatIn.value = ''; };
@@ -186,7 +188,7 @@ export function createLobby(G, menu) {
   G.playerList = (show) => {
     if (!net.role) return;
     listEl.hidden = !show;
-    if (show) listEl.innerHTML = `<h4>${esc(net.name || 'Party')} · code ${esc(net.code)}</h4>` + net.memberList().map((m) => `<p><span class="talk ${net.voice.speaking.get(m.id) ? 'on' : ''}"></span>${esc(m.name)}${m.leader ? ` · ${CAMPAIGNS[G.campaign]?.hero}` : G.campaign === 'gospel' && m.role ? ` · ${esc(m.role)}` : ''}</p>`).join('') + '<small>T chat · B push-to-talk · J ask Jesus · L players</small>';
+    if (show) listEl.innerHTML = `<h4>${esc(net.name || 'Party')} · code ${esc(net.code)}</h4>` + net.memberList().map((m) => `<p><span class="talk ${net.voice.speaking.get(m.id) ? 'on' : ''}"></span>${esc(m.name)}${m.leader ? ` · ${CAMPAIGNS[G.campaign]?.hero}` : G.campaign === 'gospel' && m.role ? ` · ${esc(m.role)}` : ''}</p>`).join('') + `<small>T chat (Tab: nearby / party) · B push-to-talk · J ask Jesus · L players · voice: ${net.voice.mode === 'party' ? 'whole party' : 'proximity'}</small>`;
   };
   return L;
 }
