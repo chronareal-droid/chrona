@@ -22,11 +22,27 @@ import { enableAutoHero } from './hero.js';
 import { createAsk } from './ask.js';
 
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+// No canvas MSAA: every frame goes through post-processing (SMAA) anyway, and MSAA costs laptops a lot of fill.
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+// First run: pick graphics quality from the GPU. Laptop (integrated) graphics start on Medium, very old or
+// software GPUs on Low. Once the player picks a quality in Settings we never override it.
+(() => {
+  const st = save.settings;
+  if (st.qualityChosen || st.qualityDetected) return;
+  st.qualityDetected = true;
+  try {
+    const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    st.gpu = gpu.slice(0, 120);
+    if (/swiftshader|llvmpipe|basic render|HD Graphics [2-6]\d{2,3}\b|HD Graphics$|Mali-[GT]?[2-7]\d|Adreno \(TM\) [3-5]/i.test(gpu)) st.quality = 'low';
+    else if (/intel|iris|uhd|radeon\(tm\) (vega|graphics)|amd radeon graphics|radeon vega|mali|adreno|powervr|apple gpu/i.test(gpu)) st.quality = 'medium';
+  } catch {}
+  save.write();
+})();
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = save.settings.quality === 'low' ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.72;
 
@@ -434,7 +450,9 @@ G.addNPC = (opts, pos, facing = 0) => {
   return n;
 };
 
+let npcFrame = 0;
 function updateNPCs(dt) {
+  npcFrame++;
   let best = null, bestD = 2.6;
   for (const n of G.npcs) {
     let sp = 0;
@@ -456,7 +474,10 @@ function updateNPCs(dt) {
     n.root.position.copy(n.pos);
     n.root.rotation.y = n.facing;
     n.pose.talk += ((n.talking ? 1 : 0) - n.pose.talk) * Math.min(1, dt * 8);
-    n.animate(dt, n.mirrorSpeed ?? sp);
+    // far-away people animate a quarter as often (their limbs are a few pixels tall)
+    n.lodDt = (n.lodDt || 0) + dt;
+    const far = n.pos.distanceToSquared(camera.position) > 4900;
+    if (!far || ((npcFrame + n.netId) & 3) === 0 || n.talking) { n.animate(n.lodDt, n.mirrorSpeed ?? sp); n.lodDt = 0; }
     if (n.talk && G.control && !G.interactBusy) {
       const d = hdist(n.pos, P.pos);
       if (d < bestD) { best = n; bestD = d; }
@@ -729,13 +750,38 @@ G.stats = (() => {
 renderer.shadowMap.autoUpdate = false;
 let shadowTick = 0;
 let lastFrame = performance.now();
+// Auto quality: if play stays under ~45 FPS even after dynamic resolution has done what it can, step the
+// preset down (Ultra → High → Medium → Low), then thin the grass. Settings → "Auto-adjust quality" turns it off.
+const QUALITY = ['low', 'medium', 'high', 'ultra'];
+const gov = { t: 0, frames: 0, grace: 4, grass: 1 };
+G.gov = gov;
+function governor(ms) {
+  if (save.settings.autoQuality === false || !G.inGame || G.paused || document.hidden) { gov.t = 0; gov.frames = 0; return; }
+  gov.t += Math.min(ms, 1000) / 1000; gov.frames++;
+  if (gov.t < 4) return;
+  const fps = gov.frames / gov.t; gov.t = 0; gov.frames = 0;
+  if (gov.grace > 0) { gov.grace--; if (fps >= 40) return; } // let dynamic resolution settle first
+  if (fps >= 45 || post.scale > 0.65) return;
+  const i = QUALITY.indexOf(post.preset);
+  if (i > 0) {
+    const q = QUALITY[i - 1];
+    save.settings.quality = q; save.write();
+    post.apply(q, world.sun);
+    gov.grace = 2;
+    ui.toast(`Graphics set to ${PRESETS_LABEL[q]} for smoother play (change it in Settings)`, 4500);
+  } else if (gov.grass > 0.3) {
+    gov.grass = Math.max(0.3, gov.grass - 0.35); world.setGrassDensity?.(gov.grass); gov.grace = 2;
+  }
+}
+const PRESETS_LABEL = { low: 'Low', medium: 'Medium', high: 'High', ultra: 'Ultra' };
 
 function frame() {
   requestAnimationFrame(frame);
   const nowMs = performance.now(), frameMs = nowMs - lastFrame; lastFrame = nowMs;
   G.stats.tick(frameMs);
   post.adapt(frameMs, frameMs / 1000);
-  renderer.shadowMap.needsUpdate = post.preset === 'ultra' || (shadowTick++ & 1) === 0 || !!G.cine;
+  governor(frameMs);
+  renderer.shadowMap.needsUpdate = post.preset === 'ultra' || (shadowTick++ % (post.preset === 'low' ? 3 : 2)) === 0 || !!G.cine;
   // settings.debugFast (test harness only) lets slow software renderers run game time faster.
   const raw = Math.min(clock.getDelta(), save.settings.debugFast ? 0.3 : 1 / 20);
   if (G.paused) { input.endFrame(); post.render(G.t, { spirit: 0 }); return; }

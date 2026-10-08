@@ -51,7 +51,8 @@ export function createPhysics(G) {
         }
       }
       // 2. Lean, slope and secondary motion
-      for (const n of G.npcs) if (n.root.visible) motion(n, dt, false);
+      const cam = G.camera.position;
+      for (const n of G.npcs) if (n.root.visible && n.pos.distanceToSquared(cam) < 3600) motion(n, dt, false);
       for (const s of G.sheep) if (!s.carried) motion(s, dt, true);
       for (const m of G.systems?.mounts || []) motion(m, dt, true);
       if (!P.ragdoll) motion(P, dt, false, P.h);

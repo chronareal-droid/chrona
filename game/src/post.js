@@ -11,7 +11,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 export const PRESETS = {
   low: { label: 'Low', ratio: 0.75, shadow: 1024, ao: false, bloom: false, smaa: false, dof: false, grassScale: 0.4 },
-  medium: { label: 'Medium', ratio: 1, shadow: 2048, ao: false, bloom: true, smaa: true, dof: true, grassScale: 0.7 },
+  medium: { label: 'Medium', ratio: 1, shadow: 1536, ao: false, bloom: true, smaa: true, dof: true, grassScale: 0.7 },
   high: { label: 'High', ratio: 1.5, shadow: 2048, ao: true, bloom: true, smaa: true, dof: true, grassScale: 1 },
   ultra: { label: 'Ultra · 4K', ratio: 2.5, shadow: 4096, ao: true, bloom: true, smaa: true, dof: true, grassScale: 1 },
 };
@@ -99,7 +99,8 @@ export function createPost(renderer, scene, camera) {
     if (timer < 1.2) return;
     const avg = acc / n; acc = 0; n = 0; timer = 0;
     const prev = post.scale;
-    if (avg > 21 && post.scale > 0.6) post.scale = Math.max(0.6, post.scale - 0.1);
+    const floor = post.preset === 'low' || post.preset === 'medium' ? 0.5 : 0.6;
+    if (avg > 21 && post.scale > floor) post.scale = Math.max(floor, post.scale - 0.1);
     else if (avg < 14 && post.scale < 1) post.scale = Math.min(1, post.scale + 0.05);
     if (post.scale !== prev) setRatio();
   };

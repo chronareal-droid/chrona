@@ -400,6 +400,7 @@ export function buildWorld(scene, renderer, quality = 'high', campaign = 'gospel
     const grass = new THREE.Mesh(blade, gm);
     grass.frustumCulled = false; grass.receiveShadow = true;
     scene.add(grass);
+    world.setGrassDensity = (f) => { blade.instanceCount = Math.floor(N * Math.max(0, Math.min(1, f))); grass.visible = f > 0.01; };
     world.grassFollow = (cam, player) => { uniforms.uCenter.value.set(cam.x, cam.z); if (player) uniforms.uPlayer.value.copy(player); };
     const prev = world.update;
     world.update = (t, dt) => { prev(t, dt); uniforms.uTime.value = t; };

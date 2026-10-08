@@ -112,6 +112,8 @@ export function createMenu(G, { start }) {
       <p class="note">Ultra renders at native 4K on 4K displays, with ambient occlusion, 4096 px shadows, bloom and SMAA. Use High on laptops and Medium on phones.</p>
       <label>Difficulty<div class="seg" data-k="difficulty">${['easy', 'normal', 'hard'].map((d) => `<button data-v="${d}" class="${(st.difficulty || 'normal') === d ? 'on' : ''}">${d[0].toUpperCase() + d.slice(1)}</button>`).join('')}</div></label>
       <p class="note">Sets how much harm you take, how long Goliath stays open, and how fast the conviction bar moves.</p>
+      <label>Auto-adjust quality<div class="seg" data-k="autoQuality"><button data-v="true" class="${st.autoQuality !== false ? 'on' : ''}">On</button><button data-v="false" class="${st.autoQuality === false ? 'on' : ''}">Off</button></div></label>
+      <p class="note">On: if the game runs slowly it lowers the resolution, then the quality, until it plays smoothly.</p>
       <label>Show FPS<div class="seg" data-k="showFps"><button data-v="false" class="${!st.showFps ? 'on' : ''}">Off</button><button data-v="true" class="${st.showFps ? 'on' : ''}">On</button></div></label>
       <label>Camera view<div class="seg" data-k="camMode"><button data-v="third" class="${G.camMode === 'third' ? 'on' : ''}">Third person</button><button data-v="first" class="${G.camMode === 'first' ? 'on' : ''}">First person</button><button data-v="second" class="${G.camMode === 'second' ? 'on' : ''}">Second person</button></div></label>
       <p class="note">Second person is the Witness view: you see David through the eyes of someone walking ahead of him. Press V in play to cycle views.</p>
@@ -130,7 +132,7 @@ export function createMenu(G, { start }) {
       b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
       if (k === 'camMode') { G.cycleCamera(v); return; }
       st[k] = v; save.write();
-      if (k === 'quality') post.apply(v, G.world.sun);
+      if (k === 'quality') { st.qualityChosen = true; save.write(); post.apply(v, G.world.sun); }
       if (k === 'showFps') G.stats?.show(v);
       if (k === 'voiceMode') G.net?.voice.setMode(v);
     }));
