@@ -509,7 +509,7 @@ function updateSheep(dt) {
 
 // ---------------------------------------------------------------- Objective marker & beacon
 const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 60, 16, 1, true),
-  new THREE.MeshBasicMaterial({ color: 0xffd889, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  new THREE.MeshBasicMaterial({ color: 0xff3a2a, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
 beacon.visible = false; scene.add(beacon);
 G.setObjective = (text, target = null) => {
   G.objective = target ? { text, target } : null;
@@ -605,7 +605,14 @@ function snapCamera() { cameraWanted(G.cam.pos, G.cam.look); }
 
 function updateCamera(dt) {
   const c = G.cam;
-  if (G.cine) {
+  if (G.cine && G.cine.path) { // a camera that follows a path, e.g. an orbit around a scene
+    const s = G.cine;
+    s.t = Math.min(1, s.t + dt / s.dur);
+    const k = s.ease ? ease(s.t) : s.t;
+    const r = s.path(k);
+    camera.position.copy(r.pos); camTarget.copy(r.look);
+    if (s.t >= 1 && s.done) { const d = s.done; s.done = null; d(); }
+  } else if (G.cine) {
     const s = G.cine;
     s.t = Math.min(1, s.t + dt / s.dur);
     const k = s.ease ? ease(s.t) : s.t;
@@ -649,6 +656,14 @@ const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 /** Cinematic camera move. Positions may be vectors or functions returning vectors (to track movers). */
 G.shot = (from, to, lookFrom, lookTo, dur, { ease: e = true } = {}) =>
   new Promise((res) => { G.cine = { from, to, lookFrom, lookTo: lookTo || lookFrom, dur, t: 0, ease: e, done: res }; });
+/** Orbit the camera around a point: radius r, height h, from angle a0 to a1 (radians), looking at lookH above it. */
+G.orbit = (center, r, h, a0, a1, dur, lookH = 1.2) => new Promise((res) => {
+  const c = typeof center === 'function' ? center : () => center;
+  G.cine = { dur, t: 0, ease: true, done: res, path: (k) => {
+    const p = c(), a = a0 + (a1 - a0) * k;
+    return { pos: V(p.x + Math.sin(a) * r, p.y + h, p.z + Math.cos(a) * r), look: V(p.x, p.y + lookH, p.z) };
+  } };
+});
 G.cinemaOn = () => { G.control = false; ui.cinema(true); if (document.pointerLockElement) document.exitPointerLock(); };
 G.cinemaOff = () => {
   // Hand the camera back smoothly from wherever the shot left it.

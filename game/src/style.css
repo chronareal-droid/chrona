@@ -99,8 +99,8 @@ body.cinema #hud { opacity: 0; }
 .courage i { background: linear-gradient(90deg, #2b4f8a, #6a9ad8); }
 .stones { font-family: var(--display); color: var(--gold); text-shadow: 0 1px 6px #000; }
 .stones b { font-size: 1.8rem; margin-right: 0.3rem; } .stones span { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; }
-.marker { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); color: var(--gold); text-align: center; text-shadow: 0 0 10px rgba(0, 0, 0, 0.8); }
-.marker span { display: block; font-size: 1.1rem; animation: pulse 1.6s infinite; }
+.marker { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); color: #ff3b2f; text-align: center; text-shadow: 0 0 10px rgba(0, 0, 0, 0.85), 0 0 14px rgba(255, 40, 30, 0.6); font-weight: 600; }
+.marker span { display: block; font-size: 1.35rem; animation: pulse 1.6s infinite; }
 .marker em { font-size: 0.8rem; font-style: normal; opacity: 0.85; }
 @keyframes pulse { 50% { transform: scale(1.35); } }
 .crosshair { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; transform: translate(-50%, -50%); }

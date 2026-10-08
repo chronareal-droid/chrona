@@ -137,6 +137,59 @@ export async function runGospel(G, startPart = 'entry') {
     return 'temple';
   }
 
+  // Overturning a table: Jesus drives it over; it tips, spins and bounces under gravity while the coins scatter.
+  let tablesTurned = 0;
+  async function overturn(tb) {
+    tb.done = true;
+    const first = tablesTurned++ === 0;
+    const away = V().subVectors(tb.pos, P.pos).setY(0).normalize();
+    P.facing = Math.atan2(away.x, away.z);
+    G.cinemaOn(); G.focus = 3;
+    const side = V(-away.z, 0, away.x);
+    const camA = tb.pos.clone().add(side.clone().multiplyScalar(4)).add(V(0, 1.6, 0)).addScaledVector(away, -1.5);
+    const camB = tb.pos.clone().add(side.clone().multiplyScalar(3)).add(V(0, 1.2, 0)).addScaledVector(away, 1);
+    G.shot(camA, camB, P.pos.clone().add(V(0, 1.2, 0)), tb.pos.clone().add(V(0, 0.8, 0)), first ? 2.6 : 1.4);
+    // the shove
+    for (let i = 0; i <= 10; i++) { P.h.pose.shove = i / 10; await G.wait(28); }
+    audio.play('hit'); G.shake(0.35);
+    if (first) G.timeScale = 0.35; // a moment of slow motion
+    tb.seller.pose.cower = 1;
+    // rigid-body tumble: velocity, spin, gravity, bounce, friction
+    const body = { v: away.clone().multiplyScalar(3.2).add(V(0, 3.4, 0)), w: V(-away.z * 6, (Math.random() - 0.5) * 3, away.x * 6), q: tb.t.quaternion, pos: tb.t.position };
+    const coins = [];
+    tb.t.children.filter((c) => c.geometry?.type === 'CylinderGeometry' && c.geometry.parameters.radiusTop < 0.05).forEach((c) => {
+      const wp = c.getWorldPosition(V()); tb.t.remove(c); G.scene.add(c); c.position.copy(wp);
+      coins.push({ m: c, v: away.clone().multiplyScalar(1.5 + Math.random() * 3).add(V((Math.random() - 0.5) * 3, 2 + Math.random() * 3, (Math.random() - 0.5) * 3)), w: Math.random() * 20 });
+    });
+    const dq = new THREE.Quaternion(), ax = V();
+    let rest = 0;
+    const phys = (dt) => {
+      body.v.y -= 9.8 * dt;
+      body.pos.addScaledVector(body.v, dt);
+      const gy = heightAt(body.pos.x, body.pos.z);
+      if (body.pos.y < gy) { body.pos.y = gy; if (body.v.y < -1) { body.v.y *= -0.3; audio.play('thud'); G.shake(0.12); } else body.v.y = 0; body.v.x *= 0.6; body.v.z *= 0.6; body.w.multiplyScalar(0.55); }
+      const wl = body.w.length();
+      if (wl > 1e-3) { dq.setFromAxisAngle(ax.copy(body.w).divideScalar(wl), wl * dt); body.q.premultiply(dq); }
+      for (const c of coins) {
+        c.v.y -= 9.8 * dt; c.m.position.addScaledVector(c.v, dt); c.m.rotation.x += c.w * dt;
+        const cy = heightAt(c.m.position.x, c.m.position.z) + 0.01;
+        if (c.m.position.y < cy) { c.m.position.y = cy; c.v.multiplyScalar(0.4); c.v.y = Math.abs(c.v.y) * 0.3; c.w *= 0.5; }
+      }
+      if (body.v.length() < 0.2 && body.pos.y <= gy + 0.01) rest += dt;
+      if (rest > 2.5) G.updaters.splice(G.updaters.indexOf(phys), 1);
+    };
+    G.updaters.push(phys);
+    if (first) {
+      await G.wait(900);
+      G.timeScale = 1;
+      await narrate('He overturned the tables of the money-changers and the seats of those who sold pigeons.', 'Matthew 21:12', { auto: 3200 });
+    } else await G.wait(900);
+    for (let i = 10; i >= 0; i--) { P.h.pose.shove = i / 10; await G.wait(20); }
+    tb.seller.pose.cower = 0;
+    tb.seller.walkTo(tb.pos.clone().add(V((Math.random() - 0.5) * 10, 0, 16)), 4);
+    G.cinemaOff();
+  }
+
   // ------------------------------------------------------------ PART 2: The House of Prayer
   async function temple() {
     reach('temple');
@@ -158,11 +211,7 @@ export async function runGospel(G, startPart = 'entry') {
       const seller = G.addNPC(robe({ robe: [0x6a4a2a, 0x8a6a3a][i % 2], headwrap: 0xd8cca8 }), p.clone().add(V(0, 0, -1.2)), 0);
       const tb = { t, seller, done: false, pos: p };
       tables.push(tb);
-      G.interactables.push({ pos: p, range: 2.6, prompt: 'Overturn the tables', enabled: () => !tb.done && G.flags.cleanse, talk: async () => {
-        tb.done = true; audio.play('hit'); G.shake(0.2);
-        tb.t.rotation.z = 1.4; tb.t.position.y += 0.4;
-        tb.seller.walkTo(p.clone().add(V((Math.random() - 0.5) * 10, 0, 16)), 4);
-      } });
+      G.interactables.push({ pos: p, range: 2.6, prompt: 'Overturn the tables', enabled: () => !tb.done && G.flags.cleanse, talk: () => overturn(tb) });
     });
     await waitFor(near(world.temple, 14));
     G.cinemaOn(); G.focus = 10;

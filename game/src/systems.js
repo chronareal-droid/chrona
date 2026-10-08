@@ -339,17 +339,25 @@ export function createSystems(G) {
   async function preach(g) {
     if (document.pointerLockElement) document.exitPointerLock();
     const t = P.h.pose;
-    const look = g.center.clone().add(V(0, 1.2, 0));
-    const camPos = P.pos.clone().add(V().subVectors(P.pos, g.center).setY(0).normalize().multiplyScalar(3.2)).add(V(1.2, 1.9, 0));
-    G.cinemaOn(); G.focus = 3.5;
-    G.shot(G.camera.position.clone(), camPos, look, look, 1.0);
+    const head = (o, y = 1.55) => o.pos.clone().add(V(0, y * (o.rig?.scale || 1), 0));
+    const myHead = () => P.pos.clone().add(V(0, 1.6, 0));
     P.facing = Math.atan2(g.center.x - P.pos.x, g.center.z - P.pos.z);
-    t.preach = 1;
+    G.cinemaOn(); G.focus = 4;
+    // The listeners turn to face the teacher; in the Gospel they sit at his feet.
+    g.men.forEach((m) => { m.facing = Math.atan2(P.pos.x - m.pos.x, P.pos.z - m.pos.z); if (gospel) m.pose.sit = 1; });
+    t.preach = 0.6;
+    const a0 = Math.atan2(P.pos.x - g.center.x, P.pos.z - g.center.z);
+    await G.orbit(g.center, 5.5, 2.4, a0 + 1.4, a0 + 0.5, 2.6, 1.0);
     let gain = 0;
     for (let r = 0; r < 2; r++) {
       if (!fearDeck.length) fearDeck = [...(gospel ? QUESTIONS : FEARS)].sort(() => Math.random() - 0.5);
       const f = fearDeck.pop();
       const speaker = g.men[r % g.men.length];
+      // over the teacher's shoulder onto the one who asks
+      const toS = V().subVectors(speaker.pos, P.pos).setY(0).normalize(), sideS = V(-toS.z, 0, toS.x);
+      const over = P.pos.clone().addScaledVector(toS, -1.1).addScaledVector(sideS, 0.55).add(V(0, 1.75, 0));
+      G.focus = speaker.pos.distanceTo(over);
+      G.shot(over, over.clone().addScaledVector(toS, 0.3), head(speaker, speaker.pose.sit ? 1.0 : 1.55), null, 2.5);
       speaker.talking = true;
       await ui.say(f.who || 'Soldier', f.fear, { reference: f.ref || '' });
       speaker.talking = false;
@@ -361,6 +369,11 @@ export function createSystems(G) {
       }
       // Conviction: speak it with your whole heart
       const q = await ui.timing('Speak with conviction', input);
+      // close on the teacher as he answers
+      const front = P.pos.clone().addScaledVector(toS, 1.9).addScaledVector(sideS, -0.35).add(V(0, 1.55, 0));
+      G.focus = 1.9;
+      G.shot(front, front.clone().addScaledVector(toS, -0.25), myHead(), null, 3);
+      t.preach = 1;
       await ui.say(G.heroName, f.good, { auto: 2600 });
       gain += 6 + q * 9;
       speaker.pose.cower = 0;
@@ -369,13 +382,18 @@ export function createSystems(G) {
     t.preach = 0;
     if (gain > 0) {
       g.done = true;
-      g.men.forEach((m) => { m.pose.cower = 0; m.pose.cheer = 1; setTimeout(() => (m.pose.cheer = 0), 2200); });
+      // a rising wide shot as they respond
+      G.focus = 9;
+      G.orbit(g.center, 7, 2, a0 + 0.4, a0 - 0.5, 3.2, 1.2);
+      g.men.forEach((m) => { m.pose.cower = 0; m.pose.sit = 0; m.pose.cheer = 1; setTimeout(() => (m.pose.cheer = 0), 2400); });
+      t.bless = 1; setTimeout(() => (t.bless = 0), 2000);
       save.courage = Math.min(100, save.courage + Math.round(gain)); save.faith += Math.round(gain); save.write();
       ui.courage(save.courage);
       audio.play('cheer');
-      await ui.say(gospel ? 'The people' : 'Soldiers', gospel ? rnd(['Never man spake like this man.', 'He teacheth as one having authority!', 'Is not this the Christ?']) : rnd(['The LORD is with this boy!', 'For the LORD and for Israel!', 'We will stand. We will stand!']), { auto: 1800 });
+      await ui.say(gospel ? 'The people' : 'Soldiers', gospel ? rnd(['No one ever spoke like this man!', 'He teaches as one who has authority!', 'Can this be the Christ?']) : rnd(['The LORD is with this boy!', 'For the LORD and for Israel!', 'We will stand. We will stand!']), { auto: 2000 });
       G.addSpirit(0.25, 'Preaching');
     } else {
+      g.men.forEach((m) => (m.pose.sit = 0));
       await ui.say('', 'They are not yet ready to hear. Speak the truth, not your own boast.', { auto: 2600 });
     }
     G.cinemaOff();
@@ -386,17 +404,40 @@ export function createSystems(G) {
     const n = G.addNPC({ skin: 0xa77a58, robe: 0x7a6a52, sash: 0x3e3a30, hair: 0x2a1a10, beard: Math.random() < 0.6, headwrap: 0x9a8a6a, height: 1.66, lookAtPlayer: true }, pos, Math.random() * 6);
     n.pose.cower = 1;
     const sk = { n, pos: n.pos, healed: false, kind };
+    // A soft light that gathers where the healing touch lands
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffe9b0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    glow.visible = false; scene.add(glow);
     G.interactables.push({ pos: n.pos, range: 2.6, prompt: kind === 'blind' ? 'Touch his eyes and heal him' : 'Take his hand and raise him up', enabled: () => !sk.healed, talk: async () => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      const toN = V().subVectors(n.pos, P.pos).setY(0).normalize(), side = V(-toN.z, 0, toN.x);
+      // step close and face him
+      P.pos.copy(n.pos).addScaledVector(toN, -0.85); G.ground(P.pos);
+      P.facing = Math.atan2(toN.x, toN.z); n.facing = P.facing + Math.PI; n.lookAtPlayer = false;
+      G.cinemaOn(); G.focus = 2.2;
+      const mid = P.pos.clone().lerp(n.pos, 0.5);
+      const a0 = Math.atan2(side.x, side.z);
+      G.orbit(mid, 2.6, 1.1, a0 + 0.5, a0 - 0.1, 6, 1.0);
       await ui.say(kind === 'blind' ? 'A blind man' : 'A lame man', kind === 'blind' ? 'Jesus, Son of David, have mercy on me! Lord, let me recover my sight.' : 'Sir, I have no one to put me into the pool.', { reference: kind === 'blind' ? 'Luke 18:38–41' : 'John 5:7' });
-      P.h.pose.preach = 1;
       const q = await ui.timing('Pray for him', input);
-      audio.play('spirit');
+      // the touch: Jesus reaches out, light gathers, a close-up
+      const touch = n.pos.clone().add(V(0, kind === 'blind' ? 0.95 : 0.55, 0));
+      G.shot(touch.clone().addScaledVector(side, 1.4).add(V(0, 0.3, 0)), touch.clone().addScaledVector(side, 1.0).add(V(0, 0.25, 0)), touch, null, 3.2);
+      for (let i = 0; i <= 12; i++) { P.h.pose.reach = i / 12; await G.wait(35); }
+      glow.position.copy(touch); glow.visible = true;
+      audio.play('spirit'); G.spiritFx = 1;
+      for (let i = 0; i <= 20; i++) { glow.material.opacity = Math.sin((i / 20) * Math.PI) * 0.6; glow.scale.setScalar(0.5 + i * 0.05); await G.wait(40); }
+      glow.visible = false;
       await ui.say(G.heroName, kind === 'blind' ? 'Recover your sight; your faith has made you well.' : 'Get up, take up your bed, and walk.', { reference: kind === 'blind' ? 'Luke 18:42' : 'John 5:8', auto: 2600 });
-      P.h.pose.preach = 0;
-      sk.healed = true; n.pose.cower = 0; n.pose.cheer = 1; setTimeout(() => (n.pose.cheer = 0), 3000);
+      // he rises slowly, then rejoices; the camera rises with him
+      G.orbit(n.pos, 3.2, 0.6, a0 - 0.1, a0 - 0.7, 3.4, 1.3);
+      for (let i = 0; i <= 30; i++) { n.pose.cower = 1 - i / 30; P.h.pose.reach = Math.max(0, 1 - i / 15); await G.wait(45); }
+      sk.healed = true; n.pose.cheer = 1; setTimeout(() => (n.pose.cheer = 0), 3000);
       audio.play('cheer'); save.faith += 10 + Math.round(q * 10); save.write();
-      ui.toast(kind === 'blind' ? 'He received his sight, and followed, glorifying God' : 'He rose up and walked', 3500, true);
+      ui.toast(kind === 'blind' ? 'He recovered his sight and followed him, glorifying God' : 'He got up and walked', 3500, true);
       G.addSpirit(0.15, 'Compassion');
+      await G.wait(1600);
+      n.lookAtPlayer = true;
+      G.cinemaOff();
     } });
     return sk;
   };

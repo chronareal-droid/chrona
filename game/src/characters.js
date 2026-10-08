@@ -242,7 +242,7 @@ export function createHumanoid(opts = {}) {
   const rig = { hips, torso, neck, head: headG, armL, armR, foreL, foreR, legL, legR, shinL, shinR, handR, handL, skirt, scale: s };
 
   let phase = Math.random() * 10, t = 0;
-  const pose = { swing: 0, throw: 0, aim: 0, kneel: 0, sling: 0, fallen: 0, lookUp: 0, talk: 0, cheer: 0, ride: 0, pray: 0, preach: 0, cower: 0, cross: 0, carry: 0 };
+  const pose = { swing: 0, throw: 0, aim: 0, kneel: 0, sling: 0, fallen: 0, lookUp: 0, talk: 0, cheer: 0, ride: 0, pray: 0, preach: 0, cower: 0, cross: 0, carry: 0, reach: 0, shove: 0, bless: 0, sit: 0 };
   const animate = (dt, speed = 0) => {
     t += dt;
     const moving = Math.min(1, speed / 2.2);
@@ -282,6 +282,10 @@ export function createHumanoid(opts = {}) {
     if (pose.pray > 0) { const k = pose.pray; aLx = aLx * (1 - k) - 1.1 * k; aRx = aRx * (1 - k) - 1.1 * k; aLz = 0.12 - 0.5 * k; aRz = -0.12 + 0.5 * k; fLx = fRx = -1.3 * k; }
     if (pose.preach > 0) { const k = pose.preach, w = Math.sin(t * 2.2); aRx = aRx * (1 - k) + (-2.2 + w * 0.5) * k; aRz = aRz * (1 - k) - 0.5 * k; fRx = -0.4 * k; aLx = aLx * (1 - k) + (-0.9 - w * 0.3) * k; aLz = 0.12 + 0.4 * k; }
     if (pose.cower > 0) { const k = pose.cower; aLx = aLx * (1 - k) - 1.6 * k; aRx = aRx * (1 - k) - 1.6 * k; fLx = fRx = -1.8 * k; }
+    if (pose.reach > 0) { const k = pose.reach; aRx = aRx * (1 - k) - 1.35 * k; aRz = aRz * (1 - k) + 0.05 * k; fRx = fRx * (1 - k) - 0.35 * k; } // hand outstretched to touch
+    if (pose.shove > 0) { const k = Math.sin(Math.min(1, pose.shove) * Math.PI); aLx = -1.5 * k + aLx * (1 - k); aRx = -1.5 * k + aRx * (1 - k); aLz = 0.15; aRz = -0.15; fLx = fRx = -0.15; torso.rotation.x += 0.25 * k; } // both arms drive forward
+    if (pose.bless > 0) { const k = pose.bless; aLx = aLx * (1 - k) - 2.4 * k; aRx = aRx * (1 - k) - 2.4 * k; aLz = 0.12 + 0.5 * k; aRz = -0.12 - 0.5 * k; fLx = fRx = -0.2 * k; } // hands raised
+    if (pose.sit > 0) { const k = pose.sit; legL.rotation.x = legR.rotation.x = -1.4 * k; shinL.rotation.x = shinR.rotation.x = 1.5 * k; hips.position.y = 0.95 - 0.55 * k; } // sitting on the ground
     if (pose.carry > 0) { aLx = -0.25; aRx = -0.25; aLz = 1.3; aRz = -1.3; fLx = fRx = -1.0; torso.rotation.x += 0.28; } // arms along the beam across his shoulders
     if (pose.cross > 0) { aLx = 0; aRx = 0; aLz = 1.45; aRz = -1.45; fLx = fRx = 0; legL.rotation.x = legR.rotation.x = 0; shinL.rotation.x = shinR.rotation.x = 0; neck.rotation.x = 0.35; }
     armL.rotation.set(aLx, 0, aLz); armR.rotation.set(aRx, 0, aRz);
