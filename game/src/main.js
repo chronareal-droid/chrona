@@ -107,20 +107,92 @@ if (CAMPAIGN === 'gospel') {
 G.setArmor = (on) => { P.armored = on; saulArmor.visible = on; };
 G.setSling = (on) => { P.slingUnlocked = on; staff.visible = !on; };
 
-G.damage = (amount, from) => {
-  if (P.invuln > 0 || P.dead || !G.control) return false;
+// Difficulty: damage taken, Goliath's open window, conviction-bar speed and target size, healing rate.
+export const DIFFICULTY = {
+  easy: { label: 'Easy', dmg: 0.5, roar: 6.5, timing: 0.6, zone: 0.24, regen: 0.25, enemy: 0.85 },
+  normal: { label: 'Normal', dmg: 1, roar: 4.5, timing: 1, zone: 0.16, regen: 0.15, enemy: 1 },
+  hard: { label: 'Hard', dmg: 1.5, roar: 3, timing: 1.5, zone: 0.11, regen: 0.08, enemy: 1.2 },
+};
+Object.defineProperty(G, 'diff', { get: () => DIFFICULTY[save.settings.difficulty] || DIFFICULTY.normal });
+ui.getDiff = () => G.diff;
+
+G.damage = (amount, from, { heavy = false } = {}) => {
+  if (P.invuln > 0 || P.dead || !G.control || P.ragdoll) return false;
   if (P.spiritActive > 0) amount *= 0.35; // the LORD is my strength and my shield
-  amount *= G.mods?.armor ?? 1;
+  amount *= (G.mods?.armor ?? 1) * G.diff.dmg;
   P.health -= amount / P.maxHealth; P.lastHurt = G.t; P.invuln = 0.6; G.hurtFx = 1;
-  ui.hurt(); audio.play('hurt'); G.shake(0.5);
-  if (from) { const k = V().subVectors(P.pos, from).setY(0).normalize().multiplyScalar(7); P.vel.x += k.x; P.vel.z += k.z; P.vel.y = 3; P.onGround = false; }
-  if (P.health <= 0) { P.dead = true; G.onPlayerDeath?.(); }
+  ui.hurt(); audio.play('hurt'); G.shake(heavy ? 0.9 : 0.5);
+  const away = from ? V().subVectors(P.pos, from).setY(0).normalize() : V(Math.sin(P.facing + Math.PI), 0, Math.cos(P.facing + Math.PI));
+  if (heavy && !P.mount) startRagdoll(away, amount);
+  else if (from) { const k = away.clone().multiplyScalar(7); P.vel.x += k.x; P.vel.z += k.z; P.vel.y = 3; P.onGround = false; }
+  if (P.health <= 0) { P.dead = true; if (!P.ragdoll) G.onPlayerDeath?.(); else P.ragdoll.thenDie = true; }
   return true;
 };
+
+// ---------------------------------------------------------------- Ragdoll
+// A heavy blow throws David: the body is launched and tumbles under gravity, bounces and slides to rest,
+// limbs flail on damped springs, then he gets back up.
+function startRagdoll(dir, amount) {
+  const power = 6 + amount * 10;
+  P.ragdoll = {
+    t: 0, vel: V(dir.x * power, 4 + amount * 4, dir.z * power), dir: dir.clone(),
+    pitch: 0, pitchV: -(5 + Math.random() * 3) * Math.sign(Math.cos(P.facing) * dir.z + Math.sin(P.facing) * dir.x || 1),
+    roll: 0, rollV: (Math.random() - 0.5) * 6, rest: 0, getUp: 0,
+    limbs: ['armL', 'armR', 'foreL', 'foreR', 'legL', 'legR', 'shinL', 'shinR'].map((k) => ({ k, a: 0, v: (Math.random() - 0.5) * 18, b: 0, bv: (Math.random() - 0.5) * 10 })),
+  };
+  P.rollT = 0; P.attackT = 0;
+}
+function updateRagdoll(dt) {
+  const R = P.ragdoll, rig = david.rig;
+  R.t += dt;
+  const gy = heightAt(P.pos.x, P.pos.z);
+  if (R.getUp <= 0) {
+    R.vel.y -= 18 * dt;
+    P.pos.addScaledVector(R.vel, dt);
+    for (const c of world.colliders) resolveCircle(P.pos, c.x, c.z, c.r + 0.35);
+    if (P.pos.y <= gy) { // hit the ground: bounce, then slide with friction
+      P.pos.y = gy;
+      if (R.vel.y < -2) { R.vel.y *= -0.3; G.shake(0.35); audio.play('thud'); R.pitchV *= 0.5; } else R.vel.y = 0;
+      R.vel.x *= Math.exp(-dt * 6); R.vel.z *= Math.exp(-dt * 6);
+    }
+    // tumble, settling flat on the back or front once grounded
+    const grounded = P.pos.y <= gy + 0.02;
+    R.pitch += R.pitchV * dt; R.roll += R.rollV * dt;
+    if (grounded) {
+      const flat = Math.round(R.pitch / Math.PI) * Math.PI + Math.sign(R.pitch - Math.round(R.pitch / Math.PI) * Math.PI || 1) * Math.PI / 2;
+      R.pitchV += (flat - R.pitch) * 30 * dt; R.pitchV *= Math.exp(-dt * 6);
+      R.rollV += (0 - R.roll) * 20 * dt; R.rollV *= Math.exp(-dt * 6);
+      if (Math.hypot(R.vel.x, R.vel.z) < 0.4) R.rest += dt;
+    }
+    for (const L of R.limbs) { // damped springs toward a limp pose, kicked by the impact
+      const limp = L.k.startsWith('arm') ? (L.k === 'armL' ? 1.2 : -1.2) : L.k.startsWith('shin') ? 0.4 : 0.1;
+      L.v += ((L.k.startsWith('arm') ? 0 : limp) - L.a) * 40 * dt - L.v * 4 * dt; L.a += L.v * dt;
+      L.bv += ((L.k.startsWith('arm') ? limp : 0) - L.b) * 30 * dt - L.bv * 4 * dt; L.b += L.bv * dt;
+    }
+    if (R.rest > (G.diff.dmg > 1 ? 1.6 : 1.1)) {
+      if (R.thenDie) { P.ragdoll = null; G.onPlayerDeath?.(); return; }
+      R.getUp = 0.001; R.from = { pitch: R.pitch, roll: R.roll };
+    }
+  } else { // get up
+    R.getUp += dt / 0.9;
+    const k = Math.min(1, R.getUp), e = k * k * (3 - 2 * k);
+    R.pitch = R.from.pitch * (1 - e); R.roll = R.from.roll * (1 - e);
+    P.pos.y = gy;
+    for (const L of R.limbs) { L.a *= 1 - e * 0.2; L.b *= 1 - e * 0.2; }
+    if (k >= 1) { P.ragdoll = null; P.invuln = 0.8; return; }
+  }
+  david.animate(dt, 0);
+  for (const L of R.limbs) { const j = rig[L.k]; if (j) { j.rotation.x = L.a; if (L.k.startsWith('arm') || L.k.startsWith('leg')) j.rotation.z = L.b; } }
+  // lying on the ground the body pivots near the hips, not the feet
+  david.root.position.copy(P.pos).add(V(0, 0.25 * Math.abs(Math.sin(R.pitch)), 0));
+  david.root.rotation.set(R.pitch, P.facing, R.roll, 'YXZ');
+  ui.health(P.health);
+}
 G.heal = () => { P.health = 1; P.dead = false; ui.health(1); };
 G.shake = (a) => { G.shakeAmt = Math.max(G.shakeAmt, a); };
 
 function updatePlayer(dt) {
+  if (P.ragdoll) { updateRagdoll(dt); return; }
   const ctl = G.control && !P.dead;
   // In witness view, steer relative to the direction David faces.
   const yaw = G.camMode === 'second' ? P.facing + Math.PI : G.cam.yaw;
@@ -211,7 +283,7 @@ function updatePlayer(dt) {
   ui.crosshair(P.aiming || (G.camMode === 'first' && P.slingUnlocked && ctl), P.stones > 0 ? P.aimCharge : 0);
 
   // Health regen
-  if (!P.dead && (G.t - P.lastHurt > 4 || P.spiritActive > 0) && P.health < 1) P.health = Math.min(1, P.health + dt * (P.spiritActive > 0 ? 0.3 : 0.15));
+  if (!P.dead && (G.t - P.lastHurt > 4 || P.spiritActive > 0) && P.health < 1) P.health = Math.min(1, P.health + dt * (P.spiritActive > 0 ? 0.3 : G.diff.regen));
   ui.health(P.health);
 
   david.pose.carry = G.carrySpeed ? 1 : 0;
@@ -538,8 +610,35 @@ G.cinemaOff = () => {
 
 // ---------------------------------------------------------------- Loop
 const clock = new THREE.Clock();
+// ---------------------------------------------------------------- Performance stats (Settings → Show FPS)
+G.stats = (() => {
+  const el = document.createElement('div'); el.id = 'stats'; el.hidden = !save.settings.showFps; document.body.appendChild(el);
+  let frames = 0, t0 = performance.now(), worst = 0;
+  return {
+    show: (v) => { el.hidden = !v; },
+    tick: (ms) => {
+      frames++; worst = Math.max(worst, ms);
+      const now = performance.now();
+      if (now - t0 < 500 || el.hidden) { if (now - t0 >= 500) { frames = 0; t0 = now; worst = 0; } return; }
+      const fps = (frames * 1000) / (now - t0);
+      const info = renderer.info.render;
+      el.innerHTML = `<b class="${fps >= 55 ? 'ok' : fps >= 30 ? 'mid' : 'bad'}">${fps.toFixed(0)} FPS</b><span>${(1000 / fps).toFixed(1)} ms · worst ${worst.toFixed(0)} ms</span><span>${info.calls} draws · ${(info.triangles / 1000).toFixed(0)}k tris</span><span>${post.preset} · res ${(post.scale * 100).toFixed(0)}%</span>`;
+      frames = 0; t0 = now; worst = 0;
+    },
+  };
+})();
+// Shadows: re-render the shadow map every frame on Ultra, every other frame otherwise (moving shadows still
+// update 30+ times a second, at half the cost).
+renderer.shadowMap.autoUpdate = false;
+let shadowTick = 0;
+let lastFrame = performance.now();
+
 function frame() {
   requestAnimationFrame(frame);
+  const nowMs = performance.now(), frameMs = nowMs - lastFrame; lastFrame = nowMs;
+  G.stats.tick(frameMs);
+  post.adapt(frameMs, frameMs / 1000);
+  renderer.shadowMap.needsUpdate = post.preset === 'ultra' || (shadowTick++ & 1) === 0 || !!G.cine;
   // settings.debugFast (test harness only) lets slow software renderers run game time faster.
   const raw = Math.min(clock.getDelta(), save.settings.debugFast ? 0.3 : 1 / 20);
   if (G.paused) { input.endFrame(); post.render(G.t, { spirit: 0 }); return; }

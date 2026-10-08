@@ -100,6 +100,9 @@ export function createMenu(G, { start }) {
     openPanel('Settings', `<div class="settings">
       <label>Graphics quality<div class="seg" data-k="quality">${Object.entries(PRESETS).map(([k, p]) => `<button data-v="${k}" class="${st.quality === k ? 'on' : ''}">${p.label}</button>`).join('')}</div></label>
       <p class="note">Ultra renders at native 4K on 4K displays, with ambient occlusion, 4096 px shadows, bloom and SMAA. Use High on laptops and Medium on phones.</p>
+      <label>Difficulty<div class="seg" data-k="difficulty">${['easy', 'normal', 'hard'].map((d) => `<button data-v="${d}" class="${(st.difficulty || 'normal') === d ? 'on' : ''}">${d[0].toUpperCase() + d.slice(1)}</button>`).join('')}</div></label>
+      <p class="note">Sets how much harm you take, how long Goliath stays open, and how fast the conviction bar moves.</p>
+      <label>Show FPS<div class="seg" data-k="showFps"><button data-v="false" class="${!st.showFps ? 'on' : ''}">Off</button><button data-v="true" class="${st.showFps ? 'on' : ''}">On</button></div></label>
       <label>Camera view<div class="seg" data-k="camMode"><button data-v="third" class="${G.camMode === 'third' ? 'on' : ''}">Third person</button><button data-v="first" class="${G.camMode === 'first' ? 'on' : ''}">First person</button><button data-v="second" class="${G.camMode === 'second' ? 'on' : ''}">Second person</button></div></label>
       <p class="note">Second person is the Witness view: you see David through the eyes of someone walking ahead of him. Press V in play to cycle views.</p>
       <label>Volume<input type="range" min="0" max="1" step="0.05" value="${st.volume}" data-r="volume" /></label>
@@ -114,6 +117,7 @@ export function createMenu(G, { start }) {
       if (k === 'camMode') { G.cycleCamera(v); return; }
       st[k] = v; save.write();
       if (k === 'quality') post.apply(v, G.world.sun);
+      if (k === 'showFps') G.stats?.show(v);
     }));
     body.querySelectorAll('[data-r]').forEach((r) => (r.oninput = () => {
       st[r.dataset.r] = parseFloat(r.value); save.write();
@@ -123,6 +127,18 @@ export function createMenu(G, { start }) {
       if (e.target.dataset.armed) { save.reset(); location.hash = ''; location.reload(); }
       e.target.dataset.armed = 1; e.target.textContent = 'Click again to confirm';
     };
+  };
+  const chooseDifficulty = (onPick, back) => {
+    const cur = save.settings.difficulty || 'normal';
+    const info = {
+      easy: 'For the story. You take half the harm, Goliath stays open far longer, and the conviction bar moves slowly with a wide target.',
+      normal: 'The intended balance of story and challenge.',
+      hard: 'You take more harm and heal slowly. Goliath is quicker and opens only briefly. The conviction bar is fast with a narrow target.',
+    };
+    openPanel('Choose your difficulty', `<div class="chapters">${['easy', 'normal', 'hard'].map((d) => `
+      <button class="chapter${d === cur ? ' current' : ''}" data-d="${d}"><small>${d === cur ? 'Last used' : '&nbsp;'}</small><b>${d[0].toUpperCase() + d.slice(1)}</b><span>${info[d]}</span></button>`).join('')}</div>
+      <p class="note" style="opacity:.6;margin-top:1rem">You can change this any time in Settings.</p>`, back);
+    body.querySelectorAll('[data-d]').forEach((b) => (b.onclick = () => { save.settings.difficulty = b.dataset.d; save.write(); panelBack = null; panel.hidden = true; onPick(); }));
   };
   const controls = (back) => openPanel('Controls', `<div class="ctl-list">
       <kbd>W A S D</kbd><span>Move (in Witness view: A/D turn)</span><kbd>Mouse</kbd><span>Look (click the game to capture the mouse)</span>
@@ -138,8 +154,8 @@ export function createMenu(G, { start }) {
     audio.start(); audio.volume(save.settings.volume);
     const n = b.dataset.nav;
     if (n === 'continue') go(lastC, lastPart);
-    if (n === 'new') { save.gospel.part = null; save.write(); go('gospel', 'entry'); }
-    if (n === 'david') { save.part = null; save.write(); go('david', 'prologue'); }
+    if (n === 'new') { home.hidden = true; chooseDifficulty(() => { save.gospel.part = null; save.write(); go('gospel', 'entry'); }, showHome); }
+    if (n === 'david') { home.hidden = true; chooseDifficulty(() => { save.part = null; save.write(); go('david', 'prologue'); }, showHome); }
     if (n === 'chapters') { home.hidden = true; chapters(showHome); }
     if (n === 'rewards') { home.hidden = true; rewards(showHome); }
     if (n === 'settings') { home.hidden = true; settings(showHome); }

@@ -92,7 +92,7 @@ export function spawnLion(G, pos, lamb, lair) {
         speed = 6;
         if (lion.pos.distanceTo(P.pos) < 1.4 && !lion.hitThisPounce) {
           lion.hitThisPounce = true;
-          if (G.damage(0.3, lion.pos)) audio.play('roar', 0.25);
+          if (G.damage(0.3, lion.pos, { heavy: true })) audio.play('roar', 0.25);
         }
         if (k >= 1) { lion.hitThisPounce = false; L.pose.pounce = 0; setState('recover'); }
         break;
@@ -141,30 +141,45 @@ export function spawnGoliath(G, pos, facing = 0) {
   gol.startFight = () => { gol.fighting = true; setState('advance'); };
 
   const wp = (obj, out = V()) => obj.getWorldPosition(out);
-  const head = V(), chest = V(), hips = V(), shield = V();
   gol.headPos = () => wp(H.brow, V());
-  // Hit volumes for the sling stone.
+  // Health: five stones bring him down (a stone to the brow while he roars counts double).
+  gol.maxHp = 5; gol.hp = 5;
+  // Hit volumes follow his body: head, a capsule of spheres along the spine, both legs, the shield.
+  const pool = Array.from({ length: 16 }, () => ({ c: V(), r: 0, part: '' }));
+  const seg = (k, a, b, n, r, part) => { for (let i = 0; i < n; i++) { const o = pool[k++]; o.c.lerpVectors(a, b, n === 1 ? 0.5 : i / (n - 1)); o.r = r; o.part = part; } return k; };
+  const pHead = V(), pNeck = V(), pHips = V(), pKL = V(), pKR = V(), pAL = V(), pAR = V(), pSh = V(), pBrow = V();
   const target = {
     spheres: () => {
-      wp(H.brow, head); wp(H.rig.torso, chest); chest.y += 1.0; wp(H.rig.hips, hips); wp(H.shield, shield);
-      return [
-        { c: head, r: 0.42, part: 'head' },
-        { c: shield, r: 0.65, part: 'shield' },
-        { c: chest, r: 0.85, part: 'body' },
-        { c: hips, r: 0.75, part: 'body' },
-      ];
+      const S = H.rig.scale;
+      wp(H.rig.head, pHead); wp(H.rig.neck, pNeck); wp(H.rig.hips, pHips); wp(H.brow, pBrow);
+      wp(H.rig.shinL, pKL); wp(H.rig.shinR, pKR); wp(H.shield, pSh);
+      pAL.copy(pKL).y -= 0.45 * S; pAR.copy(pKR).y -= 0.45 * S;
+      let k = 0;
+      pool[k].c.copy(pBrow); pool[k].r = 0.32; pool[k++].part = 'brow';
+      pool[k].c.copy(pHead); pool[k].r = 0.36; pool[k++].part = 'head';
+      k = seg(k, pHips, pNeck, 5, 0.42 * S, 'body');
+      k = seg(k, pHips, pKL, 2, 0.2 * S, 'body'); k = seg(k, pKL, pAL, 2, 0.16 * S, 'body');
+      k = seg(k, pHips, pKR, 2, 0.2 * S, 'body'); k = seg(k, pKR, pAR, 2, 0.16 * S, 'body');
+      pool[k].c.copy(pSh); pool[k].r = 0.62; pool[k++].part = 'shield';
+      // the brow is listed first, so a stone that reaches it during a roar counts there
+      return pool.slice(0, k);
     },
     onHit: (part, proj) => {
       if (!gol.fighting) return;
-      if (part === 'head' && gol.state === 'roar') {
-        gol.fighting = false; setState('fall');
-        audio.play('hit'); G.shake(0.6);
-        resolveDown();
-        return;
-      }
-      audio.play('clang'); G.shake(0.1);
-      if (part === 'head') ui.hint('The bronze helmet turns the stone. Wait until he throws back his head to roar, then strike his brow.', 5000);
-      else if (!gol.hintedHelm) { gol.hintedHelm = true; ui.hint('He is armoured in bronze from head to foot. Watch for his brow.', 4000); }
+      const open = gol.state === 'roar';
+      let dmg = 0;
+      if ((part === 'brow' || part === 'head') && open) dmg = 2;
+      else if (part === 'shield') dmg = 0;
+      else dmg = 1;
+      if (dmg === 0) { audio.play('clang'); G.shake(0.1); ui.hint('The stone glances off his shield.', 1800); return; }
+      gol.hp = Math.max(0, gol.hp - dmg);
+      ui.boss(true, gol.hp / gol.maxHp);
+      audio.play(dmg === 2 ? 'hit' : 'clang'); G.shake(dmg === 2 ? 0.45 : 0.15);
+      gol.flinch = 1;
+      ui.toast(dmg === 2 ? 'Struck his brow!' : `Hit · ${gol.maxHp - gol.hp}/${gol.maxHp}`, 1500, dmg === 2);
+      if (gol.hp <= 0) { gol.fighting = false; setState('fall'); resolveDown(); return; }
+      if (dmg === 2) setState('stagger');
+      else if (!gol.hintedHelm) { gol.hintedHelm = true; ui.hint('Every stone counts, but strike his brow while he roars for a double blow.', 4500); }
     },
   };
   G.targets.push(target);
@@ -186,7 +201,8 @@ export function spawnGoliath(G, pos, facing = 0) {
     const dP = toP.length();
     let speed = 0;
     const pose = H.pose;
-    pose.lookUp += (((gol.state === 'roar') ? 1 : 0) - pose.lookUp) * Math.min(1, dt * 5);
+    pose.lookUp += (((gol.state === 'roar' || gol.state === 'stagger') ? 1 : 0) - pose.lookUp) * Math.min(1, dt * 5);
+    gol.flinch = Math.max(0, (gol.flinch || 0) - dt * 3);
     H.helm.rotation.x = -pose.lookUp * 0.55; H.helm.position.y = pose.lookUp * 0.05;
     H.brow.material.opacity = gol.state === 'roar' ? 0.55 + Math.sin(G.t * 12) * 0.35 : 0;
 
@@ -200,11 +216,11 @@ export function spawnGoliath(G, pos, facing = 0) {
       }
       case 'advance': {
         faceTo(P.pos, dt);
-        if (dP > 5) { gol.pos.addScaledVector(toP.normalize(), 1.7 * dt); speed = 1.3; }
+        if (dP > 5) { gol.pos.addScaledVector(toP.normalize(), 1.7 * (G.diff?.enemy ?? 1) * dt); speed = 1.3; }
         if (dP < 6.2 && gol.t > 0.6) setState('sweepWind');
         else if (gol.t > 3.2) {
           gol.cycle++;
-          setState(gol.cycle % 3 === 0 ? 'roar' : 'throwWind');
+          setState(gol.cycle % 2 === 0 ? 'roar' : 'throwWind');
           if (gol.state === 'roar') {
             audio.play('roar', 0.6); G.shake(0.3);
             const [line, ref] = TAUNTS[Math.floor(Math.random() * TAUNTS.length)];
@@ -216,7 +232,7 @@ export function spawnGoliath(G, pos, facing = 0) {
       case 'throwWind':
         faceTo(P.pos, dt, 5);
         pose.aim = Math.min(1, gol.t * 1.5); // arm raised
-        if (gol.t > 1.1) { pose.aim = 0; pose.throw = 1; throwSpear(); setState('throwRecover'); }
+        if (gol.t > 1.1 / (G.diff?.enemy ?? 1)) { pose.aim = 0; pose.throw = 1; throwSpear(); setState('throwRecover'); }
         break;
       case 'throwRecover':
         pose.throw = Math.max(0, pose.throw - dt * 2);
@@ -227,17 +243,22 @@ export function spawnGoliath(G, pos, facing = 0) {
         pose.swing = Math.min(0.3, gol.t * 0.4);
         sweepRing.visible = true; sweepRing.position.set(gol.pos.x, gol.pos.y + 0.1, gol.pos.z);
         sweepRing.scale.setScalar(0.4 + Math.min(1, gol.t / 0.95) * 0.6);
-        if (gol.t > 0.95) {
+        if (gol.t > 0.95 / (G.diff?.enemy ?? 1)) {
           setState('sweep'); audio.play('swing'); G.shake(0.2);
-          if (dP < 6.5) G.damage(0.45, gol.pos);
+          if (dP < 6.5) G.damage(0.45, gol.pos, { heavy: true });
         }
         break;
       case 'sweep':
         pose.swing = Math.min(1, 0.3 + gol.t * 1.6); sweepRing.visible = false;
-        if (gol.t > 0.6) { pose.swing = 0; setState(gol.cycle % 3 === 2 ? 'roar' : 'advance'); if (gol.state === 'roar') { gol.cycle++; audio.play('roar', 0.6); } }
+        if (gol.t > 0.6) { pose.swing = 0; setState(gol.cycle % 2 === 1 ? 'roar' : 'advance'); if (gol.state === 'roar') { gol.cycle++; audio.play('roar', 0.6); } }
         break;
       case 'roar':
-        if (gol.t > 3.0) setState('advance');
+        if (gol.t > (G.diff?.roar ?? 4.5)) setState('advance');
+        break;
+      case 'stagger': // reels back from a blow to the brow
+        pose.lookUp = 1; speed = 0;
+        gol.pos.addScaledVector(toP.clone().normalize(), -1.2 * dt);
+        if (gol.t > 1.6) setState('advance');
         break;
       case 'fall':
         pose.fallen = Math.min(1, pose.fallen + dt * (0.3 + pose.fallen * 2.5));
@@ -256,7 +277,7 @@ export function spawnGoliath(G, pos, facing = 0) {
       throwRing.material.opacity = 0.35 + Math.sin(G.t * 20) * 0.2;
       if (k >= 1 && !s.landed) {
         s.landed = true; throwRing.visible = false; G.shake(0.35); audio.play('thud');
-        if (P.pos.distanceTo(s.to) < 2.3) G.damage(0.4, s.to);
+        if (G.hdist(P.pos, s.to) < 2.3) G.damage(0.4, s.to, { heavy: true });
         H.spear.visible = true;
         setTimeout(() => scene.remove(s.mesh), 3000);
         spearFlight = null;
@@ -271,6 +292,7 @@ export function spawnGoliath(G, pos, facing = 0) {
     H.root.position.copy(gol.pos);
     H.root.rotation.y = gol.facing;
     H.animate(dt, speed);
+    H.rig.torso.rotation.x -= (gol.flinch || 0) * 0.35; // recoil from each stone
   };
   G.updaters.push(update);
   return gol;

@@ -390,16 +390,31 @@ export async function runStory(G, startPart = 'prologue') {
     bearer.walkTo(at(-14, -126), 3);
     G.cinemaOff();
     ui.boss(true, 1);
-    ui.hint('“David hasted, and ran toward the army to meet the Philistine.” Dodge his spear (C to roll). When he throws back his head to roar, sling a stone at his brow.', 8000);
+    ui.hint('Five stones will bring him down. Dodge his spear (C to roll). When he throws back his head to roar, a stone to his brow counts double. Fresh stones appear nearby when you run low.', 9000);
     gol.startFight();
+    // The brook keeps giving: when David runs low, a fresh smooth stone turns up near him.
+    let refillT = 0;
+    const refill = (dt) => {
+      if (!gol.fighting) return;
+      refillT -= dt;
+      const lying = G.pickups.filter((pk) => pk.kind === 'stone').length;
+      if (refillT <= 0 && P.stones + lying < 3) {
+        refillT = 5;
+        const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 2;
+        G.addStonePickup(P.pos.clone().add(V(Math.cos(a) * r, 0, Math.sin(a) * r)));
+        ui.toast('A smooth stone lies nearby', 2200);
+      }
+    };
+    G.updaters.push(refill);
     G.respawn = async () => {
-      gol.pos.copy(at(0, -118)); gol.fighting = true; gol.startFight();
+      gol.pos.copy(at(0, -118)); gol.hp = gol.maxHp; ui.boss(true, 1); gol.fighting = true; gol.startFight();
       P.pos.copy(at(6, -88)); G.ground(P.pos);
       const lying = G.pickups.filter((p) => p.kind === 'stone');
       lying.forEach((pk) => G.scene.remove(pk.grp)); G.pickups.length = 0;
       P.stones = 5; ui.stones(5);
     };
     await gol.down;
+    G.updaters.splice(G.updaters.indexOf(refill), 1);
     // Victory: the stone sinks into his forehead
     ui.boss(true, 0);
     G.timeScale = 0.25;

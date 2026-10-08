@@ -62,7 +62,10 @@ export function createPost(renderer, scene, camera) {
   const ao = new GTAOPass(scene, camera, innerWidth, innerHeight);
   ao.output = GTAOPass.OUTPUT.Default;
   ao.blendIntensity = 0.85;
-  ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.0, samples: 12 });
+  ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.0, samples: 8 });
+  // Ambient occlusion is soft by nature: compute it at half resolution (about a quarter of the cost).
+  const aoSetSize = ao.setSize.bind(ao);
+  ao.setSize = (w, h) => aoSetSize(Math.max(1, Math.floor(w / 2)), Math.max(1, Math.floor(h / 2)));
   composer.addPass(ao);
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.32, 0.6, 0.85);
   composer.addPass(bloom);
@@ -76,15 +79,32 @@ export function createPost(renderer, scene, camera) {
   const smaa = new SMAAPass(innerWidth, innerHeight);
   composer.addPass(smaa);
 
-  const post = { composer, bloom, ao, dof, grade, preset: 'high', cineFocus: null };
-  post.apply = (name, sun) => {
-    const p = PRESETS[name] || PRESETS.high;
-    post.preset = name;
+  const post = { composer, bloom, ao, dof, grade, preset: 'high', cineFocus: null, scale: 1, autoRes: true };
+  const setRatio = () => {
+    const p = PRESETS[post.preset] || PRESETS.high;
     // Ultra renders at up to 2.5× CSS pixels, so a 1080p-CSS window on a 4K display renders native 4K.
-    const ratio = Math.min(p.ratio, Math.max(devicePixelRatio, name === 'ultra' ? 2 : 1));
+    const ratio = Math.min(p.ratio, Math.max(devicePixelRatio, post.preset === 'ultra' ? 2 : 1)) * post.scale;
     renderer.setPixelRatio(ratio);
     composer.setPixelRatio(ratio);
     post.resize();
+  };
+  // Dynamic resolution: when frames run long, render fewer pixels (down to 60%); recover when there is headroom.
+  // Keeps High and Ultra smooth on machines that can't hold them at full resolution.
+  let acc = 0, n = 0, timer = 0;
+  post.adapt = (ms, dt) => {
+    if (!post.autoRes) return;
+    acc += ms; n++; timer += dt;
+    if (timer < 1.2) return;
+    const avg = acc / n; acc = 0; n = 0; timer = 0;
+    const prev = post.scale;
+    if (avg > 21 && post.scale > 0.6) post.scale = Math.max(0.6, post.scale - 0.1);
+    else if (avg < 14 && post.scale < 1) post.scale = Math.min(1, post.scale + 0.05);
+    if (post.scale !== prev) setRatio();
+  };
+  post.apply = (name, sun) => {
+    const p = PRESETS[name] || PRESETS.high;
+    post.preset = name; post.scale = 1;
+    setRatio();
     ao.enabled = p.ao; bloom.enabled = p.bloom; smaa.enabled = p.smaa;
     post.dofAllowed = p.dof;
     if (sun && sun.shadow.mapSize.x !== p.shadow) {

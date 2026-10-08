@@ -138,15 +138,16 @@ export function createUI(input) {
       timing.hidden = false;
       timing.querySelector('small').textContent = label;
       const mark = timing.querySelector('.mark'), zone = timing.querySelector('.zone');
-      const zc = 0.3 + Math.random() * 0.4, zw = 0.16;
+      const df = ui.getDiff?.() || { timing: 1, zone: 0.16 };
+      const zc = 0.3 + Math.random() * 0.4, zw = df.zone;
       zone.style.left = (zc - zw / 2) * 100 + '%'; zone.style.width = zw * 100 + '%';
       const t0 = performance.now();
       return new Promise((res) => {
         const tick = () => {
           const t = (performance.now() - t0) / 1000;
-          const x = 0.5 + 0.5 * Math.sin(t * 3.4 - Math.PI / 2);
+          const x = 0.5 + 0.5 * Math.sin(t * 3.4 * df.timing - Math.PI / 2);
           mark.style.left = x * 100 + '%';
-          if (inp.pressed.has('advance') || inp.pressed.has('attack') || t > 6) {
+          if (inp.pressed.has('advance') || inp.pressed.has('attack') || t > 6 / df.timing) {
             inp.clearUI(); inp.pressed.delete('attack');
             const q = Math.max(0, 1 - Math.abs(x - zc) / (zw * 1.5));
             timing.classList.add(q > 0.6 ? 'good' : 'meh');

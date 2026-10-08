@@ -54,7 +54,7 @@ export function createPhysics(G) {
       for (const n of G.npcs) if (n.root.visible) motion(n, dt, false);
       for (const s of G.sheep) if (!s.carried) motion(s, dt, true);
       for (const m of G.systems?.mounts || []) motion(m, dt, true);
-      motion(P, dt, false, P.h);
+      if (!P.ragdoll) motion(P, dt, false, P.h);
     },
   };
 

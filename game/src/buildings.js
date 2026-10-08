@@ -20,18 +20,18 @@ function canvasTex(size, paint, repeat = 1) {
 // Plaster: warm ochre mud with darker blotches, straw flecks and fine cracks.
 function paintPlaster(g, s, base = [214, 180, 122]) {
   g.fillStyle = `rgb(${base})`; g.fillRect(0, 0, s, s);
-  for (let i = 0; i < 900; i++) {
-    const x = rnd() * s, y = rnd() * s, r = 10 + rnd() * 70, k = (rnd() - 0.5) * 16;
+  for (let i = 0; i < 260; i++) {
+    const x = rnd() * s, y = rnd() * s, r = 30 + rnd() * 120, k = (rnd() - 0.5) * 10;
     const gr = g.createRadialGradient(x, y, 0, x, y, r);
     gr.addColorStop(0, `rgba(${base[0] + k},${base[1] + k * 0.9},${base[2] + k * 0.7},0.22)`); gr.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
   }
-  for (let i = 0; i < 1400; i++) { // straw
+  for (let i = 0; i < 380; i++) { // a little straw
     const x = rnd() * s, y = rnd() * s, a = rnd() * Math.PI, l = 2 + rnd() * 5;
-    g.strokeStyle = rnd() < 0.7 ? 'rgba(240,214,150,0.35)' : 'rgba(140,108,62,0.22)'; g.lineWidth = 0.7;
+    g.strokeStyle = rnd() < 0.8 ? 'rgba(240,218,160,0.22)' : 'rgba(150,118,72,0.14)'; g.lineWidth = 0.6;
     g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
   }
-  for (let i = 0; i < 9; i++) { // hairline cracks
+  for (let i = 0; i < 0; i++) { // (no cracks: a clean, freshly plastered finish)
     let x = rnd() * s, y = rnd() * s; g.strokeStyle = 'rgba(110,80,44,0.3)'; g.lineWidth = 0.9; g.beginPath(); g.moveTo(x, y);
     for (let k = 0; k < 8; k++) { x += (rnd() - 0.5) * 22; y += rnd() * 16; g.lineTo(x, y); }
     g.stroke();
@@ -41,11 +41,11 @@ function paintStone(g, s) { // dressed limestone courses (ashlar)
   g.fillStyle = '#cdb994'; g.fillRect(0, 0, s, s);
   const rows = 8, rh = s / rows;
   for (let r = 0; r < rows; r++) {
-    let x = -(r % 2) * 40;
+    let x = -(r % 2) * 40 * (s / 512);
     while (x < s) {
-      const w = 60 + rnd() * 70, k = (rnd() - 0.5) * 30;
+      const w = (60 + rnd() * 70) * (s / 512), k = (rnd() - 0.5) * 22;
       g.fillStyle = `rgb(${205 + k},${185 + k},${148 + k * 0.8})`; g.fillRect(x + 2, r * rh + 2, w - 4, rh - 4);
-      for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(90,70,40,${rnd() * 0.18})`; g.fillRect(x + rnd() * w, r * rh + rnd() * rh, 2 + rnd() * 3, 2 + rnd() * 3); }
+      for (let i = 0; i < 12; i++) { g.fillStyle = `rgba(90,70,40,${rnd() * 0.08})`; g.fillRect(x + rnd() * w, r * rh + rnd() * rh, 2 + rnd() * 3, 2 + rnd() * 3); }
       x += w;
     }
   }
@@ -58,16 +58,16 @@ function paintWood(g, s) {
 let MATS = null;
 export function materials() {
   if (MATS) return MATS;
-  const plaster = canvasTex(512, (g, s) => paintPlaster(g, s));
-  const plasterLight = canvasTex(512, (g, s) => paintPlaster(g, s, [214, 186, 136]));
-  const stone = canvasTex(512, paintStone);
+  const plaster = canvasTex(1024, (g, s) => paintPlaster(g, s));
+  const plasterLight = canvasTex(1024, (g, s) => paintPlaster(g, s, [226, 202, 158]));
+  const stone = canvasTex(1024, paintStone);
   const wood = canvasTex(256, paintWood);
   [plaster, plasterLight, stone, wood].forEach((t) => (t.colorSpace = THREE.SRGBColorSpace));
   const bump = (t) => { const b = t.clone(); b.colorSpace = THREE.NoColorSpace; b.needsUpdate = true; return b; };
   MATS = {
-    wall: new THREE.MeshStandardMaterial({ map: plaster, bumpMap: bump(plaster), bumpScale: 1.0, roughness: 0.97 }),
+    wall: new THREE.MeshStandardMaterial({ map: plaster, bumpMap: bump(plaster), bumpScale: 0.5, roughness: 0.95 }),
     trim: new THREE.MeshStandardMaterial({ map: plasterLight, bumpMap: bump(plasterLight), bumpScale: 1.4, roughness: 0.95 }),
-    stone: new THREE.MeshStandardMaterial({ map: stone, bumpMap: bump(stone), bumpScale: 3, roughness: 0.9 }),
+    stone: new THREE.MeshStandardMaterial({ map: stone, bumpMap: bump(stone), bumpScale: 1.6, roughness: 0.88 }),
     wood: new THREE.MeshStandardMaterial({ map: wood, bumpMap: bump(wood), bumpScale: 1.5, roughness: 0.85 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x1a120a, roughness: 1 }),
   };
@@ -75,7 +75,7 @@ export function materials() {
 }
 
 /** A box with world-scaled UVs (1 texture tile ≈ 2 m) and gently uneven, hand-plastered faces. */
-function wallBox(w, h, d, wobble = 0.05) {
+function wallBox(w, h, d, wobble = 0.025) {
   const g = new THREE.BoxGeometry(w, h, d, Math.max(1, Math.round(w * 1.5)), Math.max(1, Math.round(h * 1.5)), Math.max(1, Math.round(d * 1.5)));
   const p = g.attributes.position, uv = g.attributes.uv, n = g.attributes.normal;
   for (let i = 0; i < p.count; i++) {
