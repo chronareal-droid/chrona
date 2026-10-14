@@ -13,7 +13,8 @@ export interface CaptionTiming {
   instant?: boolean;
   /**
    * Explicit pop-in frame for each word (scene-relative), e.g. to land a word on a beat or a voice-over.
-   * Words beyond the list follow on at `stagger`.
+   * Words beyond the list follow on at `stagger`. While later words wait, each line stays centred on the
+   * words already shown, gliding over as new ones arrive.
    */
   at?: number[];
 }
@@ -35,11 +36,26 @@ export const Caption: React.FC<{ text: string; timing?: CaptionTiming }> = ({ te
     if (i < at.length) return at[i];
     return (at.length ? at[at.length - 1] + stagger * (i - at.length + 1) : start + stagger * i);
   };
-  const { fontSize, lines } = layout;
+  const { fontSize, lines, widths } = layout;
+  const gap = fontSize * CAPTION.wordGapEm;
+  const recentre = !timing.instant && !!timing.at?.length;
   const lineHeightPx = fontSize * CAPTION.lineHeight;
   const blockHeight = lineHeightPx * lines.length;
   const firstWordAt = timing.instant ? 0 : wordStart(0);
   const backdrop = timing.instant ? 1 : interpolate(frame, [firstWordAt, firstWordAt + 10], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+
+  // Per word: pop progress (0–1). Computed up front so a line can centre on its visible words.
+  const progress: number[] = [];
+  lines.flat().forEach((_, i) => {
+    progress.push(timing.instant ? 1 : spring({ frame: frame - wordStart(i), fps, config: { damping: 15, stiffness: 190, mass: 0.6 } }));
+  });
+  let offset = 0;
+  const lineShift = lines.map((line, li) => {
+    const full = widths[li].reduce((a, w) => a + w, 0) + gap * (line.length - 1);
+    const shown = widths[li].reduce((a, w, k) => a + (w + (k ? gap : 0)) * Math.min(1, progress[offset + k]), 0);
+    offset += line.length;
+    return recentre ? (full - shown) / 2 : 0;
+  });
 
   let wordIndex = 0;
   return (
@@ -64,15 +80,16 @@ export const Caption: React.FC<{ text: string; timing?: CaptionTiming }> = ({ te
             position: 'relative',
             display: 'flex',
             justifyContent: 'center',
-            columnGap: fontSize * CAPTION.wordGapEm,
+            columnGap: gap,
             height: lineHeightPx,
             alignItems: 'center',
+            transform: `translateX(${lineShift[li]}px)`,
           }}
         >
           {line.map((word) => {
             const i = wordIndex++;
             const t = frame - wordStart(i);
-            const p = timing.instant ? 1 : spring({ frame: t, fps, config: { damping: 15, stiffness: 190, mass: 0.6 } });
+            const p = progress[i];
             const opacity = timing.instant ? 1 : interpolate(t, [0, 3], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
             return (
               <span

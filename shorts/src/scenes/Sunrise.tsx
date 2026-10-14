@@ -20,23 +20,24 @@ interface Building {
 
 const BASE = 1640;
 
-// Hand-placed so the skyline reads as screens of different kinds; heights stay below the caption band.
+// Hand-placed so the skyline reads as screens of different kinds. Tall at the sides, low in the middle,
+// leaving a notch around x ≈ 540 for the sun to crest through.
 const NEAR: Building[] = [
-  { x: -20, w: 150, h: 330, kind: 'tower' },
-  { x: 140, w: 120, h: 250, kind: 'phone' },
-  { x: 270, w: 210, h: 190, kind: 'monitor' },
-  { x: 490, w: 110, h: 420, kind: 'phone' },
-  { x: 610, w: 180, h: 300, kind: 'tower' },
-  { x: 800, w: 170, h: 200, kind: 'tv' },
-  { x: 975, w: 130, h: 360, kind: 'tower' },
+  { x: -20, w: 150, h: 360, kind: 'tower' },
+  { x: 140, w: 120, h: 280, kind: 'phone' },
+  { x: 270, w: 200, h: 200, kind: 'monitor' },
+  { x: 480, w: 120, h: 150, kind: 'tv' },
+  { x: 615, w: 175, h: 230, kind: 'tower' },
+  { x: 800, w: 120, h: 330, kind: 'phone' },
+  { x: 935, w: 165, h: 400, kind: 'tower' },
 ];
 const FAR: Building[] = [
-  { x: 40, w: 130, h: 400, kind: 'tower' },
-  { x: 200, w: 150, h: 300, kind: 'monitor' },
-  { x: 380, w: 120, h: 470, kind: 'tower' },
-  { x: 560, w: 150, h: 360, kind: 'tv' },
-  { x: 720, w: 110, h: 500, kind: 'phone' },
-  { x: 860, w: 160, h: 420, kind: 'tower' },
+  { x: 30, w: 140, h: 470, kind: 'tower' },
+  { x: 190, w: 130, h: 400, kind: 'phone' },
+  { x: 340, w: 130, h: 260, kind: 'tower' },
+  { x: 610, w: 150, h: 250, kind: 'monitor' },
+  { x: 770, w: 120, h: 450, kind: 'tower' },
+  { x: 900, w: 150, h: 520, kind: 'phone' },
 ];
 
 const Screen: React.FC<{ b: Building; fill: string; warm: number; layer: string }> = ({ b, fill, warm, layer }) => {
@@ -50,11 +51,21 @@ const Screen: React.FC<{ b: Building; fill: string; warm: number; layer: string 
   };
   let body: React.ReactNode;
   if (b.kind === 'tower') {
-    body = <rect x={b.x} y={top} width={b.w} height={b.h + 40} rx={10} {...lineStyle(3, 0.45, fill)} />;
-    const cols = 2;
-    const ww = (b.w - 36 - (cols - 1) * 14) / cols;
-    for (let r = 0; r < Math.floor((b.h - 30) / 64); r++)
-      for (let c = 0; c < cols; c++) win(b.x + 18 + c * (ww + 14), top + 22 + r * 64, ww, 40, r * cols + c);
+    // a video wall: a stack of 16:9 screens, each with its own bezel
+    const pw = b.w - 28;
+    const ph = (pw * 9) / 16;
+    const bezels: React.ReactNode[] = [];
+    for (let r = 0; r < Math.floor((b.h - 14) / (ph + 14)); r++) {
+      const py = top + 14 + r * (ph + 14);
+      bezels.push(<rect key={`bz${r}`} x={b.x + 10} y={py - 4} width={pw + 8} height={ph + 8} rx={7} {...lineStyle(2.5, 0.35)} />);
+      win(b.x + 14, py, pw, ph, r);
+    }
+    body = (
+      <>
+        <rect x={b.x} y={top} width={b.w} height={b.h + 40} rx={10} {...lineStyle(3, 0.45, fill)} />
+        {bezels}
+      </>
+    );
   } else if (b.kind === 'phone') {
     body = (
       <>
@@ -67,7 +78,8 @@ const Screen: React.FC<{ b: Building; fill: string; warm: number; layer: string 
     const sh = b.h * 0.7;
     body = (
       <>
-        <rect x={b.x + b.w / 2 - 12} y={top + sh} width={24} height={b.h - sh} {...lineStyle(3, 0.4, fill)} />
+        {/* a solid plinth under the screen, so no glow shows through at street level */}
+        <rect x={b.x + b.w * 0.12} y={top + sh - 6} width={b.w * 0.76} height={b.h - sh + 46} rx={8} {...lineStyle(3, 0.4, fill)} />
         <rect x={b.x} y={top} width={b.w} height={sh} rx={12} {...lineStyle(3, 0.45, fill)} />
       </>
     );
@@ -94,7 +106,7 @@ export const Sunrise: React.FC<SunriseProps> = ({ caption, captionTiming, riseFr
   const frame = useCurrentFrame();
   const { durationInFrames: d } = useVideoConfig();
   const rise = ramp(frame, 0, d * riseFraction, gentle);
-  const sunY = interpolate(rise, [0, 1], [1780, 1390]);
+  const sunY = interpolate(rise, [0, 1], [1760, 1300]);
 
   return (
     <SceneFrame caption={caption} captionTiming={captionTiming}>

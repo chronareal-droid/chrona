@@ -17,7 +17,7 @@ export interface ScreensProps extends SceneCaptionProps {
   seed?: string;
 }
 
-const GRID = { left: 100, right: 980, top: 205, gap: 34, antenna: 34 };
+const GRID = { left: 100, right: 980, top: 205, bottom: 800, gap: 34, antenna: 34 };
 const FLOOR = 1500;
 const FADE = 8;
 
@@ -60,9 +60,14 @@ export const Screens: React.FC<ScreensProps> = ({
   const frame = useCurrentFrame();
   const { durationInFrames: d } = useVideoConfig();
   const rows = Math.ceil(count / columns);
-  const w = (GRID.right - GRID.left - (columns - 1) * GRID.gap) / columns;
+  // As large as fits in the box above the caption band, centred.
+  const w = Math.min(
+    (GRID.right - GRID.left - (columns - 1) * GRID.gap) / columns,
+    (GRID.bottom - GRID.top - rows * GRID.antenna - (rows - 1) * GRID.gap) / rows / 0.74,
+  );
   const h = w * 0.74;
   const pitch = h + GRID.antenna + GRID.gap;
+  const left = (GRID.left + GRID.right) / 2 - (columns * w + (columns - 1) * GRID.gap) / 2;
 
   // Deterministic shuffle: the k-th TV in `order` goes dark k-th.
   const order = Array.from({ length: count }, (_, i) => i).sort((a, b) => random(`${seed}-${a}`) - random(`${seed}-${b}`));
@@ -82,14 +87,14 @@ export const Screens: React.FC<ScreensProps> = ({
           <RoughFilter id="screens-rough" />
         </defs>
         <Glow id="screens-glow" cx={540} cy={GRID.top + (rows * pitch) / 2} r={620} rx={760} color={COLORS.line} opacity={0.2 * light} />
-        <g transform={`translate(0 ${drift(frame, d, -16)})`} filter="url(#screens-rough)">
+        <g transform={`translate(0 ${drift(frame, d, -6)})`} filter="url(#screens-rough)">
           {lit.map((l, i) => {
             const col = i % columns;
             const row = Math.floor(i / columns);
-            return <Tv key={i} x={GRID.left + col * (w + GRID.gap)} y={GRID.top + GRID.antenna + row * pitch} w={w} h={h} lit={l} />;
+            return <Tv key={i} x={left + col * (w + GRID.gap)} y={GRID.top + GRID.antenna + row * pitch} w={w} h={h} lit={l} />;
           })}
         </g>
-        <g transform={`translate(0 ${drift(frame, d, -6)})`} filter="url(#screens-rough)">
+        <g transform={`translate(0 ${drift(frame, d, -16)})`} filter="url(#screens-rough)">
           <line x1={120} y1={FLOOR} x2={960} y2={FLOOR} {...lineStyle(3, 0.3)} />
           <ellipse cx={540} cy={FLOOR + 4} rx={70} ry={9} fill={COLORS.ink} opacity={0.8} />
           <Silhouette parts={personParts(540, FLOOR, 250)} rimOpacity={0.2 + 0.4 * light} />

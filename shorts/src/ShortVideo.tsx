@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, interpolate, Sequence, useCurrentFrame, useVideoConfig } from 'remotion';
 import { PaperGrain } from './components/PaperGrain';
 import { Soundtrack } from './components/Soundtrack';
 import {
@@ -82,7 +82,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({
   crossfadeFrames = CROSSFADE_FRAMES,
   grain,
 }) => {
-  const fps = 30;
+  const { fps } = useVideoConfig();
   const fadeOf = (s: SceneSpec | undefined, i: number) => (s && i > 0 && (s.transition ?? 'crossfade') === 'crossfade' ? crossfadeFrames : 0);
   let start = 0;
   return (

@@ -21,6 +21,7 @@ export const Doors: React.FC<DoorsProps> = ({ caption, captionTiming, count = 3 
   const frame = useCurrentFrame();
   const { durationInFrames: d } = useVideoConfig();
   const spacing = (WALL.right - WALL.left) / count;
+  const doorW = Math.min(DOOR.width, spacing * 0.72);
   const floorY = (k: number, n: number) => WALL.bottom + (NEAR.bottom - WALL.bottom) * (k / n) ** 2;
   const wallW = WALL.right - WALL.left;
 
@@ -66,17 +67,17 @@ export const Doors: React.FC<DoorsProps> = ({ caption, captionTiming, count = 3 
 
           {Array.from({ length: count }, (_, i) => {
             const cx = WALL.left + spacing * (i + 0.5);
-            const x = cx - DOOR.width / 2;
+            const x = cx - doorW / 2;
             const glow = breathe(frame, 54, 0.55, 1, i * 1.7);
             return (
               <g key={i}>
                 {/* door */}
-                <rect x={x} y={DOOR.top} width={DOOR.width} height={WALL.bottom - DOOR.top} rx={5} {...lineStyle(3.5, 0.55, COLORS.ink)} />
-                <rect x={x + 22} y={DOOR.top + 26} width={DOOR.width - 44} height={190} rx={4} {...lineStyle(2.5, 0.2)} />
-                <rect x={x + 22} y={DOOR.top + 246} width={DOOR.width - 44} height={240} rx={4} {...lineStyle(2.5, 0.2)} />
-                <circle cx={x + DOOR.width - 30} cy={DOOR.top + 290} r={6} fill={COLORS.line} opacity={0.5} />
+                <rect x={x} y={DOOR.top} width={doorW} height={WALL.bottom - DOOR.top} rx={5} {...lineStyle(3.5, 0.55, COLORS.ink)} />
+                <rect x={x + 22} y={DOOR.top + 26} width={doorW - 44} height={190} rx={4} {...lineStyle(2.5, 0.2)} />
+                <rect x={x + 22} y={DOOR.top + 246} width={doorW - 44} height={240} rx={4} {...lineStyle(2.5, 0.2)} />
+                <circle cx={x + doorW * 0.84} cy={DOOR.top + 290} r={6} fill={COLORS.line} opacity={0.5} />
                 {/* light leaking under the door */}
-                <line x1={x + 14} y1={WALL.bottom - 3} x2={x + DOOR.width - 14} y2={WALL.bottom - 3} stroke={COLORS.line} strokeWidth={3} opacity={0.3} />
+                <line x1={x + 14} y1={WALL.bottom - 3} x2={x + doorW - 14} y2={WALL.bottom - 3} stroke={COLORS.line} strokeWidth={3} opacity={0.3} />
                 {/* small red light above */}
                 <rect x={cx - 16} y={DOOR.top - 44} width={32} height={16} rx={5} {...lineStyle(2.5, 0.4, COLORS.slate)} />
                 <Glow id={`doors-light-${i}`} cx={cx} cy={DOOR.top - 36} r={60} color={COLORS.signal} opacity={0.55 * glow} />

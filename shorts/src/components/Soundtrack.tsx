@@ -20,6 +20,8 @@ export const Soundtrack: React.FC<{ voice?: string | null; music?: string | null
         <Html5Audio
           src={staticFile(music)}
           loop
+          // the fade curve counts frames across loops, so it fades in once and out at the very end
+          loopVolumeCurveBehavior="extend"
           volume={(f) =>
             musicVolume *
             interpolate(f, [0, fps * 0.5, durationInFrames - fps, durationInFrames - 1], [0, 1, 1, 0], {

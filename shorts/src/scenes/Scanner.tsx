@@ -1,8 +1,9 @@
 import React from 'react';
-import { interpolateColors, random, useCurrentFrame, useVideoConfig } from 'remotion';
+import { interpolate, interpolateColors, random, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Canvas, SceneFrame, type SceneCaptionProps } from '../components/SceneFrame';
 import { Glow, RoughFilter } from '../components/doodle';
-import { drift, gentle, pushIn, ramp } from '../components/motion';
+import { drift, pushIn, ramp } from '../components/motion';
+import { cruise, pointAt, serpentine } from '../components/path';
 import { COLORS } from '../style/theme';
 import { DeskSetup } from './Desk';
 
@@ -16,25 +17,11 @@ export interface ScannerProps extends SceneCaptionProps {
   typing?: number;
 }
 
-const GRID = { left: 110, right: 970, top: 200, gap: 22 };
+const GRID = { left: 110, right: 970, top: 200, bottom: 740, gap: 22 };
 const LENS_R = 104;
-const SWEEP = { start: 16, endBeforeSceneEnd: 34 };
-
-/** Serpentine path: across the top half of the grid, a half-loop on the right, back across the bottom half. */
-function lensPath(u: number, yA: number, yB: number): [number, number] {
-  const xL = GRID.left + 40;
-  const xR = GRID.right - 40;
-  const r = (yB - yA) / 2;
-  const lA = xR - xL;
-  const lB = Math.PI * r;
-  const s = u * (lA + lB + lA);
-  if (s <= lA) return [xL + s, yA];
-  if (s <= lA + lB) {
-    const a = -Math.PI / 2 + (s - lA) / r; // clockwise round the right side
-    return [xR + r * Math.cos(a), yA + r + r * Math.sin(a)];
-  }
-  return [xR - (s - lA - lB), yB];
-}
+/** The lens centre stays inside this x range, so the whole ring stays in frame (after the 3% push-in). */
+const LENS_X = { min: 150, max: 930 };
+const SWEEP = { start: 8, endBeforeSceneEnd: 14, accel: 24 };
 
 const Thumb: React.FC<{ x: number; y: number; w: number; h: number; variant: number; flag: number; checked: number }> = ({
   x,
@@ -94,35 +81,47 @@ export const Scanner: React.FC<ScannerProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames: d } = useVideoConfig();
-  const w = (GRID.right - GRID.left - (columns - 1) * GRID.gap) / columns;
+  // 16:9 thumbnails, as large as fit in the box above the caption band; the grid is centred in it.
+  const w = Math.min(
+    (GRID.right - GRID.left - (columns - 1) * GRID.gap) / columns,
+    (((GRID.bottom - GRID.top - (rows - 1) * GRID.gap) / rows) * 16) / 9,
+  );
   const h = (w * 9) / 16;
+  const left = (GRID.left + GRID.right) / 2 - (columns * w + (columns - 1) * GRID.gap) / 2;
   const centers = Array.from({ length: columns * rows }, (_, i) => [
-    GRID.left + (i % columns) * (w + GRID.gap) + w / 2,
+    left + (i % columns) * (w + GRID.gap) + w / 2,
     GRID.top + Math.floor(i / columns) * (h + GRID.gap) + h / 2,
   ]);
-  const gridBottom = GRID.top + rows * h + (rows - 1) * GRID.gap;
-  // Two passes, each between a pair of rows, so the lens covers every thumbnail.
-  const yA = GRID.top + (gridBottom - GRID.top) * 0.25;
-  const yB = GRID.top + (gridBottom - GRID.top) * 0.75;
+  const rowCentres = Array.from({ length: rows }, (_, r) => GRID.top + r * (h + GRID.gap) + h / 2);
+  const colCentres = Array.from({ length: columns }, (_, c) => left + c * (w + GRID.gap) + w / 2);
+  const route = serpentine(rowCentres, colCentres, LENS_X);
   const sweepEnd = d - SWEEP.endBeforeSceneEnd;
-  const lensAt = (f: number) => lensPath(ramp(f, SWEEP.start, sweepEnd, gentle), yA, yB);
+  const sweepFrames = sweepEnd - SWEEP.start;
+  const lensAt = (f: number) => pointAt(route, cruise(f - SWEEP.start, sweepFrames, SWEEP.accel));
 
   // When the lens comes closest to each thumbnail (deterministic, from the path itself).
   const closest = centers.map(([cx, cy]) => {
-    let best = Infinity;
-    let at = 0;
+    let dist = Infinity;
+    let at = SWEEP.start;
     for (let f = SWEEP.start; f <= sweepEnd; f++) {
       const [lx, ly] = lensAt(f);
-      const dist = Math.hypot(lx - cx, ly - cy);
-      if (dist < best) [best, at] = [dist, f];
+      const dd = Math.hypot(lx - cx, ly - cy);
+      if (dd < dist) [dist, at] = [dd, f];
     }
-    return best <= LENS_R + 10 ? at : Infinity;
+    return { at, passedOver: dist <= LENS_R + 10 };
   });
 
   const [lx, ly] = lensAt(frame);
-  const lensIn = ramp(frame, SWEEP.start - 12, SWEEP.start + 4);
-  const lensOut = 1 - ramp(frame, sweepEnd + 6, sweepEnd + 22);
-  const hits = flagged.filter((i) => frame >= closest[i]).length;
+  const lensIn = ramp(frame, SWEEP.start - 10, SWEEP.start + 4);
+  const lensOut = 1 - ramp(frame, sweepEnd - 2, sweepEnd + 10);
+  // The handle swings from down-right to down-left as the lens crosses the grid, so it never leaves the frame.
+  const cx = (GRID.left + GRID.right) / 2;
+  const handleAngle = interpolate(lx, [cx - 180, cx + 180], [Math.PI / 4, (3 * Math.PI) / 4], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const [hx, hy] = [Math.cos(handleAngle), Math.sin(handleAngle)];
+  const hits = flagged.reduce((sum, i) => sum + (closest[i] ? ramp(frame, closest[i].at, closest[i].at + 12) : 0), 0);
 
   return (
     <SceneFrame caption={caption} captionTiming={captionTiming}>
@@ -140,8 +139,8 @@ export const Scanner: React.FC<ScannerProps> = ({
                 w={w}
                 h={h}
                 variant={Math.floor(random(`thumb-${i}`) * 3)}
-                flag={flagged.includes(i) ? ramp(frame, closest[i] - 2, closest[i] + 10) : 0}
-                checked={ramp(frame, closest[i] + 4, closest[i] + 16)}
+                flag={flagged.includes(i) ? ramp(frame, closest[i].at - 2, closest[i].at + 10) : 0}
+                checked={closest[i].passedOver ? ramp(frame, closest[i].at + 4, closest[i].at + 16) : 0}
               />
             ))}
           </g>
@@ -159,10 +158,10 @@ export const Scanner: React.FC<ScannerProps> = ({
               opacity={0.55}
             />
             <line
-              x1={lx + LENS_R * 0.72}
-              y1={ly + LENS_R * 0.72}
-              x2={lx + LENS_R * 1.72}
-              y2={ly + LENS_R * 1.72}
+              x1={lx + LENS_R * 1.02 * hx}
+              y1={ly + LENS_R * 1.02 * hy}
+              x2={lx + LENS_R * 2.43 * hx}
+              y2={ly + LENS_R * 2.43 * hy}
               stroke={COLORS.amber}
               strokeWidth={20}
               strokeLinecap="round"

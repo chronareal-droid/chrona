@@ -2,21 +2,35 @@ import React from 'react';
 import { useCurrentFrame, useVideoConfig } from 'remotion';
 import { Canvas, SceneFrame, type SceneCaptionProps } from '../components/SceneFrame';
 import { Glow, lineStyle, type Part, RoughFilter, Silhouette } from '../components/doodle';
-import { breathe, pushIn } from '../components/motion';
+import { breathe, pushIn, ramp } from '../components/motion';
 import { COLORS } from '../style/theme';
 
 const FLOOR = 1560;
 const DESK_TOP = 1380;
 const HIP: [number, number] = [360, 1430];
 const MONITOR = { x: 640, y: 1170, w: 270, h: 175 };
+const CODE_CYCLE = 40;
+const CODE_LINES: [number, number][] = [
+  [0, 110],
+  [24, 150],
+  [24, 90],
+  [48, 120],
+  [0, 70],
+];
 
-/** Seated figure facing right, hands on the keyboard. `typing` (0–1) sets how fast the hands move. */
+/** How far a hand lifts off the keys (px, upward only) at a given phase. Smooth, peaks at TAP_LIFT. */
+const TAP_LIFT = 11;
+const tap = (phase: number) => TAP_LIFT * Math.max(0, Math.sin(phase)) ** 2;
+
+/** Seated figure facing right, hands on the keyboard. `typing` (0 = still, ~1.5 = fast) drives the key taps. */
 function seatedParts(frame: number, typing: number): { lower: Part[]; upper: Part[] } {
   const [hx, hy] = HIP;
-  // Fast but tiny, smooth key taps: two hands out of phase.
-  const tapA = typing ? Math.sin(frame * 0.9 * typing) * 3.5 : 0;
-  const tapB = typing ? Math.sin(frame * 0.9 * typing + 2.1) * 3.5 : 0;
-  const leanFwd = typing ? 6 : 0;
+  const rate = 0.6 * typing; // rad per frame: typing 1.4 ≈ 4 taps a second per hand, hands alternating
+  const liftNear = typing ? tap(frame * rate) : 0;
+  const liftFar = typing ? tap(frame * rate + Math.PI) : 0;
+  const leanFwd = typing ? 10 : 0;
+  const nod = typing ? 2 * Math.sin(frame * rate * 0.5) : 0;
+  const keysY = DESK_TOP - 14; // hands rest on top of the keyboard, never below the desk surface
   return {
     lower: [
       { kind: 'line', x1: hx, y1: hy - 8, x2: hx + 110, y2: hy - 2, w: 34 },
@@ -24,17 +38,17 @@ function seatedParts(frame: number, typing: number): { lower: Part[]; upper: Par
       { kind: 'line', x1: hx + 118, y1: FLOOR - 6, x2: hx + 150, y2: FLOOR - 4, w: 15 },
     ],
     upper: [
-      // far arm (slightly offset), torso, near arm, head
-      { kind: 'line', x1: hx + 18, y1: hy - 146, x2: hx + 92 + leanFwd, y2: hy - 66, w: 22 },
-      { kind: 'line', x1: hx + 92 + leanFwd, y1: hy - 66, x2: hx + 178 + leanFwd, y2: hy - 52 + tapB, w: 19 },
+      // far arm (slightly higher and further along the keys), torso, near arm, head
+      { kind: 'line', x1: hx + 18, y1: hy - 146, x2: hx + 108 + leanFwd, y2: hy - 84, w: 22 },
+      { kind: 'line', x1: hx + 108 + leanFwd, y1: hy - 84, x2: hx + 228 + leanFwd, y2: keysY - 6 - liftFar, w: 19 },
       {
         kind: 'path',
         d: `M ${hx - 40} ${hy - 150} Q ${hx - 52} ${hy - 60} ${hx - 32} ${hy + 2} L ${hx + 42} ${hy + 2}
             Q ${hx + 48} ${hy - 72} ${hx + 26 + leanFwd} ${hy - 160} Q ${hx - 4} ${hy - 182} ${hx - 40} ${hy - 150} Z`,
       },
-      { kind: 'line', x1: hx + 8, y1: hy - 140, x2: hx + 82 + leanFwd, y2: hy - 58, w: 26 },
-      { kind: 'line', x1: hx + 82 + leanFwd, y1: hy - 58, x2: hx + 166 + leanFwd, y2: hy - 44 + tapA, w: 22 },
-      { kind: 'circle', cx: hx + 14 + leanFwd, cy: hy - 210, r: 40 },
+      { kind: 'line', x1: hx + 8, y1: hy - 140, x2: hx + 96 + leanFwd, y2: hy - 74, w: 26 },
+      { kind: 'line', x1: hx + 96 + leanFwd, y1: hy - 74, x2: hx + 200 + leanFwd, y2: keysY - liftNear, w: 22 },
+      { kind: 'circle', cx: hx + 14 + leanFwd, cy: hy - 210 + nod, r: 40 },
     ],
   };
 }
@@ -98,11 +112,24 @@ export const DeskSetup: React.FC<{ frame: number; typing?: number; glow?: number
         <rect x={m.x + m.w / 2 - 55} y={DESK_TOP - 7} width={110} height={8} rx={4} {...lineStyle(3, 0.5, COLORS.slate)} />
         <rect x={m.x} y={m.y} width={m.w} height={m.h} rx={14} {...lineStyle(4, 0.75, COLORS.navy)} />
         <rect x={m.x + 14} y={m.y + 14} width={m.w - 28} height={m.h - 28} rx={8} fill={`url(#${idPrefix}-screen)`} opacity={screenGlow} />
-        <g opacity={0.6 * screenGlow}>
-          <line x1={m.x + 34} y1={m.y + 48} x2={m.x + 150} y2={m.y + 48} stroke={COLORS.bg} strokeWidth={8} strokeLinecap="round" />
-          <line x1={m.x + 34} y1={m.y + 78} x2={m.x + 210} y2={m.y + 78} stroke={COLORS.bg} strokeWidth={6} strokeLinecap="round" opacity={0.6} />
-          <line x1={m.x + 34} y1={m.y + 104} x2={m.x + 180} y2={m.y + 104} stroke={COLORS.bg} strokeWidth={6} strokeLinecap="round" opacity={0.6} />
-        </g>
+        {typing ? (
+          // lines of "code" appear one by one while the figure types, then clear softly and start again
+          <g opacity={0.65 * screenGlow}>
+            {CODE_LINES.map(([indent, len], k) => {
+              const t = frame % CODE_CYCLE;
+              const o = ramp(t, k * 6, k * 6 + 3) * (1 - ramp(t, CODE_CYCLE - 5, CODE_CYCLE));
+              return (
+                <line key={k} x1={m.x + 34 + indent} y1={m.y + 40 + k * 22} x2={m.x + 34 + indent + len} y2={m.y + 40 + k * 22} stroke={COLORS.bg} strokeWidth={6} strokeLinecap="round" opacity={o} />
+              );
+            })}
+          </g>
+        ) : (
+          <g opacity={0.6 * screenGlow}>
+            <line x1={m.x + 34} y1={m.y + 48} x2={m.x + 150} y2={m.y + 48} stroke={COLORS.bg} strokeWidth={8} strokeLinecap="round" />
+            <line x1={m.x + 34} y1={m.y + 78} x2={m.x + 210} y2={m.y + 78} stroke={COLORS.bg} strokeWidth={6} strokeLinecap="round" opacity={0.6} />
+            <line x1={m.x + 34} y1={m.y + 104} x2={m.x + 180} y2={m.y + 104} stroke={COLORS.bg} strokeWidth={6} strokeLinecap="round" opacity={0.6} />
+          </g>
+        )}
         {/* keyboard */}
         <rect x={510} y={DESK_TOP - 9} width={150} height={9} rx={4} {...lineStyle(2.5, 0.6, COLORS.slate)} />
 

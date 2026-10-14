@@ -4,6 +4,8 @@ import { CAPTION } from '../style/theme';
 export interface CaptionLayout {
   fontSize: number;
   lines: string[][];
+  /** Width of each word in px at fontSize, per line. */
+  widths: number[][];
 }
 
 /**
@@ -35,13 +37,19 @@ export function layoutCaption(
   const sizeFor = (lines: string[][]) => Math.min(maxSize, maxWidth / Math.max(...lines.map(lineWidth)));
   const clamp = (s: number) => Math.max(minSize, Math.floor(s));
 
+  const withWidths = (fontSize: number, lines: string[][]): CaptionLayout => ({
+    fontSize,
+    lines,
+    widths: lines.map((l) => l.map((w) => widthAt100(w) * fontSize)),
+  });
+
   const forced = text.split('\n').map((l) => l.trim().split(/\s+/).filter(Boolean)).filter((l) => l.length);
   if (forced.length > 2) throw new Error(`Caption has more than 2 lines: "${text}"`);
-  if (forced.length === 2) return { fontSize: clamp(sizeFor(forced)), lines: forced };
+  if (forced.length === 2) return withWidths(clamp(sizeFor(forced)), forced);
 
   const words = forced[0] ?? [];
   const single = sizeFor([words]);
-  if (words.length < 2 || single >= maxSize) return { fontSize: clamp(single), lines: [words] };
+  if (words.length < 2 || single >= maxSize) return withWidths(clamp(single), [words]);
 
   let best: string[][] = [words];
   let bestSize = single;
@@ -50,5 +58,5 @@ export function layoutCaption(
     const s = sizeFor(split);
     if (s > bestSize) [best, bestSize] = [split, s];
   }
-  return { fontSize: clamp(bestSize), lines: best };
+  return withWidths(clamp(bestSize), best);
 }
