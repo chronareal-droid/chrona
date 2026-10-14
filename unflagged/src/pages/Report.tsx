@@ -27,6 +27,9 @@ function useScan(id: string, waitForPayment: boolean) {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     const start = Date.now();
+    setScan(null);
+    setPhase('loading');
+    setConfirming(false);
     let failures = 0;
 
     const tick = async () => {

@@ -222,6 +222,7 @@ export default function Scan() {
 
   return (
     <form
+      noValidate
       className="space-y-8 pt-2"
       onSubmit={(e) => {
         e.preventDefault();
