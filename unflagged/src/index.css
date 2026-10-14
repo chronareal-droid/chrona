@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0b0f14;
+  --color-panel: #121821;
+  --color-line: #232c38;
+  --color-muted: #93a1b3;
+  --color-accent: #a3e635;
+  --color-accent-ink: #1a2e05;
+  --color-low: #4ade80;
+  --color-elevated: #fbbf24;
+  --color-high: #f87171;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { @apply bg-ink text-slate-100 antialiased; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* "Save as PDF": print the report on white, drop chrome and buttons. */
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff !important; color: #111 !important; }
+  .no-print { display: none !important; }
+  .print-plain { background: #fff !important; color: #111 !important; border-color: #ccc !important; box-shadow: none !important; }
+  .print-plain * { color: #111 !important; }
+  section, li { break-inside: avoid; }
+}
