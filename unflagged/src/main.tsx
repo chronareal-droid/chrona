@@ -1,7 +1,8 @@
 import { lazy, StrictMode, Suspense, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
+import { DEMO } from './lib/demo';
 import { captureSrc } from './lib/src';
 import Landing from './pages/Landing';
 import './index.css';
@@ -17,6 +18,9 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 captureSrc();
 
+// The demo runs inside a page that can't route real paths, so it keeps the route in memory.
+const Router = DEMO ? MemoryRouter : BrowserRouter;
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => window.scrollTo(0, 0), [pathname]);
@@ -25,7 +29,7 @@ function ScrollToTop() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <Router>
       <ScrollToTop />
       <Suspense fallback={<p className="pt-10 text-center text-muted">Loading…</p>}>
         <Routes>
@@ -41,6 +45,6 @@ createRoot(document.getElementById('root')!).render(
           </Route>
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </Router>
   </StrictMode>,
 );

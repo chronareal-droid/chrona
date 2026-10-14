@@ -1,3 +1,5 @@
+import { DEMO } from './demo';
+
 // Gemini's free tier isn't allowed for users in the EU/EEA, UK or Switzerland, so they get a "not yet" message.
 // Cloudflare Pages serves /cdn-cgi/trace on every site; its `loc=` line is the visitor's country.
 
@@ -24,7 +26,7 @@ export type RegionState = 'checking' | 'allowed' | 'blocked';
 export async function checkRegion(): Promise<'allowed' | 'blocked'> {
   const forced = new URLSearchParams(location.search).get('loc')?.toUpperCase();
   if (forced && BLOCKED.has(forced)) return 'blocked';
-  if (['localhost', '127.0.0.1'].includes(location.hostname)) return 'allowed';
+  if (DEMO || ['localhost', '127.0.0.1'].includes(location.hostname)) return 'allowed';
   try {
     const res = await fetch('/cdn-cgi/trace', { cache: 'no-store' });
     const loc = parseLoc(await res.text());

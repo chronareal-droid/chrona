@@ -5,6 +5,7 @@ import { Button, Card, LevelBadge } from '../components/ui';
 import { ApiError, api, rememberPayload, takeLastPayload } from '../lib/api';
 import { track } from '../lib/analytics';
 import { BRAND, PRICE } from '../lib/brand';
+import { DEMO } from '../lib/demo';
 import { CATEGORY_LABELS, type Finding, type FreeReport, type LockedCounts, type PublicScan, type Report } from '../lib/types';
 
 const POLL_MS = 2_500;
@@ -241,6 +242,7 @@ function DisclaimerBlock() {
 }
 
 function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; locked: LockedCounts }) {
+  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -251,7 +253,8 @@ function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; 
     try {
       const { url } = await api.createCheckout(scan.id);
       track('checkout_started');
-      location.href = url;
+      if (url.startsWith('/')) navigate(url);
+      else location.href = url;
     } catch {
       setErr('Checkout couldn’t start. Try again in a moment.');
       setBusy(false);
@@ -297,6 +300,7 @@ function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; 
           {busy ? 'Opening checkout…' : `Unlock full report — ${PRICE}`}
         </Button>
         {err && <p className="text-sm text-high">{err}</p>}
+        {DEMO && <p className="text-center text-xs text-muted">Demo: no charge. It unlocks the sample report straight away.</p>}
       </section>
 
       <ConfidenceNote text={free.confidence_note} />
@@ -307,10 +311,12 @@ function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; 
 
 function FullReport({ scan, report }: { scan: PublicScan; report: Report }) {
   const [copied, setCopied] = useState(false);
+  const [demoNote, setDemoNote] = useState(false);
   const link = `${location.origin}/r/${scan.id}`;
 
   async function copy() {
     track('share_clicked');
+    if (DEMO) return setDemoNote(true);
     try {
       await navigator.clipboard.writeText(link);
     } catch {
@@ -326,8 +332,9 @@ function FullReport({ scan, report }: { scan: PublicScan; report: Report }) {
         <Card className="text-sm">Bookmark this page. It’s your report.</Card>
         <div className="grid grid-cols-2 gap-2">
           <Button variant="ghost" onClick={() => void copy()}>{copied ? 'Copied ✓' : 'Copy link'}</Button>
-          <Button variant="ghost" onClick={() => window.print()}>Save as PDF</Button>
+          <Button variant="ghost" onClick={() => (DEMO ? setDemoNote(true) : window.print())}>Save as PDF</Button>
         </div>
+        {demoNote && <p className="text-center text-xs text-muted">Copy link and Save as PDF work on the live site, not in this demo.</p>}
       </div>
 
       <Header overall={report.overall} headline={report.headline} videosRead={scan.videos_read} />

@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { BRAND } from '../lib/brand';
+import { DEMO } from '../lib/demo';
 
 export function Logo() {
   return (
@@ -20,6 +21,11 @@ export function Disclaimer({ className = '' }: { className?: string }) {
 export default function Layout() {
   return (
     <div className="flex min-h-dvh flex-col">
+      {DEMO && (
+        <div className="no-print border-b border-accent/30 bg-accent/10 px-4 py-2 text-center text-xs text-accent">
+          Demo with sample data. Nothing you enter leaves this page, and no payment is taken.
+        </div>
+      )}
       <header className="no-print mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4">
         <Logo />
         <Link to="/scan" className="rounded-full border border-line px-3 py-1.5 text-sm text-slate-200 hover:border-accent">

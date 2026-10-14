@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test:functions": "cd supabase/functions && deno test --allow-env",
     "check:functions": "cd supabase/functions && deno check */index.ts _shared/*.ts",
-    "deploy:pages": "npm run build && npx wrangler pages deploy dist --project-name unflagged"
+    "deploy:pages": "npm run build && npx wrangler pages deploy dist --project-name unflagged",
+    "build:demo": "tsc -b && vite build --config vite.demo.config.ts && node scripts/demo-page.mjs"
   },
   "dependencies": {
     "posthog-js": "^1.266.0",
@@ -25,6 +26,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }

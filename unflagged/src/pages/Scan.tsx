@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, Chips } from '../components/ui';
 import { ApiError, api, rememberPayload } from '../lib/api';
 import { track } from '../lib/analytics';
+import { DEMO, SAMPLE_SCRIPT, sampleScreenshot } from '../lib/demo';
 import { ACCEPT, resizeToJpeg, wordCount } from '../lib/image';
 import { checkRegion, type RegionState } from '../lib/region';
 import { getSrc } from '../lib/src';
@@ -157,6 +158,15 @@ export default function Scan() {
     }
   }
 
+  function fillSample() {
+    markStarted();
+    setShots([sampleScreenshot(0), sampleScreenshot(1)]);
+    setScripts([SAMPLE_SCRIPT, '', '']);
+    setAnswers({ monetization: 'rejected', voice: 'ai', visuals: 'stock', scripts: 'ai_light_edits', opinion: 'rarely', uploads: '7-14' });
+    setNiche('horror lists');
+    setShotError(null);
+  }
+
   const scriptWords = scripts.map(wordCount);
   const scriptProblems = scriptWords.map((w) =>
     w === 0 || (w >= SCRIPT_MIN && w <= SCRIPT_MAX) ? null : w < SCRIPT_MIN ? `At least ${SCRIPT_MIN} words` : `At most ${SCRIPT_MAX} words`,
@@ -224,6 +234,11 @@ export default function Scan() {
         <p className="mt-1 text-muted">
           {rescanOf ? 'Included with your Full Report. Upload fresh screenshots after your fixes.' : 'Free risk read in about a minute.'}
         </p>
+        {DEMO && (
+          <Button type="button" variant="ghost" onClick={fillSample} className="mt-4 w-full">
+            Fill with sample channel data
+          </Button>
+        )}
       </div>
 
       {/* Screenshots */}
