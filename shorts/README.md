@@ -6,7 +6,8 @@ palette with a single amber accent, paper grain, slow push-ins and parallax, and
 ```bash
 npm install
 npm run studio         # preview in Remotion Studio (http://localhost:3000)
-npm run render:day1    # → out/day1.mp4
+npm run render:day1    # → out/day1.mp4 (voice: af_heart)
+npm run render:day1-male  # → out/day1-male-voice.mp4 (same video, voice: am_michael, for A/B tests)
 npm run cover:day1     # → out/day1-cover.png (frame 0, the hook)
 ```
 
