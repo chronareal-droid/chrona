@@ -65,6 +65,23 @@ Each scene also has a 4–6 s preview under **Scenes** in the Studio.
 Colours, safe zones and caption sizes live in `src/style/theme.ts`. Text stays out of the top 150 px and bottom 350 px.
 Motion is slow and eased (`src/components/motion.ts`); shapes move and fade but never morph. The grain is static.
 
+## Voice-over and music (free, local)
+
+```bash
+npm run setup:tts      # once: local Kokoro-82M text-to-speech (Apache-2.0), fetched from npm into .tts/
+npm run voice:day1     # voice/day1.json → public/voice.mp3 + src/videos/day1.voice.json (word timings)
+npm run music:day1     # an original ambient bed synthesized with numpy → public/music.mp3
+```
+
+- `voice/day1.json` holds what's said, when, and in which voice. Use `|` to group spoken words per caption word
+  (`"Sixteen | channels. | Thirty-five million | ..."` lines up with the caption `16 channels. 35M ...`).
+- Change the voice with `"voice"` or `--voice` (e.g. `af_heart`, `af_bella`, `am_michael`, `am_fenrir`, `bf_emma`,
+  `bm_george`). The captions follow the new timings automatically (`withVoiceTimings` in `src/videos/day1.ts`).
+- A line that's too long for its slot is sped up by up to 20%; if it still doesn't fit you get a warning.
+- The voice is compressed, limited and set to −14 LUFS (the level Reels and Shorts are mastered to); the video
+  plays the music at 15% underneath it.
+- `scripts/music.py` follows a plan of chords on the scene cuts (see `PLANS` in the script, or pass a JSON plan).
+
 ## Tools
 
 - `npm run stills -- Day1 0 90 300`: render chosen frames to `out/stills/` (one bundle, fast)

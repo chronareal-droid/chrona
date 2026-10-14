@@ -47,6 +47,35 @@ export const CROSSFADE_FRAMES = 6;
 export const totalFrames = (scenes: SceneSpec[], fps: number) =>
   scenes.reduce((sum, s) => sum + Math.round(s.seconds * fps), 0);
 
+export interface SceneSlot {
+  /** First frame of the scene's Sequence (half a crossfade before its cut). */
+  from: number;
+  durationInFrames: number;
+  /** Frame of the scene's cut in the script (where its `seconds` start counting). */
+  cut: number;
+  fade: number;
+}
+
+/**
+ * Where each scene sits on the timeline. A crossfade overlaps the incoming scene by half the fade on each side of
+ * the cut, so cuts stay exactly where the script puts them (3 s, 7 s, ...). Scene-relative frames (captions,
+ * animations) count from `from`.
+ */
+export function sceneLayout(scenes: SceneSpec[], fps: number, crossfadeFrames = CROSSFADE_FRAMES): SceneSlot[] {
+  const fadeOf = (s: SceneSpec | undefined, i: number) =>
+    s && i > 0 && (s.transition ?? 'crossfade') === 'crossfade' ? crossfadeFrames : 0;
+  let cut = 0;
+  return scenes.map((s, i) => {
+    const len = Math.round(s.seconds * fps);
+    const fade = fadeOf(s, i);
+    const pre = Math.floor(fade / 2);
+    const post = Math.ceil(fadeOf(scenes[i + 1], i + 1) / 2);
+    const slot = { from: cut - pre, durationInFrames: len + pre + post, cut, fade };
+    cut += len;
+    return slot;
+  });
+}
+
 const renderScene = (s: SceneSpec) => {
   switch (s.scene) {
     case 'desk':
@@ -70,10 +99,7 @@ const FadeIn: React.FC<{ frames: number; children: React.ReactNode }> = ({ frame
   return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
 
-/**
- * Plays scenes back to back. A crossfade overlaps the incoming scene by half the fade on each side of the cut,
- * so scene boundaries stay exactly where the script puts them (3 s, 7 s, ...).
- */
+/** Plays scenes back to back (see sceneLayout), with the grain over everything and the optional soundtrack. */
 export const ShortVideo: React.FC<ShortVideoProps> = ({
   scenes,
   voice,
@@ -83,23 +109,14 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({
   grain,
 }) => {
   const { fps } = useVideoConfig();
-  const fadeOf = (s: SceneSpec | undefined, i: number) => (s && i > 0 && (s.transition ?? 'crossfade') === 'crossfade' ? crossfadeFrames : 0);
-  let start = 0;
+  const layout = sceneLayout(scenes, fps, crossfadeFrames);
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
-      {scenes.map((s, i) => {
-        const len = Math.round(s.seconds * fps);
-        const fade = fadeOf(s, i);
-        const pre = Math.floor(fade / 2);
-        const post = Math.ceil(fadeOf(scenes[i + 1], i + 1) / 2);
-        const from = start - pre;
-        start += len;
-        return (
-          <Sequence key={i} from={from} durationInFrames={len + pre + post} name={`${i + 1}. ${s.scene}`}>
-            <FadeIn frames={fade}>{renderScene(s)}</FadeIn>
-          </Sequence>
-        );
-      })}
+      {scenes.map((s, i) => (
+        <Sequence key={i} from={layout[i].from} durationInFrames={layout[i].durationInFrames} name={`${i + 1}. ${s.scene}`}>
+          <FadeIn frames={layout[i].fade}>{renderScene(s)}</FadeIn>
+        </Sequence>
+      ))}
       <PaperGrain opacity={grain} />
       <Soundtrack voice={voice} music={music} musicVolume={musicVolume} />
     </AbsoluteFill>

@@ -9,7 +9,10 @@
     "render:day1": "remotion render Day1 out/day1.mp4",
     "cover:day1": "remotion still Day1 out/day1-cover.png --frame=0",
     "stills": "node scripts/stills.mjs",
-    "contact-sheet": "python3 scripts/contact-sheet.py"
+    "contact-sheet": "python3 scripts/contact-sheet.py",
+    "setup:tts": "bash scripts/setup-tts.sh",
+    "voice:day1": ".tts/venv/bin/python scripts/voiceover.py voice/day1.json",
+    "music:day1": "python3 scripts/music.py --plan day1 --out public/music.mp3"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.530",
