@@ -60,3 +60,48 @@ Deno.test("reportIssues flags banned wording and paid content in free fields", (
   const leaky = sampleReport({ action_plan_7_days: plan, confidence_note: "Day 1: retitle the three newest list videos around one story, then Day 2: b" });
   assert(reportIssues(leaky).some((m) => m.includes("7-day plan")));
 });
+
+Deno.test("an elision ('90s, 'til) doesn't pair with a plural possessive into a bogus quote", () => {
+  assertEquals(quotesIn("Your '90s recap titles lean on other creators' clips."), []);
+  assertEquals(quotesIn("Wait 'til the end, then 'em all."), []);
+  assertEquals(quotesIn("Your title 'Top 10 Scariest Places' repeats."), ["Top 10 Scariest Places"]);
+});
+
+const SERIES = ["Minecraft Hardcore Day 5", "Minecraft Hardcore Day 6", "Is Mexico City Safe for Tourists?"];
+const OUTRO = "Stay safe out there and I will see you in the next one.";
+const series = { titles: SERIES, scripts: [OUTRO] };
+
+Deno.test("the plan-leak check ignores a single Day N and the creator's own numbered titles", () => {
+  const one = sampleReport({ headline: "Your Day 3 upload repeats the template." });
+  assertEquals(reportIssues(one), []);
+  const quoted = sampleReport();
+  quoted.top_findings[0].evidence = '"Minecraft Hardcore Day 5" and "Minecraft Hardcore Day 6" differ only by the number.';
+  assertEquals(reportIssues(quoted, series), []);
+  // The model's own Day-by-Day text in a free field is still a leak.
+  const leak = sampleReport({ confidence_note: "Start with Day 1: retitle, then Day 2: rewrite the intro." });
+  assert(reportIssues(leak, series).some((m) => m.includes("7-day plan")));
+});
+
+Deno.test("banned wording is the model's own: quoted creator lines and titles don't count", () => {
+  const r = sampleReport();
+  r.categories[3].evidence = [`Every script ends with "${OUTRO}"`];
+  r.top_findings[1].evidence = 'Titles like "Is Mexico City Safe for Tourists?" follow one frame.';
+  assertEquals(reportIssues(r, series), []);
+  assert(reportIssues(r).length === 1, "without the inputs it can't tell, so it flags");
+  // A scare-quoted single word is the model's word even if the creator once said it.
+  const scare = sampleReport({ headline: 'Your channel looks "safe" for now.' });
+  assert(reportIssues(scare, series)[0].includes("guaranteed"));
+});
+
+Deno.test("a long title quoted in a free and a later finding is not a paid leak", () => {
+  const title = "The Most Terrifying Places on Earth That Scientists Cannot Explain";
+  const inputs = { titles: [title, ...TITLES], scripts: [SCRIPT] };
+  const r = sampleReport();
+  r.top_findings[0].evidence = `"${title}" and others follow one frame.`;
+  r.top_findings[3].evidence = `"${title}" is also the longest video.`;
+  assertEquals(reportIssues(r, inputs), []);
+  // The model's own later-finding wording copied into a free field is still caught.
+  r.top_findings[3].fix = "Record a two minute personal intro for each of your list videos this week";
+  r.top_findings[0].fix = "Record a two minute personal intro for each of your list videos this week";
+  assert(reportIssues(r, inputs).some((m) => m.includes("later findings")));
+});

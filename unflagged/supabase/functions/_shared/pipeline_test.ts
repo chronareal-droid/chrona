@@ -148,3 +148,36 @@ Deno.test("pipeline: the creator's answers may be quoted as evidence", async () 
   assertEquals(h.merged().status, "done");
   assertEquals(h.merged().report!.top_findings.length, 1);
 });
+
+Deno.test("pipeline: video details and signal lines the judge was shown can be quoted in a summary", async () => {
+  const r = sampleReport();
+  r.categories[0].summary = 'Uploads from "1 days ago" to "5 days ago" all run about ten minutes.';
+  r.categories[1].summary = 'Thumbnails share "colors: red" and one layout.';
+  const h = harness([() => extraction, () => r]);
+  await runPipeline(input, h.deps);
+  assertEquals(h.merged().status, "done");
+});
+
+Deno.test("pipeline: the combined answer line the judge sees is quotable", async () => {
+  const r = sampleReport();
+  r.top_findings = [{ title: "Reused clips", evidence: 'You answered "Visuals: Clips from other creators/media".', why_it_matters: "w", fix: "f" }];
+  const h = harness([() => extraction, () => r]);
+  await runPipeline({ ...input, answers: { ...answers, visuals: "others_clips" } }, h.deps);
+  assertEquals(h.merged().report!.top_findings.length, 1);
+});
+
+Deno.test("pipeline: a report with one evidence item too many is trimmed, not rejected", async () => {
+  const r = sampleReport();
+  r.categories[0].evidence = Array.from({ length: 8 }, () => '"Top 10 Scariest Places in Japan"');
+  const h = harness([() => extraction, () => r]);
+  await runPipeline(input, h.deps);
+  assertEquals(h.merged().status, "done");
+  assertEquals(h.merged().report!.categories[0].evidence.length, 6);
+  assertEquals(h.calls.length, 2, "no retry spent");
+});
+
+Deno.test("pipeline: extraction may write a long list (four dense screenshots)", async () => {
+  const h = harness([() => extraction, () => sampleReport()]);
+  await runPipeline(input, h.deps);
+  assertEquals(h.calls[0].maxOutputTokens, 8192);
+});

@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test';
-import { errorScan, fillScanForm, freeScan, mockApi, noHorizontalScroll, PAID_ONLY, paidScan, processing, SCAN_ID } from './mock';
+import {
+  errorScan,
+  FREE,
+  fillScanForm,
+  freeScan,
+  mockAnalytics,
+  mockApi,
+  noHorizontalScroll,
+  PAID_ONLY,
+  paidScan,
+  processing,
+  SCAN_ID,
+} from './mock';
+
+// Analytics are on in the e2e build: never let them reach the real PostHog.
+test.beforeEach(async ({ page }) => {
+  await mockAnalytics(page);
+});
 
 const DISCLAIMER = 'Not affiliated with or endorsed by YouTube or Google.';
 
@@ -96,7 +113,7 @@ test.describe('scan form', () => {
     await mockApi(page, { create: () => ({ status: 429, error: 'rate_limited' }) });
     await fillScanForm(page);
     await page.getByRole('button', { name: 'Get my free risk read' }).click();
-    await expect(page.getByText('You’ve used your 3 free scans for the last 24 hours')).toBeVisible();
+    await expect(page.getByText('You’ve reached the free scan limit for the last 24 hours')).toBeVisible();
   });
 });
 
@@ -134,20 +151,62 @@ test.describe('report', () => {
 
   test('a late payment webhook gets an honest note, then the page updates by itself', async ({ page }) => {
     let paid = false;
+    let checked = false;
     await page.clock.install();
-    await mockApi(page, { scan: () => (paid ? paidScan() : freeScan()) });
+    await mockApi(page, {
+      scan: () => (paid ? paidScan() : checked ? { ...freeScan(), free: { ...FREE, headline: 'REFRESHED-READ' } } : freeScan()),
+    });
     await page.goto(`/r/${SCAN_ID}?paid=1`);
     await expect(page.getByText('Confirming your payment')).toBeVisible();
     await page.clock.fastForward('01:35');
     await expect(page.getByText('We haven’t received the payment confirmation yet')).toBeVisible();
-    // "Check again" doesn't restart the 90-second clock.
+    // The Unlock button is back, in case the payment never went through.
+    await expect(page.getByRole('button', { name: 'Unlock full report — $29' })).toBeVisible();
+    // "Check again" doesn't restart the 90-second clock. Wait until the refreshed poll has landed (its answer
+    // carries a marker headline) before checking the page didn't fall back to "Confirming…".
+    checked = true;
     await page.getByRole('button', { name: 'Check again' }).click();
+    await expect(page.getByText('REFRESHED-READ')).toBeVisible();
     await expect(page.getByText('We haven’t received the payment confirmation yet')).toBeVisible();
     await expect(page.getByText('Confirming your payment')).toHaveCount(0);
     paid = true;
     const heading = page.getByRole('heading', { name: 'All findings' });
     // Jump past the next 10-second poll, retrying in case the jump lands before that timer is set.
     await expect.poll(async () => (await page.clock.fastForward('00:11'), heading.isVisible())).toBe(true);
+  });
+
+  test('a failed payment comes back to the Unlock button, not a wait for confirmation', async ({ page }) => {
+    const api = await mockApi(page, { scan: () => freeScan() });
+    await page.goto(`/r/${SCAN_ID}?paid=1&payment_id=pay_1&status=failed`);
+    await expect(page.getByText('The payment didn’t go through. You can try again.')).toBeVisible();
+    await expect(page.getByText('Confirming your payment')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Unlock full report — $29' }).click();
+    await expect.poll(() => api.checkoutCalls).toBe(1);
+  });
+
+  test('analytics never receive a report id or a payment id', async ({ page }) => {
+    const sent = await mockAnalytics(page);
+    // posthog-js drops everything from automated browsers (navigator.webdriver, a "HeadlessChrome" brand): look like
+    // a real one.
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false });
+      Object.defineProperty(Navigator.prototype, 'userAgentData', { get: () => undefined });
+    });
+    await mockApi(page, { scan: () => paidScan() });
+    await page.goto(`/r/${SCAN_ID}?paid=1&payment_id=pay_secret_1&status=succeeded`);
+    await expect(page.getByRole('heading', { name: 'All findings' })).toBeVisible();
+    // Events go out in batches every few seconds: wait for this page's before leaving it.
+    await expect.poll(() => sent.some((r) => r.body.includes('purchase_completed')), { timeout: 15_000 }).toBe(true);
+    // A second page load: posthog-js re-sends the first page's URL as "initial" person properties.
+    const before = sent.length;
+    await page.goto('/');
+    await expect.poll(() => sent.slice(before).some((r) => r.body.includes('landing_view')), { timeout: 15_000 }).toBe(true);
+    for (const r of sent) {
+      expect(r.url + r.body).not.toContain(SCAN_ID);
+      expect(r.url + r.body).not.toContain('pay_secret_1');
+    }
+    expect(sent.some((r) => r.body.includes('/r/:id')), 'the report page view is counted, without its id').toBe(true);
+    expect(sent.filter((r) => /\/(flags|decide)\b/.test(r.url))).toEqual([]);
   });
 
   test('keeps polling through a dropped connection and says so', async ({ page }) => {

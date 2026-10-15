@@ -33,10 +33,11 @@ export function scrubUrl(value: string): string {
     .replace(/[?&]+(?=#|$|\s)/g, '');
 }
 
-function scrubProps(props: Record<string, unknown> | undefined): void {
-  if (!props) return;
+function scrubProps(props: Record<string, unknown> | undefined, depth = 0): void {
+  if (!props || depth > 4) return;
   for (const [k, v] of Object.entries(props)) {
-    if (typeof v === 'string' && (v.includes('/r/') || v.includes('rescan=') || v.includes('payment_id='))) props[k] = scrubUrl(v);
+    if (typeof v === 'string') props[k] = scrubUrl(v);
+    else if (v && typeof v === 'object') scrubProps(v as Record<string, unknown>, depth + 1); // e.g. $initial_person_info
   }
 }
 
@@ -59,6 +60,16 @@ function load(): Promise<PH | null> {
         disable_session_recording: true,
         persistence: 'localStorage',
         before_send: scrubEvent,
+        // Only capture() passes through before_send. These features send data some other way (the /flags call
+        // carries the first page's raw URL as a person property), and none of them is used here.
+        advanced_disable_flags: true,
+        disable_surveys: true,
+        disable_web_experiments: true,
+        disable_external_dependency_loading: true,
+        capture_heatmaps: false,
+        capture_dead_clicks: false,
+        capture_performance: false,
+        capture_exceptions: false,
       });
       const src = getSrc();
       if (src) posthog.register({ src });

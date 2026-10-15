@@ -19,6 +19,7 @@ function setup(result: () => CreateResult, env = ENV) {
     createScan: async (scan) => (calls.push({ kind: "scan", scan }), result()),
     createRescan: async (parent, scan) => (calls.push({ kind: "rescan", scan, parent }), result()),
     update: async (_id, patch) => void updates.push(patch),
+    failIfProcessing: async () => {},
   };
   const handler = createScanHandler({
     store,

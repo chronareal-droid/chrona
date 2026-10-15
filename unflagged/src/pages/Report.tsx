@@ -100,7 +100,11 @@ function useScan(id: string, waitForPayment: boolean) {
 export default function ReportPage() {
   const { id = '' } = useParams();
   const [params] = useSearchParams();
-  const paidParam = params.get('paid') === '1';
+  // Back from checkout. Dodo adds the payment's status to the return URL: only wait for the webhook when the payment
+  // can still succeed; a failed or cancelled one goes straight back to the Unlock button.
+  const returnStatus = params.get('status');
+  const paymentFailed = params.get('paid') === '1' && !!returnStatus && !['succeeded', 'processing'].includes(returnStatus);
+  const paidParam = params.get('paid') === '1' && !paymentFailed;
   const { scan, phase, confirm, offline, refresh } = useScan(id, paidParam);
   const tracked = useRef(false);
 
@@ -175,7 +179,7 @@ export default function ReportPage() {
         </Card>
       )}
       {scan.paid && scan.report ? <FullReport scan={scan} report={scan.report} /> : scan.free && scan.locked && (
-        <FreeView scan={scan} free={scan.free} locked={scan.locked} confirm={confirm} onPaid={refresh} />
+        <FreeView scan={scan} free={scan.free} locked={scan.locked} confirm={confirm} paymentFailed={paymentFailed} onPaid={refresh} />
       )}
     </div>
   );
@@ -250,7 +254,7 @@ function scanFormPath(last: CreateScanPayload | null): string {
 }
 
 const RETRY_ERRORS: Record<string, string> = {
-  rate_limited: 'You’ve used your 3 free scans for the last 24 hours. Try again later.',
+  rate_limited: 'You’ve reached the free scan limit for the last 24 hours. Try again later.',
   rescan_used: 'The re-scan included with this report has already been used.',
   rescan_unavailable: 'This re-scan link has expired or isn’t valid.',
   too_large: 'Those screenshots are too large. Start again with fewer or smaller ones.',
@@ -351,12 +355,14 @@ function FreeView({
   free,
   locked,
   confirm,
+  paymentFailed,
   onPaid,
 }: {
   scan: PublicScan;
   free: FreeReport;
   locked: LockedCounts;
   confirm: Confirm;
+  paymentFailed: boolean;
   onPaid: () => void;
 }) {
   const navigate = useNavigate();
@@ -421,12 +427,20 @@ function FreeView({
           <li>✓ One re-scan within {BRAND.rescanDays} days</li>
           <li>✓ {BRAND.refundDays}-day no-questions refund</li>
         </ul>
-        {confirm === 'none' ? (
-          <Button onClick={() => void unlock()} disabled={busy} className="w-full text-lg">
-            {busy ? 'Opening checkout…' : `Unlock full report — ${PRICE}`}
-          </Button>
-        ) : (
+        {paymentFailed && confirm === 'none' && (
+          <p className="text-center text-sm text-high">The payment didn’t go through. You can try again.</p>
+        )}
+        {confirm === 'waiting' ? (
           <p className="text-center text-sm text-slate-300">Your payment is being confirmed. The full report will appear here.</p>
+        ) : (
+          <>
+            {confirm === 'late' && (
+              <p className="text-center text-sm text-slate-300">If your payment didn’t go through, you can try again.</p>
+            )}
+            <Button onClick={() => void unlock()} disabled={busy} className="w-full text-lg">
+              {busy ? 'Opening checkout…' : `Unlock full report — ${PRICE}`}
+            </Button>
+          </>
         )}
         {err && <p className="text-sm text-high">{err}</p>}
         {DEMO && <p className="text-center text-xs text-muted">Demo: no charge. It unlocks the sample report straight away.</p>}

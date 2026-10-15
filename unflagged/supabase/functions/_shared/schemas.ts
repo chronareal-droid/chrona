@@ -130,6 +130,10 @@ export const CATEGORY_KEYS = ["generic_repetitive", "off_putting", "ai_persona_s
 export type Level = (typeof LEVELS)[number];
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
 
+/** A model that writes one item too many shouldn't cost the scan its only retry: keep the first `max`. */
+const upTo = <T extends z.ZodTypeAny>(item: T, max: number, min = 0) =>
+  z.array(item).min(min).transform((a) => a.slice(0, max));
+
 const Finding = z.object({
   title: z.string().min(1).max(140),
   evidence: z.string().min(1).max(600),
@@ -146,17 +150,17 @@ export const ReportSchema = z.object({
         key: z.enum(CATEGORY_KEYS),
         level: z.enum(LEVELS),
         summary: z.string().min(1).max(360),
-        evidence: z.array(z.string().max(500)).max(6),
-        fixes: z.array(z.string().max(400)).max(6),
+        evidence: upTo(z.string().max(500), 6),
+        fixes: upTo(z.string().max(400), 6),
       }),
     )
     .refine((cs) => CATEGORY_KEYS.every((k) => cs.filter((c) => c.key === k).length === 1), {
       message: "categories must contain each of the 4 keys exactly once",
     }),
-  top_findings: z.array(Finding).min(1).max(10),
-  videos_to_review: z.array(z.object({ title: z.string().min(1).max(200), reason: z.string().min(1).max(400) })).max(12),
-  action_plan_7_days: z.array(z.string().max(400)).min(5).max(9),
-  before_you_apply_checklist: z.array(z.string().max(300)).min(1).max(12),
+  top_findings: upTo(Finding, 10, 1),
+  videos_to_review: upTo(z.object({ title: z.string().min(1).max(200), reason: z.string().min(1).max(400) }), 12),
+  action_plan_7_days: upTo(z.string().max(400), 9, 5),
+  before_you_apply_checklist: upTo(z.string().max(300), 12, 1),
   confidence_note: z.string().max(500),
 });
 export type Report = z.infer<typeof ReportSchema>;

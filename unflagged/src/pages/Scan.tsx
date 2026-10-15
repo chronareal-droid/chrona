@@ -81,11 +81,14 @@ const QUESTIONS: { key: keyof Answers; label: string; options: { value: string; 
 
 const EMPTY_ANSWERS: Answers = { monetization: '', voice: '', visuals: '', scripts: '', opinion: '', uploads: '' };
 
-/** Same shape the server accepts: something@domain.tld (catches the common "me@gmail" typo). */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/**
+ * The regex the server's zod `.email()` uses (zod 3.25), so an address the form accepts is never silently dropped
+ * there. Also catches the common typos: "me@gmail", a trailing dot, double dots.
+ */
+const EMAIL_RE = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
 
 const ERRORS: Record<string, string> = {
-  rate_limited: 'You’ve used your 3 free scans for the last 24 hours. Try again later.',
+  rate_limited: 'You’ve reached the free scan limit for the last 24 hours. Try again later.',
   too_large: 'Those screenshots are too large. Try fewer or smaller ones.',
   invalid: 'Something in the form isn’t right. Check the fields and try again.',
   rescan_unavailable: 'This re-scan link has expired or isn’t valid.',

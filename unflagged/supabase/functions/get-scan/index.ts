@@ -1,7 +1,7 @@
 // GET ?id= : status for polling, and the report. Unpaid scans get ONLY the free fields (built server-side).
 import { db } from "../_shared/db.ts";
 import { isUuid, json, preflight } from "../_shared/http.ts";
-import { type ScanRow, STALE_PROCESSING_MS, toPublicView } from "../_shared/report.ts";
+import { RESCAN_ATTEMPTS, type ScanRow, STALE_PROCESSING_MS, STALE_SECONDS, toPublicView } from "../_shared/report.ts";
 
 Deno.serve(async (req) => {
   const early = preflight(req, "GET");
@@ -33,11 +33,14 @@ Deno.serve(async (req) => {
 
     let rescanUsed = false;
     if (row.paid && !row.rescan_of) {
-      // A re-scan that failed doesn't use up the included one.
-      const { count, error: e2 } = await supabase
-        .from("scans").select("id", { count: "exact", head: true }).eq("rescan_of", row.id).neq("status", "error");
+      // Same rule create_rescan enforces: a done or running re-scan uses it, and so do RESCAN_ATTEMPTS attempts.
+      const { data: used, error: e2 } = await supabase.rpc("rescan_used", {
+        p_parent: row.id,
+        p_attempt_limit: RESCAN_ATTEMPTS,
+        p_stale_seconds: STALE_SECONDS,
+      });
       if (e2) throw e2;
-      rescanUsed = (count ?? 0) > 0;
+      rescanUsed = used === true;
     }
     return json(req, toPublicView(row, rescanUsed));
   } catch (err) {

@@ -13,13 +13,14 @@ export function looseNormalize(s: string): string {
 
 /**
  * Quoted spans in a piece of model text: "double", “curly double”, ‘curly single’ and 'straight single' quotes.
- * Apostrophes inside words (don't, they’re, Sam's) are not treated as quote marks.
+ * Apostrophes inside words (don't, they’re, Sam's) are not treated as quote marks, and neither is the one in an
+ * elision ('90s, 'til, 'em), which would otherwise pair with a plural possessive (creators') into a bogus quote.
  */
 export function quotesIn(text: string): string[] {
   const out: string[] = [];
   for (const m of text.matchAll(/["“”]([^"“”]+)["“”]/g)) out.push(m[1]);
-  for (const m of text.matchAll(/‘(.+?)’(?![\p{L}\p{N}])/gu)) out.push(m[1]);
-  for (const m of text.matchAll(/(?<![\p{L}\p{N}])'(.+?)'(?![\p{L}\p{N}])/gu)) out.push(m[1]);
+  for (const m of text.matchAll(/‘(?!\p{N})([^"“”]+?)’(?![\p{L}\p{N}])/gu)) out.push(m[1]);
+  for (const m of text.matchAll(/(?<![\p{L}\p{N}])'(?!\p{N}|(?:til|em|cause|bout|n)\b)([^"“”]+?)'(?![\p{L}\p{N}])/gu)) out.push(m[1]);
   return out;
 }
 
@@ -39,7 +40,9 @@ export function textIsGrounded(text: string, corpus: string): boolean {
 export interface GuardInputs {
   titles: string[];
   scripts: string[];
-  /** Other text the model may legitimately quote: thumbnail overlays, the creator's answers and niche, the policy brief. */
+  /** The creator's own words besides titles and scripts: thumbnail text overlays. */
+  creatorText?: string[];
+  /** Everything else the judge is shown and may quote: video details, signals, answers, niche, the policy brief. */
   otherText?: string[];
 }
 
@@ -51,7 +54,30 @@ export interface GuardResult {
 }
 
 export function buildCorpus(inputs: GuardInputs): string {
-  return ` ${[...inputs.titles, ...inputs.scripts, ...(inputs.otherText ?? [])].map(looseNormalize).join(" | ")} `;
+  return ` ${[...creatorTexts(inputs), ...(inputs.otherText ?? [])].map(looseNormalize).join(" | ")} `;
+}
+
+const creatorTexts = (inputs: GuardInputs) => [...inputs.titles, ...inputs.scripts, ...(inputs.creatorText ?? [])];
+
+/**
+ * The text with the creator's own quoted words taken out, so the checks below judge only what the model wrote:
+ * a quote goes if it is a whole title, or at least `minWords` words that appear in the creator's material.
+ * Short quotes otherwise stay, so a scare-quoted "safe" is still the model's word.
+ */
+export function creatorQuoteStripper(inputs?: GuardInputs): (text: string, minWords: number) => string {
+  if (!inputs) return (text) => text;
+  const corpus = ` ${creatorTexts(inputs).map(looseNormalize).join(" | ")} `; // built once per report
+  const titles = new Set(inputs.titles.map(titleKey));
+  return (text, minWords) => {
+    let out = text;
+    for (const q of quotesIn(text)) {
+      const n = looseNormalize(q);
+      if (!n) continue;
+      const isCreators = titles.has(titleKey(q)) || (n.split(" ").length >= minWords && corpus.includes(` ${n} `));
+      if (isCreators) out = out.split(q).join(" ");
+    }
+    return out;
+  };
 }
 
 export function applyGuards(report: Report, inputs: GuardInputs): GuardResult {
@@ -109,32 +135,39 @@ export function reportTexts(r: Report): string[] {
   ];
 }
 
+/** How many different "Day N" (1–7) a text mentions: two or more reads like the 7-day plan. */
+function planDays(normalized: string): number {
+  return new Set([...normalized.matchAll(/\bday\s*([1-7])\b/g)].map((m) => m[1])).size;
+}
+
 /**
- * Problems that send the report back for its one retry:
+ * Problems that send the report back for its one retry. Both checks look only at the model's own words: the creator's
+ * titles and script lines it quotes as evidence ("Stay safe out there", "Minecraft Day 5") don't count.
  * - forbidden wording anywhere;
  * - paid content (plan, checklist, later findings) copied into the fields the free view shows — whatever the
  *   uploaded scripts asked the model to do, the free view must not carry the paid report.
  */
-export function reportIssues(r: Report, freeFindings = 2): string[] {
+export function reportIssues(r: Report, inputs?: GuardInputs, freeFindings = 2): string[] {
   const issues: string[] = [];
-  const bad = reportTexts(r).find((t) => FORBIDDEN.test(t));
+  const withoutCreatorQuotes = creatorQuoteStripper(inputs);
+  const bad = reportTexts(r).find((t) => FORBIDDEN.test(withoutCreatorQuotes(t, 3)));
   if (bad) issues.push(`do not promise outcomes or call anything safe/guaranteed/approved (found: "${bad.slice(0, 80)}")`);
 
+  const own = (t: string) => looseNormalize(withoutCreatorQuotes(t, 2));
   const free = [
     r.headline,
     r.confidence_note,
     ...r.categories.map((c) => c.summary),
     ...r.top_findings.slice(0, freeFindings).flatMap((f) => [f.title, f.evidence, f.why_it_matters, f.fix]),
-  ].map(looseNormalize);
+  ].map(own);
   const paid = [
     ...r.action_plan_7_days,
     ...r.before_you_apply_checklist,
     ...r.top_findings.slice(freeFindings).flatMap((f) => [f.evidence, f.fix]),
   ]
-    .map(looseNormalize)
+    .map(own)
     .filter((p) => p.length >= 24);
-  const leak = free.some((f) => /\bday\s*[1-7]\b/.test(f) && /\bday\s*[2-7]\b/.test(f)) ||
-    free.some((f) => paid.some((p) => f.includes(p.slice(0, 40))));
+  const leak = free.some((f) => planDays(f) >= 2) || free.some((f) => paid.some((p) => f.includes(p.slice(0, 40))));
   if (leak) issues.push("headline, summaries, confidence_note and the first findings must not repeat the 7-day plan, checklist or later findings");
   return issues;
 }

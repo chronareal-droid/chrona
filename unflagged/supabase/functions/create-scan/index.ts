@@ -18,6 +18,6 @@ Deno.serve(
 // expires stale scans on its own.
 addEventListener("beforeunload", () => {
   for (const [id, store] of inFlight) {
-    store.update(id, { status: "error", error_code: "timeout", stage: null }).catch(() => {});
+    store.failIfProcessing(id).catch(() => {});
   }
 });

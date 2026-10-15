@@ -30,9 +30,11 @@ Brand name, prices and copy constants live in `src/lib/brand.ts` (renaming = edi
   Models come from secrets `MODEL_EXTRACT` / `MODEL_JUDGE` (two different Flash-Lite models = two daily quotas).
 - Payments: Dodo Payments hosted checkout (`create-checkout`), Standard Webhooks signature (`dodo-webhook`, `--no-verify-jwt`).
 - Analytics: PostHog (no-op when `VITE_POSTHOG_KEY` is empty or in the demo). `before_send` rewrites `/r/<id>` to `/r/:id`:
-  a report link is a bearer key and never goes to analytics.
-- Limits are atomic in Postgres (`create_scan` / `create_rescan` RPCs, advisory lock): 3 scans and 10 attempts per
-  salted-IP-hash (IPv6 grouped by /64) per day; one re-scan per paid report. Waitlist: 5 sign-ups per IP hash per day.
+  a report link is a bearer key and never goes to analytics. Feature flags, surveys, heatmaps and the like stay off:
+  they send data without passing `before_send` (the e2e suite checks every request PostHog would receive).
+- Limits are atomic in Postgres (RPCs under an advisory lock or row lock): 3 scans and 10 attempts per salted-IP-hash
+  (IPv6 grouped by /64) per day; one re-scan per paid report, at most 5 attempts (`create_rescan`, `rescan_used`);
+  5 waitlist sign-ups per IP hash per day (`join_waitlist`). Stranded `processing` rows are expired before counting.
 
 ## Pipeline (`_shared/pipeline.ts`, runs under `EdgeRuntime.waitUntil` in `create-scan`)
 
@@ -55,5 +57,5 @@ Brand name, prices and copy constants live in `src/lib/brand.ts` (renaming = edi
 - `npm run dev` / `npm run build` / `npm run typecheck`
 - `npm run test:functions` (deno test) / `npm run check:functions` (deno check)
 - `npm run test:e2e` (Playwright against a production build with a mocked backend; 375px viewport)
-- `npm run test:db` (every migration on PGlite + checks of `create_scan` / `create_rescan`)
+- `npm run test:db` (every migration on PGlite with Supabase's default grants; checks the RPCs, grants and RLS)
 - `npm run check:launch` (fails on a placeholder support email or missing Supabase env; part of `deploy:pages`)

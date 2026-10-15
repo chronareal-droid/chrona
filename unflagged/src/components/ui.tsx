@@ -23,7 +23,7 @@ const LEVEL_TEXT: Record<Level, string> = { low: 'Low', elevated: 'Elevated', hi
 
 export function LevelBadge({ level, big = false }: { level: Level; big?: boolean }) {
   return (
-    <span className={`print-plain inline-flex items-center rounded-full font-semibold ring-1 ${LEVEL_STYLE[level]} ${big ? 'px-4 py-1.5 text-lg' : 'px-2.5 py-0.5 text-xs'}`}>
+    <span className={`print-plain inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-semibold ring-1 ${LEVEL_STYLE[level]} ${big ? 'px-4 py-1.5 text-lg' : 'px-2.5 py-0.5 text-xs'}`}>
       {LEVEL_TEXT[level]}{big ? ' risk' : ''}
     </span>
   );

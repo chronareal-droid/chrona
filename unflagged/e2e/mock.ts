@@ -1,4 +1,5 @@
 // A scripted fake backend for the e2e tests: intercepts every Edge Function call the SPA makes.
+import { gunzipSync } from 'node:zlib';
 import type { Page, Route } from '@playwright/test';
 
 export const API = 'https://mock.supabase.test/functions/v1';
@@ -128,4 +129,27 @@ export async function fillScanForm(page: Page) {
 export async function noHorizontalScroll(page: Page): Promise<number> {
   // clientWidth excludes a vertical scrollbar, so a page that only scrolls vertically still measures 0.
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+}
+
+export interface AnalyticsRequest {
+  url: string;
+  body: string;
+}
+
+/**
+ * Stands in for PostHog (the e2e build has a fake key) and records every request it would have received, with
+ * the body decoded whichever way posthog-js encoded it (gzip, base64 form field or plain JSON).
+ */
+export async function mockAnalytics(page: Page): Promise<AnalyticsRequest[]> {
+  const seen: AnalyticsRequest[] = [];
+  await page.route(/^https:\/\/[a-z-]+\.i\.posthog\.com\//, (route) => {
+    const req = route.request();
+    const raw = req.postDataBuffer() ?? Buffer.alloc(0);
+    let body = raw.toString('utf8');
+    if (raw[0] === 0x1f && raw[1] === 0x8b) body = gunzipSync(raw).toString('utf8');
+    else if (body.startsWith('data=')) body = Buffer.from(decodeURIComponent(body.slice(5)), 'base64').toString('utf8');
+    seen.push({ url: req.url(), body });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{"status":1}' });
+  });
+  return seen;
 }

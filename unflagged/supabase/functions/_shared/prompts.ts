@@ -28,6 +28,7 @@ export const EXTRACT_PROMPT = `You are reading screenshots of a YouTube channel'
 /** Output-shape reminders appended to the judge input (the schema enforces types, not these rules). */
 export const JUDGE_OUTPUT_RULES = `OUTPUT RULES
 - "categories": exactly 4 entries, keys generic_repetitive, off_putting, ai_persona_sensitive, reused (once each).
+  Each has at most 6 evidence items and at most 6 fixes.
 - "top_findings": most severe first, 3 to 8 findings. Each "evidence" quotes the creator's exact titles or script lines in double quotes.
 - "videos_to_review": only titles copied exactly from the VIDEOS list, most urgent first, at most 8.
 - "action_plan_7_days": 7 items, "Day 1: ..." to "Day 7: ...".

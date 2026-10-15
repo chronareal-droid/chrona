@@ -33,9 +33,17 @@ export async function checkRegion(): Promise<'allowed' | 'blocked'> {
   if (forced && BLOCKED.has(forced)) return 'blocked';
   if (DEMO || ['localhost', '127.0.0.1'].includes(location.hostname)) return 'allowed';
   try {
-    const res = await fetch('/cdn-cgi/trace', { cache: 'no-store', signal: AbortSignal.timeout(TRACE_TIMEOUT_MS) });
-    const loc = parseLoc(await res.text());
-    return loc && BLOCKED.has(loc) ? 'blocked' : 'allowed';
+    // AbortController rather than AbortSignal.timeout(), which iOS 15 lacks: there it would throw before the fetch
+    // and land in the catch below, letting a blocked region through.
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TRACE_TIMEOUT_MS);
+    try {
+      const res = await fetch('/cdn-cgi/trace', { cache: 'no-store', signal: ctrl.signal });
+      const loc = parseLoc(await res.text());
+      return loc && BLOCKED.has(loc) ? 'blocked' : 'allowed';
+    } finally {
+      clearTimeout(timer);
+    }
   } catch {
     // If the trace endpoint fails or is slow we can't tell; allow rather than lock everyone out.
     return 'allowed';
