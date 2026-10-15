@@ -30,7 +30,7 @@ export function LevelBadge({ level, big = false }: { level: Level; big?: boolean
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`print-plain rounded-2xl border border-line bg-panel p-4 ${className}`}>{children}</div>;
+  return <div className={`print-plain min-w-0 rounded-2xl border border-line bg-panel p-4 [overflow-wrap:anywhere] ${className}`}>{children}</div>;
 }
 
 export function Chips<T extends string>({

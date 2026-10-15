@@ -6,80 +6,116 @@ import { ApiError, api, rememberPayload, takeLastPayload } from '../lib/api';
 import { track } from '../lib/analytics';
 import { BRAND, PRICE } from '../lib/brand';
 import { DEMO } from '../lib/demo';
-import { CATEGORY_LABELS, type Finding, type FreeReport, type LockedCounts, type PublicScan, type Report } from '../lib/types';
+import { CATEGORY_LABELS, type CreateScanPayload, type Finding, type FreeReport, type LockedCounts, type PublicScan, type Report } from '../lib/types';
+import { useTitle } from '../lib/useTitle';
 
 const POLL_MS = 2_500;
-const PROCESSING_TIMEOUT_MS = 3 * 60_000;
-const PAYMENT_CONFIRM_TIMEOUT_MS = 90_000;
+const SLOW_POLL_MS = 10_000;
+/** After this long a scan still processing gets the "taking longer" screen (the server fails it at ~170 s). */
+const PROCESSING_SLOW_MS = 3 * 60_000;
+/** Back from checkout: after this long without the payment webhook, say so (but keep checking). */
+const PAYMENT_LATE_MS = 90_000;
+const PAYMENT_GIVE_UP_MS = 15 * 60_000;
 
 const STEPS = ['Reading your uploads…', 'Comparing titles…', 'Comparing thumbnails…', 'Reading your scripts…', 'Writing your report…'];
 /** Which steps are in progress at each server stage (the judge call reads scripts and writes in one go). */
 const ACTIVE_STEPS: Record<string, number[]> = { extract: [0], signals: [1, 2], judge: [3, 4] };
 
-type Phase = 'loading' | 'processing' | 'slow' | 'done' | 'error' | 'not_found' | 'network';
+type Phase = 'loading' | 'processing' | 'slow' | 'done' | 'error' | 'not_found';
+export type Confirm = 'none' | 'waiting' | 'late';
 
+/**
+ * Polls get-scan. Never gives up on a flaky connection (it backs off and flags `offline`), keeps checking a slow
+ * scan, and after a checkout keeps waiting for the payment webhook (saying so once it's late).
+ */
 function useScan(id: string, waitForPayment: boolean) {
   const [scan, setScan] = useState<PublicScan | null>(null);
   const [phase, setPhase] = useState<Phase>('loading');
-  const [confirming, setConfirming] = useState(false);
+  const [confirm, setConfirm] = useState<Confirm>('none');
+  const [offline, setOffline] = useState(false);
+  const [nonce, setNonce] = useState(0);
+  const shownId = useRef<string | null>(null);
+  const shownSince = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
-    const start = Date.now();
-    setScan(null);
-    setPhase('loading');
-    setConfirming(false);
     let failures = 0;
+    if (shownId.current !== id) {
+      // A different report (e.g. after "Try again"): start from a clean screen.
+      shownId.current = id;
+      shownSince.current = Date.now();
+      setScan(null);
+      setPhase('loading');
+      setConfirm('none');
+    }
+    // Counted from when this report was first shown, so "Check again" doesn't restart the late-payment clock.
+    const start = shownSince.current;
+    const again = (ms: number) => {
+      timer = setTimeout(tick, ms);
+    };
 
     const tick = async () => {
       try {
         const s = await api.getScan(id);
         if (cancelled) return;
         failures = 0;
+        setOffline(false);
         setScan(s);
         const elapsed = Date.now() - start;
         if (s.status === 'processing') {
-          if (elapsed > PROCESSING_TIMEOUT_MS) return setPhase('slow');
-          setPhase('processing');
-        } else if (s.status === 'error') {
-          return setPhase('error');
-        } else {
-          setPhase('done');
-          // Back from checkout: the webhook can land a few seconds after the redirect.
-          const awaitingWebhook = waitForPayment && !s.paid && elapsed < PAYMENT_CONFIRM_TIMEOUT_MS;
-          setConfirming(awaitingWebhook);
-          if (!awaitingWebhook) return;
+          const slow = elapsed > PROCESSING_SLOW_MS;
+          setPhase(slow ? 'slow' : 'processing');
+          return again(slow ? SLOW_POLL_MS : POLL_MS);
         }
+        if (s.status === 'error') return setPhase('error');
+        setPhase('done');
+        if (waitForPayment && !s.paid) {
+          if (elapsed < PAYMENT_LATE_MS) {
+            setConfirm('waiting');
+            return again(POLL_MS);
+          }
+          setConfirm('late');
+          if (elapsed < PAYMENT_GIVE_UP_MS) return again(SLOW_POLL_MS);
+          return;
+        }
+        setConfirm('none');
       } catch (e) {
         if (cancelled) return;
         if (e instanceof ApiError && e.status === 404) return setPhase('not_found');
-        if (++failures >= 4) return setPhase('network');
+        if (++failures >= 3) setOffline(true);
+        again(Math.min(30_000, POLL_MS * 2 ** Math.min(failures, 4)));
       }
-      timer = setTimeout(tick, POLL_MS);
     };
     void tick();
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [id, waitForPayment]);
+  }, [id, waitForPayment, nonce]);
 
-  return { scan, phase, confirming };
+  return { scan, phase, confirm, offline, refresh: () => setNonce((n) => n + 1) };
 }
 
 export default function ReportPage() {
   const { id = '' } = useParams();
   const [params] = useSearchParams();
   const paidParam = params.get('paid') === '1';
-  const { scan, phase, confirming } = useScan(id, paidParam);
+  const { scan, phase, confirm, offline, refresh } = useScan(id, paidParam);
   const tracked = useRef(false);
 
+  // Coming back with the browser's Back button (e.g. from checkout) restores a frozen page: check again.
   useEffect(() => {
-    if (phase !== 'done' || !scan || tracked.current) return;
+    const onShow = (e: PageTransitionEvent) => e.persisted && refresh();
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  });
+
+  useEffect(() => {
+    if (phase !== 'done' || !scan || tracked.current || paidParam) return;
     tracked.current = true;
     if (!scan.paid) track('report_free_viewed', { overall: scan.free?.overall ?? 'unknown' });
-  }, [phase, scan]);
+  }, [phase, scan, paidParam]);
 
   useEffect(() => {
     if (!scan?.paid || !paidParam) return;
@@ -93,20 +129,53 @@ export default function ReportPage() {
     track('purchase_completed');
   }, [scan?.paid, scan?.id, paidParam]);
 
-  if (phase === 'loading') return <p className="pt-10 text-center text-muted">Loading…</p>;
+  const level = scan?.report?.overall ?? scan?.free?.overall;
+  useTitle(level ? `Your risk read: ${level} · ${BRAND.name}` : `Your report · ${BRAND.name}`);
+
+  const offlineNote = offline && (
+    <Card className="no-print text-center text-sm">Can’t reach the server. Reconnecting…</Card>
+  );
+  if (phase === 'loading') {
+    return offline ? (
+      <Card className="mt-6 space-y-3 text-center">
+        <h1 className="text-2xl font-bold">Can’t reach the server</h1>
+        <p className="text-slate-300">Check your connection. We’ll keep trying.</p>
+        <Button onClick={refresh} className="w-full">Retry now</Button>
+      </Card>
+    ) : (
+      <p className="pt-10 text-center text-muted">Loading…</p>
+    );
+  }
   if (phase === 'not_found') return <Problem title="Report not found" body="Check the link, or start a new scan." />;
-  if (phase === 'network') return <Problem title="Can’t reach the server" body="Check your connection and reload this page." />;
-  if (phase === 'processing' || phase === 'slow') return <Progress stage={scan?.stage ?? null} slow={phase === 'slow'} />;
+  if (phase === 'processing' || phase === 'slow') {
+    return (
+      <>
+        {offlineNote}
+        <Progress stage={scan?.stage ?? null} slow={phase === 'slow'} />
+      </>
+    );
+  }
   if (phase === 'error') return <ScanError code={scan?.error_code ?? 'internal'} />;
   if (!scan) return null;
 
   return (
     <div className="space-y-6 pt-2">
-      {confirming && (
+      {offlineNote}
+      {confirm === 'waiting' && (
         <Card className="no-print border-accent/40 text-center text-sm">Confirming your payment… this page will update by itself.</Card>
       )}
+      {confirm === 'late' && !scan.paid && (
+        <Card className="no-print space-y-3 border-accent/40 text-center text-sm">
+          <p>
+            We haven’t received the payment confirmation yet. If you paid, this page will update by itself, so there’s
+            no need to pay again. If it doesn’t, email <span className="text-white">{BRAND.supportEmail}</span> with this
+            page’s link.
+          </p>
+          <Button variant="ghost" onClick={refresh}>Check again</Button>
+        </Card>
+      )}
       {scan.paid && scan.report ? <FullReport scan={scan} report={scan.report} /> : scan.free && scan.locked && (
-        <FreeView scan={scan} free={scan.free} locked={scan.locked} />
+        <FreeView scan={scan} free={scan.free} locked={scan.locked} confirm={confirm} onPaid={refresh} />
       )}
     </div>
   );
@@ -125,6 +194,20 @@ function Problem({ title, body }: { title: string; body: string }) {
 }
 
 function Progress({ stage, slow }: { stage: string | null; slow: boolean }) {
+  const navigate = useNavigate();
+  const [restarting, setRestarting] = useState(false);
+  const last = takeLastPayload();
+  async function restart() {
+    if (!last) return navigate(scanFormPath(null));
+    setRestarting(true);
+    try {
+      const { id } = await api.createScan(last);
+      track('scan_submitted', { retry: true });
+      navigate(`/r/${id}`);
+    } catch {
+      setRestarting(false);
+    }
+  }
   const active = ACTIVE_STEPS[stage ?? 'extract'] ?? [0];
   const first = Math.min(...active);
   return (
@@ -148,9 +231,11 @@ function Progress({ stage, slow }: { stage: string | null; slow: boolean }) {
         })}
       </ol>
       {slow ? (
-        <Card className="space-y-2">
-          <p>This is taking longer than usual.</p>
-          <Button variant="ghost" onClick={() => location.reload()}>Check again</Button>
+        <Card className="space-y-3">
+          <p>This is taking longer than usual. We’ll keep checking.</p>
+          <Button variant="ghost" onClick={() => void restart()} disabled={restarting}>
+            {restarting ? 'Starting again…' : 'Start again'}
+          </Button>
         </Card>
       ) : (
         <p className="text-sm text-muted">Usually about a minute. Keep this page open.</p>
@@ -158,6 +243,19 @@ function Progress({ stage, slow }: { stage: string | null; slow: boolean }) {
     </div>
   );
 }
+
+/** The scan form, keeping the re-scan link when the failed scan was a re-scan. */
+function scanFormPath(last: CreateScanPayload | null): string {
+  return last?.rescanOf ? `/scan?rescan=${last.rescanOf}` : '/scan';
+}
+
+const RETRY_ERRORS: Record<string, string> = {
+  rate_limited: 'You’ve used your 3 free scans for the last 24 hours. Try again later.',
+  rescan_used: 'The re-scan included with this report has already been used.',
+  rescan_unavailable: 'This re-scan link has expired or isn’t valid.',
+  too_large: 'Those screenshots are too large. Start again with fewer or smaller ones.',
+  invalid: 'Something in the form wasn’t accepted. Start again from the form.',
+};
 
 function ScanError({ code }: { code: string }) {
   const navigate = useNavigate();
@@ -175,15 +273,16 @@ function ScanError({ code }: { code: string }) {
   }
 
   async function retry() {
-    if (!last) return navigate('/scan');
+    if (!last) return navigate(scanFormPath(null));
     setRetrying(true);
     setMsg(null);
     try {
       const { id } = await api.createScan(last);
       rememberPayload(last);
+      track('scan_submitted', { retry: true, rescan: !!last.rescanOf });
       navigate(`/r/${id}`);
     } catch (e) {
-      setMsg(e instanceof ApiError && e.code === 'rate_limited' ? 'You’ve hit today’s scan limit. Try again tomorrow.' : 'Still busy. Give it another minute.');
+      setMsg((e instanceof ApiError && RETRY_ERRORS[e.code]) || 'Still busy. Give it another minute.');
       setRetrying(false);
     }
   }
@@ -196,6 +295,9 @@ function ScanError({ code }: { code: string }) {
         {retrying ? 'Retrying…' : last ? 'Try again' : 'Start again'}
       </Button>
       {msg && <p className="text-sm text-high">{msg}</p>}
+      {msg && last && (
+        <Link to={scanFormPath(last)} className="block text-sm text-accent underline">Go to the form</Link>
+      )}
     </Card>
   );
 }
@@ -244,10 +346,29 @@ function DisclaimerBlock() {
   );
 }
 
-function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; locked: LockedCounts }) {
+function FreeView({
+  scan,
+  free,
+  locked,
+  confirm,
+  onPaid,
+}: {
+  scan: PublicScan;
+  free: FreeReport;
+  locked: LockedCounts;
+  confirm: Confirm;
+  onPaid: () => void;
+}) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Back from the hosted checkout restores this page frozen mid-"Opening checkout…": make the button usable again.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => e.persisted && setBusy(false);
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
 
   async function unlock() {
     track('unlock_clicked');
@@ -258,9 +379,10 @@ function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; 
       track('checkout_started');
       if (url.startsWith('/')) navigate(url);
       else location.href = url;
-    } catch {
-      setErr('Checkout couldn’t start. Try again in a moment.');
+    } catch (e) {
       setBusy(false);
+      if (e instanceof ApiError && e.code === 'already_paid') return onPaid(); // the payment just landed
+      setErr('Checkout couldn’t start. Try again in a moment.');
     }
   }
 
@@ -290,7 +412,7 @@ function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; 
         </div>
         <p className="text-lg font-semibold">
           {locked.more_findings > 0 ? `${locked.more_findings} more finding${locked.more_findings === 1 ? '' : 's'}` : 'Every fix in detail'},
-          your {locked.plan_days}-day fix plan
+          your 7-day fix plan
           {locked.videos_to_review > 0 ? `, ${locked.videos_to_review} video${locked.videos_to_review === 1 ? '' : 's'} to fix first` : ''}, and the
           before-you-apply checklist.
         </p>
@@ -299,9 +421,13 @@ function FreeView({ scan, free, locked }: { scan: PublicScan; free: FreeReport; 
           <li>✓ One re-scan within {BRAND.rescanDays} days</li>
           <li>✓ {BRAND.refundDays}-day no-questions refund</li>
         </ul>
-        <Button onClick={() => void unlock()} disabled={busy} className="w-full text-lg">
-          {busy ? 'Opening checkout…' : `Unlock full report — ${PRICE}`}
-        </Button>
+        {confirm === 'none' ? (
+          <Button onClick={() => void unlock()} disabled={busy} className="w-full text-lg">
+            {busy ? 'Opening checkout…' : `Unlock full report — ${PRICE}`}
+          </Button>
+        ) : (
+          <p className="text-center text-sm text-slate-300">Your payment is being confirmed. The full report will appear here.</p>
+        )}
         {err && <p className="text-sm text-high">{err}</p>}
         {DEMO && <p className="text-center text-xs text-muted">Demo: no charge. It unlocks the sample report straight away.</p>}
       </section>
@@ -332,7 +458,10 @@ function FullReport({ scan, report }: { scan: PublicScan; report: Report }) {
   return (
     <>
       <div className="no-print space-y-3">
-        <Card className="text-sm">Bookmark this page. It’s your report.</Card>
+        <Card className="space-y-1 text-sm">
+          <p>Bookmark this page. It’s your report.</p>
+          <p className="text-xs text-muted">Anyone with this link can open the full report and use its re-scan, so share it with care.</p>
+        </Card>
         <div className="grid grid-cols-2 gap-2">
           <Button variant="ghost" onClick={() => void copy()}>{copied ? 'Copied ✓' : 'Copy link'}</Button>
           <Button variant="ghost" onClick={() => (DEMO ? setDemoNote(true) : window.print())}>Save as PDF</Button>

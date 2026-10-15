@@ -131,33 +131,33 @@ export type Level = (typeof LEVELS)[number];
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
 
 const Finding = z.object({
-  title: z.string().min(1),
-  evidence: z.string().min(1),
-  why_it_matters: z.string().min(1),
-  fix: z.string().min(1),
+  title: z.string().min(1).max(140),
+  evidence: z.string().min(1).max(600),
+  why_it_matters: z.string().min(1).max(500),
+  fix: z.string().min(1).max(500),
 });
 
 export const ReportSchema = z.object({
   overall: z.enum(LEVELS),
-  headline: z.string().min(1),
+  headline: z.string().min(1).max(240),
   categories: z
     .array(
       z.object({
         key: z.enum(CATEGORY_KEYS),
         level: z.enum(LEVELS),
-        summary: z.string().min(1),
-        evidence: z.array(z.string()),
-        fixes: z.array(z.string()),
+        summary: z.string().min(1).max(360),
+        evidence: z.array(z.string().max(500)).max(6),
+        fixes: z.array(z.string().max(400)).max(6),
       }),
     )
     .refine((cs) => CATEGORY_KEYS.every((k) => cs.filter((c) => c.key === k).length === 1), {
       message: "categories must contain each of the 4 keys exactly once",
     }),
-  top_findings: z.array(Finding).min(1),
-  videos_to_review: z.array(z.object({ title: z.string().min(1), reason: z.string().min(1) })),
-  action_plan_7_days: z.array(z.string()).min(1),
-  before_you_apply_checklist: z.array(z.string()).min(1),
-  confidence_note: z.string(),
+  top_findings: z.array(Finding).min(1).max(10),
+  videos_to_review: z.array(z.object({ title: z.string().min(1).max(200), reason: z.string().min(1).max(400) })).max(12),
+  action_plan_7_days: z.array(z.string().max(400)).min(5).max(9),
+  before_you_apply_checklist: z.array(z.string().max(300)).min(1).max(12),
+  confidence_note: z.string().max(500),
 });
 export type Report = z.infer<typeof ReportSchema>;
 export type Finding = z.infer<typeof Finding>;

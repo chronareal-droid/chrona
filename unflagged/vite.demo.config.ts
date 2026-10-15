@@ -7,7 +7,7 @@ export default mergeConfig(
   base,
   defineConfig({
     plugins: [viteSingleFile()],
-    define: { 'import.meta.env.VITE_DEMO': JSON.stringify('1') },
+    define: { 'import.meta.env.VITE_DEMO': JSON.stringify('1'), 'import.meta.env.VITE_POSTHOG_KEY': JSON.stringify('') },
     build: { outDir: 'dist-demo', emptyOutDir: true },
   }),
 );

@@ -27,6 +27,19 @@ export function normalizeTitle(title: string): string {
     .trim();
 }
 
+/**
+ * Identity key for "is this the same video?": like normalizeTitle but digits are kept, so "Day 1" and "Day 2"
+ * (or "Top 10" and "Top 25") stay different videos. Use normalizeTitle only for templating statistics.
+ */
+export function titleKey(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function words(s: string): string[] {
   return s.split(" ").filter(Boolean);
 }
@@ -261,14 +274,21 @@ function escapeRe(s: string): string {
 }
 
 /** Counts whole-phrase occurrences (word boundaries; apostrophes normalized). */
+const phraseRes = new WeakMap<readonly string[], RegExp>();
+
+/**
+ * Counts phrase occurrences (word boundaries; apostrophes normalized). One alternation, longest phrase first,
+ * so overlapping entries count once: "in my view" is one marker, not "in my view" + "my view".
+ */
 export function countPhrases(text: string, phrases: readonly string[]): number {
-  const t = text.toLowerCase().replace(/[’‘]/g, "'");
-  let n = 0;
-  for (const p of phrases) {
-    const re = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(p)}(?![\\p{L}\\p{N}])`, "gu");
-    n += t.match(re)?.length ?? 0;
+  let re = phraseRes.get(phrases);
+  if (!re) {
+    const alts = [...phrases].sort((a, b) => b.length - a.length).map(escapeRe).join("|");
+    re = new RegExp(`(?<![\\p{L}\\p{N}])(?:${alts})(?![\\p{L}\\p{N}])`, "gu");
+    phraseRes.set(phrases, re);
   }
-  return n;
+  const t = text.toLowerCase().replace(/[’‘]/g, "'");
+  return t.match(re)?.length ?? 0;
 }
 
 export function wordCount(text: string): number {
@@ -308,9 +328,41 @@ export interface ScriptSignals {
 
 /** Near-identical: word-set Jaccard ≥ 0.8 (catches swapped nouns in an otherwise fixed sentence). */
 const NEAR_IDENTICAL = 0.8;
+/** Sentences compared per script. Keeps the worst case well inside the Edge Function's CPU budget. */
+export const MAX_SENTENCES_PER_SCRIPT = 300;
+
+interface Sent {
+  text: string;
+  set: Set<string>;
+}
+
+const toSent = (text: string): Sent => ({ text, set: new Set(words(text)) });
+
+function similarSents(a: Sent, b: Sent): boolean {
+  if (a.text === b.text) return true;
+  const [small, big] = a.set.size <= b.set.size ? [a.set, b.set] : [b.set, a.set];
+  // Jaccard ≥ t needs |small| / |big| ≥ t: skip pairs that can't reach it without counting.
+  if (small.size < big.size * NEAR_IDENTICAL) return false;
+  return jaccard(small, big) >= NEAR_IDENTICAL;
+}
 
 function similar(a: string, b: string): boolean {
-  return a === b || jaccard(new Set(words(a)), new Set(words(b))) >= NEAR_IDENTICAL;
+  return similarSents(toSent(a), toSent(b));
+}
+
+/** Share of sentences that also appear (identically or nearly) in another script. */
+function crossOverlap(sents: Sent[][]): number {
+  let matched = 0;
+  let all = 0;
+  const exact = sents.map((ss) => new Set(ss.map((s) => s.text)));
+  for (let i = 0; i < sents.length; i++) {
+    for (const s of sents[i]) {
+      all++;
+      const hit = sents.some((other, j) => j !== i && (exact[j].has(s.text) || other.some((o) => similarSents(s, o))));
+      if (hit) matched++;
+    }
+  }
+  return all ? matched / all : 0;
 }
 
 export function scriptSignals(scripts: string[]): ScriptSignals {
@@ -336,15 +388,7 @@ export function scriptSignals(scripts: string[]): ScriptSignals {
   let same_outro = false;
   if (filled.length >= 2) {
     const sents = filled.map(sentences);
-    let matched = 0;
-    let all = 0;
-    for (let i = 0; i < sents.length; i++) {
-      for (const s of sents[i]) {
-        all++;
-        if (sents.some((other, j) => j !== i && other.some((o) => similar(s, o)))) matched++;
-      }
-    }
-    cross = all ? matched / all : 0;
+    cross = crossOverlap(sents.map((ss) => ss.slice(0, MAX_SENTENCES_PER_SCRIPT).map(toSent)));
     const firsts = sents.filter((s) => s.length).map((s) => s[0]);
     const lasts = sents.filter((s) => s.length).map((s) => s[s.length - 1]);
     const anyPair = (xs: string[]) => xs.some((a, i) => xs.some((b, j) => j > i && similar(a, b)));

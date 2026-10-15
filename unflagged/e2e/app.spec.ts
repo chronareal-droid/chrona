@@ -28,6 +28,13 @@ test.describe('pages', () => {
     }
   });
 
+  test('each page has its own tab title', async ({ page }) => {
+    await page.goto('/privacy');
+    await expect(page).toHaveTitle('Privacy · Unflagged');
+    await page.goto('/nope');
+    await expect(page).toHaveTitle('Page not found · Unflagged');
+  });
+
   test('unknown routes show a not-found page (SPA fallback)', async ({ page }) => {
     await page.goto('/nope');
     await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
@@ -68,11 +75,28 @@ test.describe('scan form', () => {
     expect(JSON.stringify(body).length).toBeLessThan(4 * 1024 * 1024);
   });
 
+  test('a mistyped optional email is flagged instead of submitted', async ({ page }) => {
+    const api = await mockApi(page);
+    await fillScanForm(page);
+    await page.getByRole('textbox', { name: /Email/ }).fill('creator@gmail');
+    await page.getByRole('button', { name: 'Get my free risk read' }).click();
+    await expect(page.getByText('Check your email address, or leave it empty').first()).toBeVisible();
+    expect(api.createBodies).toHaveLength(0);
+    await page.getByRole('textbox', { name: /Email/ }).fill('');
+    await page.getByRole('button', { name: 'Get my free risk read' }).click();
+    await expect(page).toHaveURL(new RegExp(`/r/${SCAN_ID}$`));
+  });
+
+  test('blocks EU overseas regions too', async ({ page }) => {
+    await page.goto('/scan?loc=RE');
+    await expect(page.getByText('Unflagged isn’t available in your region yet')).toBeVisible();
+  });
+
   test('shows the daily limit message when rate limited', async ({ page }) => {
     await mockApi(page, { create: () => ({ status: 429, error: 'rate_limited' }) });
     await fillScanForm(page);
     await page.getByRole('button', { name: 'Get my free risk read' }).click();
-    await expect(page.getByText('You’ve hit today’s limit of 3 free scans')).toBeVisible();
+    await expect(page.getByText('You’ve used your 3 free scans for the last 24 hours')).toBeVisible();
   });
 });
 
@@ -106,6 +130,40 @@ test.describe('report', () => {
     await page.goto(`/r/${SCAN_ID}?paid=1`);
     await expect(page.getByText('Confirming your payment')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'All findings' })).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('a late payment webhook gets an honest note, then the page updates by itself', async ({ page }) => {
+    let paid = false;
+    await page.clock.install();
+    await mockApi(page, { scan: () => (paid ? paidScan() : freeScan()) });
+    await page.goto(`/r/${SCAN_ID}?paid=1`);
+    await expect(page.getByText('Confirming your payment')).toBeVisible();
+    await page.clock.fastForward('01:35');
+    await expect(page.getByText('We haven’t received the payment confirmation yet')).toBeVisible();
+    // "Check again" doesn't restart the 90-second clock.
+    await page.getByRole('button', { name: 'Check again' }).click();
+    await expect(page.getByText('We haven’t received the payment confirmation yet')).toBeVisible();
+    await expect(page.getByText('Confirming your payment')).toHaveCount(0);
+    paid = true;
+    const heading = page.getByRole('heading', { name: 'All findings' });
+    // Jump past the next 10-second poll, retrying in case the jump lands before that timer is set.
+    await expect.poll(async () => (await page.clock.fastForward('00:11'), heading.isVisible())).toBe(true);
+  });
+
+  test('keeps polling through a dropped connection and says so', async ({ page }) => {
+    let down = true;
+    let attempts = 0;
+    await page.clock.install();
+    await mockApi(page, { scan: () => freeScan() });
+    await page.route('**/get-scan*', (route) => (attempts++, down ? route.abort('internetdisconnected') : route.fallback()));
+    await page.goto(`/r/${SCAN_ID}`);
+    // Three failed polls (backing off 5 s, then 10 s) before the page admits it's offline.
+    await expect.poll(async () => (await page.clock.fastForward('00:11'), attempts)).toBeGreaterThanOrEqual(3);
+    await expect(page.getByRole('heading', { name: 'Can’t reach the server' })).toBeVisible();
+    down = false;
+    await page.getByRole('button', { name: 'Retry now' }).click();
+    await expect(page.getByText('Titles follow one frame')).toBeVisible();
+    await expect(page).toHaveTitle(/Your risk read: elevated/);
   });
 
   test('capacity error offers a retry that resubmits without re-uploading', async ({ page }) => {

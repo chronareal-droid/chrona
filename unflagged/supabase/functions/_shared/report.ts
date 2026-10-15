@@ -4,6 +4,8 @@ import type { Report } from "./schemas.ts";
 
 export const FREE_FINDINGS = 2;
 export const RESCAN_WINDOW_DAYS = 30;
+/** A scan still processing after this long has lost its worker (the pipeline's budget is 130 s). */
+export const STALE_PROCESSING_MS = 170_000;
 
 export interface ScanRow {
   id: string;

@@ -23,6 +23,7 @@ npm install
 npm run build             # typecheck + production build
 npm run test:functions    # deno test: signals, guards, pipeline (fake AI), webhook signatures, free/paid split
 npm run check:functions   # deno check every function
+npm run test:e2e          # Playwright, 375px phone, mocked backend (first run: npx playwright install chromium)
 ```
 
 ## First deploy (needs your accounts; see spec section 11)
@@ -31,7 +32,7 @@ npm run check:functions   # deno check every function
    ```bash
    npx supabase login
    npx supabase link --project-ref <your-project-ref>
-   npx supabase db push
+   npx supabase db push          # every migration, including the atomic rate-limit RPCs
    cp supabase/functions/.env.example supabase/functions/.env   # fill it in
    #   IP_SALT: any long random string (openssl rand -hex 32)
    #   MODEL_EXTRACT / MODEL_JUDGE: two different Flash-Lite models that accept images + JSON schema.
@@ -44,10 +45,13 @@ npm run check:functions   # deno check every function
    `DODO_PRODUCT_ID`. Add a webhook pointing at `https://<project-ref>.supabase.co/functions/v1/dodo-webhook`
    subscribed to `payment.succeeded`, and set its signing secret (`whsec_...`) as `DODO_WEBHOOK_SECRET`.
    `DODO_MODE=test` uses `test.dodopayments.com`; switch to `live` with live keys once you're verified.
-3. **Cloudflare Pages**: `npm run deploy:pages` (or connect the repo with root `unflagged`, build `npm run build`,
-   output `dist`). Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_POSTHOG_KEY` in the Pages project,
+3. **Cloudflare Pages**: `npm run deploy:pages` (or connect the repo with root `unflagged`, build command
+   `npm run check:launch && npm run build`, output `dist`). `check:launch` refuses a build with an empty
+   `VITE_SUPABASE_URL` or the placeholder support email. Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_POSTHOG_KEY` in the Pages project,
    then set `SITE_URL` in Supabase secrets to the pages.dev URL (it controls CORS and the checkout return URL).
-4. Set a real inbox in `src/lib/brand.ts → supportEmail` (shown on the privacy, terms and refunds pages).
+4. Set a real inbox in `src/lib/brand.ts → supportEmail` (shown on the privacy, terms and refunds pages, and to
+   anyone whose payment confirmation is late).
+5. **PostHog**: Project settings → turn on "Discard client IP data". The privacy page says IPs are discarded.
 
 ## QA helpers
 

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { track } from '../lib/analytics';
 import { BRAND, PRICE } from '../lib/brand';
+import { useTitle } from '../lib/useTitle';
 
 const PROOF = [
   'July 16, 2026: YouTube spelled out 3 “inauthentic content” categories that can’t be monetized.',
@@ -52,6 +53,7 @@ function Cta({ className = '' }: { className?: string }) {
 }
 
 export default function Landing() {
+  useTitle(`${BRAND.name} — ${BRAND.tagline}`);
   useEffect(() => track('landing_view'), []);
 
   return (

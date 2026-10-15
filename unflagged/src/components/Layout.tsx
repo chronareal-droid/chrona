@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom';
+import { MISCONFIGURED } from '../lib/api';
 import { BRAND } from '../lib/brand';
 import { DEMO } from '../lib/demo';
 
@@ -26,13 +27,18 @@ export default function Layout() {
           Demo with sample data. Nothing you enter leaves this page, and no payment is taken.
         </div>
       )}
+      {MISCONFIGURED && (
+        <div role="alert" className="no-print border-b border-high/40 bg-high/10 px-4 py-2 text-center text-xs text-high">
+          This build has no backend configured (VITE_SUPABASE_URL is empty), so scans can’t run. Rebuild with the env set.
+        </div>
+      )}
       <header className="no-print mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4">
         <Logo />
         <Link to="/scan" className="rounded-full border border-line px-3 py-1.5 text-sm text-slate-200 hover:border-accent">
           Free scan
         </Link>
       </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16">
+      <main className="mx-auto w-full min-w-0 max-w-3xl flex-1 px-4 pb-16 [overflow-wrap:anywhere]">
         <Outlet />
       </main>
       <footer className="no-print border-t border-line">

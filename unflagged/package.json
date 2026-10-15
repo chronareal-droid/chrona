@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test:functions": "cd supabase/functions && deno test --allow-env",
     "check:functions": "cd supabase/functions && deno check */index.ts _shared/*.ts",
-    "deploy:pages": "npm run build && npx wrangler pages deploy dist --project-name unflagged",
+    "check:launch": "node scripts/check-launch.mjs",
+    "deploy:pages": "npm run check:launch && npm run build && npx wrangler pages deploy dist --project-name unflagged",
     "build:demo": "tsc -b && vite build --config vite.demo.config.ts && node scripts/demo-page.mjs",
     "build:e2e": "vite build --mode e2e --outDir dist-e2e",
     "test:e2e": "playwright test"

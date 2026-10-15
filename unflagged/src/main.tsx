@@ -1,6 +1,7 @@
 import { lazy, StrictMode, Suspense, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import { DEMO } from './lib/demo';
 import { captureSrc } from './lib/src';
@@ -18,6 +19,18 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 captureSrc();
 
+// After a deploy, an open tab can ask for page chunks that no longer exist. Reload once to pick up the new build.
+window.addEventListener('vite:preloadError', (event) => {
+  try {
+    if (sessionStorage.getItem('unflagged_reloaded')) return;
+    sessionStorage.setItem('unflagged_reloaded', '1');
+  } catch {
+    return;
+  }
+  event.preventDefault();
+  location.reload();
+});
+
 // The demo runs inside a page that can't route real paths, so it keeps the route in memory.
 const Router = DEMO ? MemoryRouter : BrowserRouter;
 
@@ -31,6 +44,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Router>
       <ScrollToTop />
+      <ErrorBoundary>
       <Suspense fallback={<p className="pt-10 text-center text-muted">Loading…</p>}>
         <Routes>
           <Route element={<Layout />}>
@@ -45,6 +59,7 @@ createRoot(document.getElementById('root')!).render(
           </Route>
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </Router>
   </StrictMode>,
 );

@@ -25,5 +25,8 @@ body { @apply bg-ink text-slate-100 antialiased; }
   .no-print { display: none !important; }
   .print-plain { background: #fff !important; color: #111 !important; border-color: #ccc !important; box-shadow: none !important; }
   .print-plain * { color: #111 !important; }
-  section, li { break-inside: avoid; }
+  /* Keep list items and short cards whole, but let sections and list-holding cards flow across pages:
+     a block taller than a page that "avoids" breaking gets pushed to a new page, leaving a blank one before it. */
+  li, .print-plain:not(:has(li)) { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
 }

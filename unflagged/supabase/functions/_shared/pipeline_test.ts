@@ -106,3 +106,45 @@ Deno.test("dedupeVideos / truncateScripts", () => {
   assertEquals(t.length, 2);
   assertEquals(t[0].split(" ").length, 3000 + 1); // + "[...truncated]"
 });
+
+Deno.test("pipeline: an empty or broken AI reply gets the one retry too", async () => {
+  const h = harness([
+    () => {
+      throw new PipelineError("bad_output", "model returned no text (finishReason SAFETY)");
+    },
+    () => extraction,
+    () => sampleReport(),
+  ]);
+  await runPipeline(input, h.deps);
+  assertEquals(h.merged().status, "done");
+  assert((h.calls[1].parts.at(-1) as { text: string }).text.includes("not valid JSON"));
+});
+
+Deno.test("pipeline: numbered titles are different videos", () => {
+  const parts = [1, 2, 3, 4, 5].map((n) => ({ title: `Minecraft Hardcore Day ${n}`, duration_text: null, views_text: null, age_text: null, thumbnail: null }));
+  assertEquals(dedupeVideos([...parts, parts[0]]).length, 5);
+});
+
+Deno.test("pipeline: the time budget counts from when the request arrived", async () => {
+  const h = harness([() => extraction, () => sampleReport()]);
+  const t = 1_000_000;
+  await runPipeline(input, { ...h.deps, now: () => t, startedAt: t - 20_000, budgetMs: 130_000 });
+  assertEquals(h.calls[1].deadline, t - 20_000 + 130_000);
+});
+
+Deno.test("pipeline: an invented quote in the headline goes back for the retry, then fails cleanly", async () => {
+  const bad = () => sampleReport({ headline: 'Titles like "my secret night in Paris" repeat.' });
+  const h = harness([() => extraction, bad, bad]);
+  await runPipeline(input, h.deps);
+  assertEquals([h.merged().status, h.merged().error_code], ["error", "bad_output"]);
+  assert((h.calls[2].parts.at(-1) as { text: string }).text.includes("headline"));
+});
+
+Deno.test("pipeline: the creator's answers may be quoted as evidence", async () => {
+  const r = sampleReport();
+  r.top_findings = [{ title: "Reused clips", evidence: 'You answered "Clips from other creators/media".', why_it_matters: "w", fix: "f" }];
+  const h = harness([() => extraction, () => r]);
+  await runPipeline({ ...input, answers: { ...answers, visuals: "others_clips" } }, h.deps);
+  assertEquals(h.merged().status, "done");
+  assertEquals(h.merged().report!.top_findings.length, 1);
+});

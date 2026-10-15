@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Prose } from '../components/ui';
 import { BRAND, PRICE } from '../lib/brand';
+import { useTitle } from '../lib/useTitle';
 
 export default function Terms() {
+  useTitle(`Terms · ${BRAND.name}`);
   return (
     <Prose>
       <h1>Terms</h1>

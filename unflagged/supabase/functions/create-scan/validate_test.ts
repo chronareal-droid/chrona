@@ -29,7 +29,11 @@ Deno.test("rejects missing 18+, too few/too many images, non-JPEGs, oversize ima
   assert(bad({ scripts: [words(100)] }));
   assert(bad({ scripts: [words(2600)] }));
   assert(bad({ answers: { ...ok.answers, voice: "robot" } }));
-  assert(bad({ email: "not-an-email" }));
+});
+
+Deno.test("an invalid optional email is dropped instead of failing the scan", () => {
+  assertEquals(CreateScanSchema.parse({ ...ok, email: "me@gmail" }).email, null);
+  assertEquals(CreateScanSchema.parse({ ...ok, email: " Me@Example.com " }).email, "me@example.com");
 });
 
 Deno.test("a junk src is ignored rather than failing the scan", () => {

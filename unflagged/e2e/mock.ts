@@ -126,5 +126,6 @@ export async function fillScanForm(page: Page) {
 }
 
 export async function noHorizontalScroll(page: Page): Promise<number> {
-  return page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  // clientWidth excludes a vertical scrollbar, so a page that only scrolls vertically still measures 0.
+  return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 }

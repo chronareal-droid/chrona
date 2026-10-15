@@ -28,9 +28,11 @@ export const CreateScanSchema = z.object({
   scripts: z.array(Script).max(3).default([]),
   answers: AnswersSchema,
   niche: z.string().trim().max(80).optional().transform((s) => s || null),
+  // Optional "launch news" email: a typo here must never block the free scan, so an invalid one is just dropped.
   email: z
     .union([z.literal(""), z.string().trim().toLowerCase().email().max(254)])
     .optional()
+    .catch(undefined)
     .transform((s) => s || null),
   ageConfirmed: z.literal(true),
   src: z

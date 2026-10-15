@@ -3,11 +3,13 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, Chips } from '../components/ui';
 import { ApiError, api, rememberPayload } from '../lib/api';
 import { track } from '../lib/analytics';
+import { BRAND } from '../lib/brand';
 import { DEMO, SAMPLE_SCRIPT, sampleScreenshot } from '../lib/demo';
 import { ACCEPT, resizeToJpeg, wordCount } from '../lib/image';
 import { checkRegion, type RegionState } from '../lib/region';
 import { getSrc } from '../lib/src';
 import type { Answers, CreateScanPayload } from '../lib/types';
+import { useTitle } from '../lib/useTitle';
 
 const MIN_SHOTS = 2;
 const MAX_SHOTS = 4;
@@ -79,8 +81,11 @@ const QUESTIONS: { key: keyof Answers; label: string; options: { value: string; 
 
 const EMPTY_ANSWERS: Answers = { monetization: '', voice: '', visuals: '', scripts: '', opinion: '', uploads: '' };
 
+/** Same shape the server accepts: something@domain.tld (catches the common "me@gmail" typo). */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 const ERRORS: Record<string, string> = {
-  rate_limited: 'You’ve hit today’s limit of 3 free scans. Try again tomorrow.',
+  rate_limited: 'You’ve used your 3 free scans for the last 24 hours. Try again later.',
   too_large: 'Those screenshots are too large. Try fewer or smaller ones.',
   invalid: 'Something in the form isn’t right. Check the fields and try again.',
   rescan_unavailable: 'This re-scan link has expired or isn’t valid.',
@@ -110,6 +115,7 @@ export default function Scan() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const rescanOf = params.get('rescan') ?? undefined;
+  useTitle(`${rescanOf ? 'Your re-scan' : 'Free scan'} · ${BRAND.name}`);
 
   const [region, setRegion] = useState<RegionState>('checking');
   const [shots, setShots] = useState<string[]>([]);
@@ -145,17 +151,25 @@ export default function Scan() {
     const picked = [...files].slice(0, room);
     if (files.length > room) setShotError(`Up to ${MAX_SHOTS} screenshots.`);
     setProcessing(true);
-    try {
-      const out: string[] = [];
-      for (const f of picked) out.push(await resizeToJpeg(f));
+    // Each file on its own: one unsupported file (e.g. a HEIC) mustn't throw away the ones that worked.
+    const out: string[] = [];
+    const failed: string[] = [];
+    for (const f of picked) {
+      try {
+        out.push(await resizeToJpeg(f));
+      } catch {
+        failed.push(f.name);
+      }
+    }
+    if (out.length) {
       setShots((s) => [...s, ...out]);
       track('screenshots_added', { count: shots.length + out.length });
-    } catch (e) {
-      setShotError((e as Error).message);
-    } finally {
-      setProcessing(false);
-      if (fileInput.current) fileInput.current.value = '';
     }
+    if (failed.length) {
+      setShotError(`${failed.join(', ')} ${failed.length === 1 ? 'isn’t' : 'aren’t'} supported. Use PNG, JPG or WEBP screenshots.`);
+    }
+    setProcessing(false);
+    if (fileInput.current) fileInput.current.value = '';
   }
 
   function fillSample() {
@@ -172,10 +186,12 @@ export default function Scan() {
     w === 0 || (w >= SCRIPT_MIN && w <= SCRIPT_MAX) ? null : w < SCRIPT_MIN ? `At least ${SCRIPT_MIN} words` : `At most ${SCRIPT_MAX} words`,
   );
   const unanswered = QUESTIONS.filter((q) => !answers[q.key]).map((q) => q.label);
+  const emailProblem = email.trim() && !EMAIL_RE.test(email.trim()) ? 'Check your email address, or leave it empty' : null;
   const problems = [
     shots.length < MIN_SHOTS && `Add at least ${MIN_SHOTS} screenshots`,
     scriptProblems.some(Boolean) && 'Fix the script word counts',
     unanswered.length > 0 && `Answer: ${unanswered.join(', ')}`,
+    emailProblem,
     !age && 'Confirm you’re 18 or older',
   ].filter((p): p is string => !!p);
 
@@ -211,7 +227,7 @@ export default function Scan() {
   if (region === 'blocked') {
     return (
       <Card className="mt-6 space-y-3 text-center">
-        <h1 className="text-2xl font-bold">Unflagged isn’t available in your region yet</h1>
+        <h1 className="text-2xl font-bold">{BRAND.name} isn’t available in your region yet</h1>
         <p className="text-slate-300">
           We can’t offer scans in the EU/EEA, the UK or Switzerland yet. We’re working on it.
         </p>
@@ -274,13 +290,13 @@ export default function Scan() {
           type="file"
           accept={ACCEPT}
           multiple
-          className="sr-only"
+          className="peer sr-only"
           onChange={(e) => void addFiles(e.target.files)}
           disabled={shots.length >= MAX_SHOTS || processing}
         />
         <label
           htmlFor="shots"
-          className={`flex min-h-14 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-line font-medium hover:border-accent ${shots.length >= MAX_SHOTS ? 'pointer-events-none opacity-40' : ''}`}
+          className={`flex min-h-14 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-line font-medium hover:border-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${shots.length >= MAX_SHOTS ? 'pointer-events-none opacity-40' : ''}`}
         >
           {processing ? 'Preparing…' : shots.length ? `Add more (${shots.length}/${MAX_SHOTS})` : 'Choose screenshots'}
         </label>
@@ -345,8 +361,10 @@ export default function Scan() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="min-h-12 w-full rounded-xl border border-line bg-panel px-3 text-base placeholder:text-muted focus:border-accent focus:outline-none"
+            aria-invalid={showErrors && !!emailProblem}
+            className={`min-h-12 w-full rounded-xl border bg-panel px-3 text-base placeholder:text-muted focus:border-accent focus:outline-none ${showErrors && emailProblem ? 'border-high' : 'border-line'}`}
           />
+          {showErrors && emailProblem && <span className="mt-1 block text-sm text-high">{emailProblem}</span>}
         </label>
       </section>
 

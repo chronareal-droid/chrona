@@ -1,7 +1,9 @@
 import { Prose } from '../components/ui';
 import { BRAND } from '../lib/brand';
+import { useTitle } from '../lib/useTitle';
 
 export default function Refunds() {
+  useTitle(`Refunds · ${BRAND.name}`);
   return (
     <Prose>
       <h1>Refunds</h1>

@@ -13,6 +13,8 @@ export interface GenerateJsonArgs {
   schema: unknown;
   /** Absolute epoch-ms deadline for this call, retries included. */
   deadline: number;
+  /** Cap on the reply length, so a runaway (repeating) reply fails fast instead of eating the time budget. */
+  maxOutputTokens?: number;
 }
 
 export type GenerateJson = (args: GenerateJsonArgs) => Promise<unknown>;
@@ -61,15 +63,17 @@ async function callGemini(args: GenerateJsonArgs, signal: AbortSignal): Promise<
       responseMimeType: "application/json",
       responseJsonSchema: args.schema,
       temperature: 0.2,
+      maxOutputTokens: args.maxOutputTokens ?? 8192,
       abortSignal: signal,
     },
   });
   const text = res.text;
-  if (!text) throw new PipelineError("bad_output", "model returned no text");
+  const finish = res.candidates?.[0]?.finishReason ?? "unknown";
+  if (!text) throw new PipelineError("bad_output", `model returned no text (finishReason ${finish})`);
   try {
     return JSON.parse(text);
   } catch {
-    throw new PipelineError("bad_output", "model returned invalid JSON");
+    throw new PipelineError("bad_output", `model returned invalid JSON (finishReason ${finish})`);
   }
 }
 

@@ -9,9 +9,10 @@ import {
   parseAge,
   parseDuration,
   scriptSignals,
+  titleKey,
   titleSignals,
 } from "./signals.ts";
-import { GENERIC_AI_PHRASES } from "./phrases.ts";
+import { GENERIC_AI_PHRASES, OPINION_MARKERS } from "./phrases.ts";
 
 Deno.test("normalizeTitle lowercases, maps digits and strips punctuation", () => {
   assertEquals(normalizeTitle("Top 10 SCARIEST Places on Earth!!"), "top # scariest places on earth");
@@ -173,4 +174,30 @@ Deno.test("computeSignals + describeSignals produce labeled lines without script
   // The stored signals object must never carry script text.
   const json = JSON.stringify(sig);
   assert(!json.includes("tapestry") && !json.includes("Rome"));
+});
+
+Deno.test("titleKey keeps digits, so numbered episodes stay separate videos", () => {
+  assertEquals(titleKey("Day 1: I Built a Base!"), "day 1 i built a base");
+  assert(titleKey("Part 1") !== titleKey("Part 2"));
+  assertEquals(titleKey("Top 10 Scariest Places"), titleKey("TOP 10 scariest places!!"));
+});
+
+Deno.test("countPhrases counts overlapping list entries once", () => {
+  assertEquals(countPhrases("In my view, this matters.", OPINION_MARKERS), 1);
+  assertEquals(countPhrases("A rich tapestry of history.", GENERIC_AI_PHRASES), 1);
+  assertEquals(countPhrases("Unlock the secrets of Rome.", GENERIC_AI_PHRASES), 1);
+});
+
+Deno.test("scriptSignals stays fast on the largest valid input (CPU budget)", () => {
+  const vocab = Array.from({ length: 2000 }, (_, i) => `w${i.toString(36)}`);
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // 3 × 2,499 words, five words per line: the old all-pairs comparison took ~2.5 s on this.
+  const script = () => Array.from({ length: 500 }, () => Array.from({ length: 5 }, () => vocab[Math.floor(rnd() * 2000)]).join(" ")).join("\n");
+  const inputs = [script(), script(), script()];
+  scriptSignals(inputs); // warm-up (JIT)
+  const t0 = performance.now();
+  scriptSignals(inputs);
+  const ms = performance.now() - t0;
+  assert(ms < 400, `scriptSignals took ${ms.toFixed(0)} ms`);
 });
