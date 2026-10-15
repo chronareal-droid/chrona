@@ -10,6 +10,7 @@
     "typecheck": "tsc -b",
     "test:functions": "cd supabase/functions && deno test --allow-env",
     "check:functions": "cd supabase/functions && deno check */index.ts _shared/*.ts",
+    "test:db": "node supabase/tests/migrations.test.mjs",
     "check:launch": "node scripts/check-launch.mjs",
     "deploy:pages": "npm run check:launch && npm run build && npx wrangler pages deploy dist --project-name unflagged",
     "build:demo": "tsc -b && vite build --config vite.demo.config.ts && node scripts/demo-page.mjs",
@@ -23,6 +24,7 @@
     "react-router-dom": "^7.9.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.11",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/vite": "^4.1.13",
     "@types/react": "^19.1.13",

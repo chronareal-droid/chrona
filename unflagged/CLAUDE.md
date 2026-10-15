@@ -55,4 +55,5 @@ Brand name, prices and copy constants live in `src/lib/brand.ts` (renaming = edi
 - `npm run dev` / `npm run build` / `npm run typecheck`
 - `npm run test:functions` (deno test) / `npm run check:functions` (deno check)
 - `npm run test:e2e` (Playwright against a production build with a mocked backend; 375px viewport)
+- `npm run test:db` (every migration on PGlite + checks of `create_scan` / `create_rescan`)
 - `npm run check:launch` (fails on a placeholder support email or missing Supabase env; part of `deploy:pages`)

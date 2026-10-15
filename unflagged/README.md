@@ -24,6 +24,7 @@ npm run build             # typecheck + production build
 npm run test:functions    # deno test: signals, guards, pipeline (fake AI), webhook signatures, free/paid split
 npm run check:functions   # deno check every function
 npm run test:e2e          # Playwright, 375px phone, mocked backend (first run: npx playwright install chromium)
+npm run test:db           # applies the migrations to in-process Postgres (PGlite) and checks the limit functions
 ```
 
 ## First deploy (needs your accounts; see spec section 11)
