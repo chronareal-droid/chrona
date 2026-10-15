@@ -14,8 +14,12 @@ Deno.serve(async (req) => {
       return text("invalid signature", 401);
     }
     const evt = JSON.parse(raw) as PaymentEvent;
-    const paid = paidScanFromEvent(evt);
+    const paid = paidScanFromEvent(evt, Deno.env.get("DODO_PRODUCT_ID"));
     if (!paid) return text("ignored");
+    if ("wrongProduct" in paid) {
+      console.error(JSON.stringify({ fn: "dodo-webhook", error: "payment.succeeded for another product; check DODO_PRODUCT_ID" }));
+      return text("ignored");
+    }
     if (!isUuid(paid.scanId)) return text("unknown scan");
 
     const { error } = await db()

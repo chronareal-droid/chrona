@@ -84,16 +84,32 @@ export async function verifyWebhook(
     .some(([ver, sig]) => ver === "v1" && !!sig && timingSafeEqual(sig, expected));
 }
 
+/** The parts of Dodo's webhook envelope we read: `{ business_id, type, timestamp, data: Payment }`. */
 export interface PaymentEvent {
   type: string;
-  data?: { payment_id?: string; metadata?: Record<string, unknown>; status?: string };
+  data?: {
+    payment_id?: string;
+    metadata?: Record<string, unknown>;
+    status?: string | null;
+    product_cart?: { product_id: string; quantity: number }[] | null;
+  };
 }
 
-/** Returns { scanId, paymentId } for a successful payment event, else null. */
-export function paidScanFromEvent(evt: PaymentEvent): { scanId: string; paymentId: string } | null {
+export type PaidScan = { scanId: string; paymentId: string };
+
+/**
+ * Returns { scanId, paymentId } for a successful payment of the Full Report, else null. When the payment lists its
+ * products and none is `productId`, it isn't ours to unlock (another product in the same Dodo business), and
+ * `{ wrongProduct: true }` comes back so the webhook can log it loudly instead of silently ignoring it.
+ */
+export function paidScanFromEvent(evt: PaymentEvent, productId?: string): PaidScan | { wrongProduct: true } | null {
   if (evt.type !== "payment.succeeded") return null;
   const scanId = evt.data?.metadata?.scan_id;
   const paymentId = evt.data?.payment_id;
   if (typeof scanId !== "string" || typeof paymentId !== "string") return null;
+  const cart = evt.data?.product_cart;
+  if (productId && Array.isArray(cart) && cart.length && !cart.some((p) => p?.product_id === productId)) {
+    return { wrongProduct: true };
+  }
   return { scanId, paymentId };
 }
