@@ -108,7 +108,16 @@ const p2 = await paidReport('ip8');
 for (let i = 0; i < 5; i++) await fail(await rescan(p2), 'no_videos');
 assert.equal(await used(p2), true);
 assert.equal(await rescanErr(p2), 'rescan_used');
-ok('at most 5 re-scan attempts per paid report, failed ones included');
+ok('5 re-scans that failed on the creator\'s side use it up');
+
+// Failures on our side don't cost a paying customer the re-scan, but every attempt is still bounded.
+const p4 = await paidReport('ip10');
+for (let i = 0; i < 5; i++) await fail(await rescan(p4), 'capacity');
+assert.equal(await used(p4), false);
+for (let i = 0; i < 10; i++) await fail(await rescan(p4), i % 2 ? 'timeout' : 'internal');
+assert.equal(await used(p4), true);
+assert.equal(await rescanErr(p4), 'rescan_used');
+ok('capacity/timeout/internal failures are free, up to 15 attempts in all');
 
 // A re-scan whose worker died doesn't hold the slot.
 const p3 = await paidReport('ip9');
@@ -134,16 +143,20 @@ ok('re-scans are not counted toward the daily limit');
 // ---------- waitlist ----------
 
 const join = (email, ip, scanId = null) => one(`select join_waitlist($1, 'pro', $2, null, $3, 5) as r`, [email, scanId, ip]).then((r) => r.r);
+const joinErr = (email, ip, scanId = null) => err(`select join_waitlist($1, 'pro', $2, null, $3, 5)`, [email, scanId, ip]);
 assert.equal(await join('A@x.com', 'w1', p1), 'joined');
 assert.equal((await one(`select email, scan_id from waitlist where ip_hash='w1'`)).email, 'a@x.com');
 assert.equal(await join('a@X.com', 'w1'), 'already');
+assert.equal((await one(`select count(*)::int as n from waitlist where lower(email)='a@x.com'`)).n, 1);
 ok('joins once, case-insensitively; re-joining is a no-op');
 for (let i = 2; i <= 5; i++) await join(`u${i}@x.com`, 'w1');
-assert.equal(await err(`select join_waitlist('u6@x.com', 'pro', null, null, 'w1', 5)`), 'rate_limited');
-assert.equal(await join('a@x.com', 'w1'), 'already');
-ok('5 sign-ups per IP per day; an existing sign-up still gets its no-op success');
-assert.equal(await err(`select join_waitlist('z@x.com', 'pro', gen_random_uuid(), null, 'w2', 5)`), 'invalid_scan');
-ok('a scan id that does not exist is rejected');
+assert.equal(await joinErr('u6@x.com', 'w1'), 'rate_limited');
+ok('5 sign-ups per IP per day');
+// No answer may depend on whether an email is already on the list (that would reveal who signed up).
+assert.equal(await joinErr('a@x.com', 'w1'), 'rate_limited', 'a member past the limit: same answer as anyone');
+assert.equal(await joinErr('a@x.com', 'w2', '00000000-0000-4000-8000-000000000000'), 'invalid_scan');
+assert.equal(await joinErr('nobody@x.com', 'w2', '00000000-0000-4000-8000-000000000000'), 'invalid_scan');
+ok('rate limit and scan id are checked before membership');
 
 // ---------- who can do what ----------
 

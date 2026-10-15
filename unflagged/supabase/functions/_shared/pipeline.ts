@@ -228,12 +228,11 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
     const guardInputs: GuardInputs = {
       titles: videos.map((v) => v.title),
       scripts: input.scripts,
-      creatorText: videos.map((v) => v.thumbnail?.text_overlay ?? "").filter(Boolean),
+      creatorText: [...videos.map((v) => v.thumbnail?.text_overlay ?? ""), input.niche ?? ""].filter(Boolean),
       otherText: [
         ...videos.map(describeVideo),
         ...describeSignals(signals),
         ...answerTexts(input.answers),
-        input.niche ?? "",
         extraction.notes ?? "",
         JUDGE_SYSTEM_PROMPT,
       ],

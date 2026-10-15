@@ -105,3 +105,30 @@ Deno.test("a long title quoted in a free and a later finding is not a paid leak"
   r.top_findings[0].fix = "Record a two minute personal intro for each of your list videos this week";
   assert(reportIssues(r, inputs).some((m) => m.includes("later findings")));
 });
+
+Deno.test("a title that starts with a number is still a quote, so an invented one is caught", () => {
+  assertEquals(quotesIn("Titles like '7 Cursed Islands You Must Never Visit' repeat."), ["7 Cursed Islands You Must Never Visit"]);
+  assertEquals(quotesIn("Titles like '10 Places You Should Never Visit' repeat."), ["10 Places You Should Never Visit"]);
+  assertEquals(quotesIn("Back in '24 your '90s recaps took off."), []);
+  const r = sampleReport({ headline: "Titles like '7 Cursed Islands You Must Never Visit' follow one frame." });
+  assertEquals(applyGuards(r, { titles: TITLES, scripts: [SCRIPT] }).ungrounded, ["headline"]);
+});
+
+Deno.test("sentences that differ only in the creator title they quote are not a paid leak", () => {
+  const inputs = { titles: TITLES, scripts: [SCRIPT] };
+  const r = sampleReport();
+  r.top_findings[0].fix = 'Add a personal intro to "Top 10 Scariest Places in Japan" explaining why you picked each place.';
+  r.top_findings[3].fix = 'Add a personal intro to "The Lost City Nobody Talks About" explaining why you picked each place.';
+  assertEquals(reportIssues(r, inputs), []);
+});
+
+Deno.test("an ellipsis-shortened creator line and the creator's niche can be quoted", () => {
+  const inputs = { titles: TITLES, scripts: [OUTRO], creatorText: ["safe investing for beginners"] };
+  const r = sampleReport();
+  r.categories[3].evidence = ['Every script ends "Stay safe out there... see you in the next one"'];
+  r.categories[2].summary = 'Your niche, "safe investing for beginners", is a sensitive topic.';
+  assertEquals(reportIssues(r, inputs), []);
+  // A scare quote doesn't become the creator's by borrowing one real word around an ellipsis.
+  const scare = sampleReport({ headline: 'You look "safe... out" of trouble.' });
+  assert(reportIssues(scare, inputs)[0].includes("guaranteed"));
+});

@@ -33,7 +33,8 @@ Brand name, prices and copy constants live in `src/lib/brand.ts` (renaming = edi
   a report link is a bearer key and never goes to analytics. Feature flags, surveys, heatmaps and the like stay off:
   they send data without passing `before_send` (the e2e suite checks every request PostHog would receive).
 - Limits are atomic in Postgres (RPCs under an advisory lock or row lock): 3 scans and 10 attempts per salted-IP-hash
-  (IPv6 grouped by /64) per day; one re-scan per paid report, at most 5 attempts (`create_rescan`, `rescan_used`);
+  (IPv6 grouped by /64) per day; one re-scan per paid report (`create_rescan`, `rescan_used`): failures on our side
+  (capacity, timeout, internal) don't use it up, 5 failures on the creator's side do, and 15 attempts in all do;
   5 waitlist sign-ups per IP hash per day (`join_waitlist`). Stranded `processing` rows are expired before counting.
 
 ## Pipeline (`_shared/pipeline.ts`, runs under `EdgeRuntime.waitUntil` in `create-scan`)

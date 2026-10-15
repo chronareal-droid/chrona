@@ -13,6 +13,8 @@ const POLL_MS = 2_500;
 const SLOW_POLL_MS = 10_000;
 /** After this long a scan still processing gets the "taking longer" screen (the server fails it at ~170 s). */
 const PROCESSING_SLOW_MS = 3 * 60_000;
+/** Return statuses after which the payment can no longer succeed. Anything else (processing, requires_*) may. */
+const FAILED_RETURN = ['failed', 'cancelled', 'expired'];
 /** Back from checkout: after this long without the payment webhook, say so (but keep checking). */
 const PAYMENT_LATE_MS = 90_000;
 const PAYMENT_GIVE_UP_MS = 15 * 60_000;
@@ -100,11 +102,13 @@ function useScan(id: string, waitForPayment: boolean) {
 export default function ReportPage() {
   const { id = '' } = useParams();
   const [params] = useSearchParams();
-  // Back from checkout. Dodo adds the payment's status to the return URL: only wait for the webhook when the payment
-  // can still succeed; a failed or cancelled one goes straight back to the Unlock button.
-  const returnStatus = params.get('status');
-  const paymentFailed = params.get('paid') === '1' && !!returnStatus && !['succeeded', 'processing'].includes(returnStatus);
+  // Back from checkout. Dodo adds the payment's status to the return URL: wait for the webhook unless the payment
+  // can no longer succeed (failed, cancelled), which goes straight back to the Unlock button.
+  const returnStatus = params.get('status')?.toLowerCase() ?? null;
+  const paymentFailed = params.get('paid') === '1' && FAILED_RETURN.includes(returnStatus ?? '');
   const paidParam = params.get('paid') === '1' && !paymentFailed;
+  // Dodo said it went through: never offer to take the money again, however late the confirmation is.
+  const paidReported = paidParam && returnStatus === 'succeeded';
   const { scan, phase, confirm, offline, refresh } = useScan(id, paidParam);
   const tracked = useRef(false);
 
@@ -179,7 +183,15 @@ export default function ReportPage() {
         </Card>
       )}
       {scan.paid && scan.report ? <FullReport scan={scan} report={scan.report} /> : scan.free && scan.locked && (
-        <FreeView scan={scan} free={scan.free} locked={scan.locked} confirm={confirm} paymentFailed={paymentFailed} onPaid={refresh} />
+        <FreeView
+          scan={scan}
+          free={scan.free}
+          locked={scan.locked}
+          confirm={confirm}
+          paymentFailed={paymentFailed}
+          paidReported={paidReported}
+          onPaid={refresh}
+        />
       )}
     </div>
   );
@@ -356,6 +368,7 @@ function FreeView({
   locked,
   confirm,
   paymentFailed,
+  paidReported,
   onPaid,
 }: {
   scan: PublicScan;
@@ -363,6 +376,7 @@ function FreeView({
   locked: LockedCounts;
   confirm: Confirm;
   paymentFailed: boolean;
+  paidReported: boolean;
   onPaid: () => void;
 }) {
   const navigate = useNavigate();
@@ -430,7 +444,7 @@ function FreeView({
         {paymentFailed && confirm === 'none' && (
           <p className="text-center text-sm text-high">The payment didn’t go through. You can try again.</p>
         )}
-        {confirm === 'waiting' ? (
+        {confirm === 'waiting' || (confirm === 'late' && paidReported) ? (
           <p className="text-center text-sm text-slate-300">Your payment is being confirmed. The full report will appear here.</p>
         ) : (
           <>

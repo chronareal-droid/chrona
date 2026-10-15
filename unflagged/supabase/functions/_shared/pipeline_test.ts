@@ -152,7 +152,8 @@ Deno.test("pipeline: the creator's answers may be quoted as evidence", async () 
 Deno.test("pipeline: video details and signal lines the judge was shown can be quoted in a summary", async () => {
   const r = sampleReport();
   r.categories[0].summary = 'Uploads from "1 days ago" to "5 days ago" all run about ten minutes.';
-  r.categories[1].summary = 'Thumbnails share "colors: red" and one layout.';
+  r.categories[1].summary = 'Thumbnails share "thumbnail: photo; colors: red" and one layout.';
+  r.categories[2].summary = 'Signals show "of 5 titles share one 3-word frame".';
   const h = harness([() => extraction, () => r]);
   await runPipeline(input, h.deps);
   assertEquals(h.merged().status, "done");

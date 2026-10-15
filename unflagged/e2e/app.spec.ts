@@ -184,6 +184,25 @@ test.describe('report', () => {
     await expect.poll(() => api.checkoutCalls).toBe(1);
   });
 
+  test('a late confirmation never offers to charge again when Dodo said the payment succeeded', async ({ page }) => {
+    await page.clock.install();
+    await mockApi(page, { scan: () => freeScan() });
+    await page.goto(`/r/${SCAN_ID}?paid=1&payment_id=pay_1&status=succeeded`);
+    await expect(page.getByText('Confirming your payment')).toBeVisible();
+    await page.clock.fastForward('01:35');
+    await expect(page.getByText('We haven’t received the payment confirmation yet')).toBeVisible();
+    await expect(page.getByText('Your payment is being confirmed.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unlock full report — $29' })).toHaveCount(0);
+  });
+
+  test('a payment still in progress (requires_*) is waited for, not treated as failed', async ({ page }) => {
+    await mockApi(page, { scan: () => freeScan() });
+    await page.goto(`/r/${SCAN_ID}?paid=1&payment_id=pay_1&status=requires_merchant_action`);
+    await expect(page.getByText('Confirming your payment')).toBeVisible();
+    await expect(page.getByText('The payment didn’t go through')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Unlock full report — $29' })).toHaveCount(0);
+  });
+
   test('analytics never receive a report id or a payment id', async ({ page }) => {
     const sent = await mockAnalytics(page);
     // posthog-js drops everything from automated browsers (navigator.webdriver, a "HeadlessChrome" brand): look like

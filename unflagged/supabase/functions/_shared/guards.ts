@@ -13,15 +13,18 @@ export function looseNormalize(s: string): string {
 
 /**
  * Quoted spans in a piece of model text: "double", “curly double”, ‘curly single’ and 'straight single' quotes.
- * Apostrophes inside words (don't, they’re, Sam's) are not treated as quote marks, and neither is the one in an
- * elision ('90s, 'til, 'em), which would otherwise pair with a plural possessive (creators') into a bogus quote.
+ * Apostrophes inside words (don't, they’re, Sam's) are not quote marks, and neither is an elision ('90s, '24, 'til,
+ * 'em), which would otherwise pair with a plural possessive (creators') into a bogus quote. A title that starts with a
+ * number ('10 Places You Should Never Visit') is still a quote.
  */
+const QUOTE_PATTERNS = [
+  /["“”]([^"“”]+)["“”]/g,
+  /‘(?!\d\ds\b)([^"“”]+?)’(?![\p{L}\p{N}])/gu,
+  /(?<![\p{L}\p{N}])'(?!\d\ds\b|\d\d\b(?!\s\p{Lu})|(?:til|em|cause|bout|n)\b)([^"“”]+?)'(?![\p{L}\p{N}])/gu,
+];
+
 export function quotesIn(text: string): string[] {
-  const out: string[] = [];
-  for (const m of text.matchAll(/["“”]([^"“”]+)["“”]/g)) out.push(m[1]);
-  for (const m of text.matchAll(/‘(?!\p{N})([^"“”]+?)’(?![\p{L}\p{N}])/gu)) out.push(m[1]);
-  for (const m of text.matchAll(/(?<![\p{L}\p{N}])'(?!\p{N}|(?:til|em|cause|bout|n)\b)([^"“”]+?)'(?![\p{L}\p{N}])/gu)) out.push(m[1]);
-  return out;
+  return QUOTE_PATTERNS.flatMap((re) => [...text.matchAll(re)].map((m) => m[1]));
 }
 
 /**
@@ -40,7 +43,7 @@ export function textIsGrounded(text: string, corpus: string): boolean {
 export interface GuardInputs {
   titles: string[];
   scripts: string[];
-  /** The creator's own words besides titles and scripts: thumbnail text overlays. */
+  /** The creator's own words besides titles and scripts: thumbnail text overlays, their niche. */
   creatorText?: string[];
   /** Everything else the judge is shown and may quote: video details, signals, answers, niche, the policy brief. */
   otherText?: string[];
@@ -60,24 +63,33 @@ export function buildCorpus(inputs: GuardInputs): string {
 const creatorTexts = (inputs: GuardInputs) => [...inputs.titles, ...inputs.scripts, ...(inputs.creatorText ?? [])];
 
 /**
- * The text with the creator's own quoted words taken out, so the checks below judge only what the model wrote:
- * a quote goes if it is a whole title, or at least `minWords` words that appear in the creator's material.
- * Short quotes otherwise stay, so a scare-quoted "safe" is still the model's word.
+ * The text with the creator's own quoted words swapped out, so the checks below judge only what the model wrote.
+ * A quote counts as the creator's if it is a whole title, or if it appears in their material (titles, scripts,
+ * thumbnail text, niche) with at least `minWords` words in one piece (an ellipsis splits a quote into pieces, as in
+ * grounding). Short quotes otherwise stay, so a scare-quoted "safe" is still the model's word. Each different quote
+ * becomes its own placeholder, so two sentences that differ only in the title they quote still differ.
  */
 export function creatorQuoteStripper(inputs?: GuardInputs): (text: string, minWords: number) => string {
   if (!inputs) return (text) => text;
   const corpus = ` ${creatorTexts(inputs).map(looseNormalize).join(" | ")} `; // built once per report
   const titles = new Set(inputs.titles.map(titleKey));
-  return (text, minWords) => {
-    let out = text;
-    for (const q of quotesIn(text)) {
-      const n = looseNormalize(q);
-      if (!n) continue;
-      const isCreators = titles.has(titleKey(q)) || (n.split(" ").length >= minWords && corpus.includes(` ${n} `));
-      if (isCreators) out = out.split(q).join(" ");
-    }
-    return out;
+  const tokens = new Map<string, string>();
+  const token = (normalized: string) => {
+    let t = tokens.get(normalized);
+    if (!t) tokens.set(normalized, (t = ` qz${tokens.size}qz `));
+    return t;
   };
+  const isCreators = (q: string, minWords: number) => {
+    if (titles.has(titleKey(q))) return true;
+    const pieces = q.split(/\.\.\.|…/).map(looseNormalize).filter(Boolean);
+    return pieces.length > 0 && pieces.every((p) => corpus.includes(` ${p} `)) &&
+      pieces.some((p) => p.split(" ").length >= minWords);
+  };
+  return (text, minWords) =>
+    QUOTE_PATTERNS.reduce(
+      (out, re) => out.replace(re, (span, inner: string) => (isCreators(inner, minWords) ? token(looseNormalize(inner)) : span)),
+      text,
+    );
 }
 
 export function applyGuards(report: Report, inputs: GuardInputs): GuardResult {
