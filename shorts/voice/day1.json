@@ -1,15 +1,19 @@
 {
-  "voice": "af_heart",
+  "voice": "am_michael",
   "speed": 1.05,
-  "duration": 25,
+  "layout": "auto",
+  "gap": 0.4,
+  "lead": 0.12,
+  "tail": 1.6,
+  "grid": 0.1,
   "output": "public/voice.mp3",
   "timings": "src/videos/day1.voice.json",
   "lines": [
-    { "scene": 0, "at": 0.1, "say": "YouTube | is | switching | off | faceless | channels." },
-    { "scene": 1, "at": 3.1, "say": "Sixteen | channels. | Thirty-five million | subscribers. | Gone." },
-    { "scene": 2, "at": 7.15, "say": "Three | kinds | of | videos | YouTube | won't | pay | for." },
-    { "scene": 3, "at": 11.15, "say": "Most | creators | don't | know | which | one | they're | making." },
-    { "scene": 4, "at": 15.2, "say": "I'm | building | a | tool | in | forty-eight | hours | that | tells | you | first." },
-    { "scene": 5, "at": 21.15, "say": "Launches | Friday. | Follow | to | get | it | first." }
+    { "scene": 0, "say": "YouTube | is | switching | off | faceless | channels." },
+    { "scene": 1, "say": "Sixteen | channels. | Thirty-five million | subscribers. | Gone." },
+    { "scene": 2, "say": "Three | kinds | of | videos | YouTube | won't | pay | for." },
+    { "scene": 3, "say": "Most | creators | don't | know | which | one | they're | making." },
+    { "scene": 4, "say": "I'm | building | a | tool | in | forty-eight | hours | that | tells | you | first." },
+    { "scene": 5, "say": "Launches | Friday. | Follow | to | get | it | first." }
   ]
 }

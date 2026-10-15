@@ -3,7 +3,10 @@ import { sceneLayout, type ShortVideoProps } from '../ShortVideo';
 
 export interface VoiceTimings {
   voice: string;
+  duration?: number;
   lines: { scene: number; start: number; end: number; words: number[]; text: string[] }[];
+  /** Present when the voice script used "layout": "auto": the scene cuts follow the voice. */
+  scenes?: { start: number; end: number }[];
 }
 
 /** Words pop this many frames before they're spoken: text that leads the voice slightly reads as "in sync". */
@@ -22,6 +25,7 @@ export function sceneFrame(props: ShortVideoProps, timings: VoiceTimings, scene:
  * count is left alone with a warning (fix the "|" groups in the voice script).
  */
 export function withVoiceTimings(props: ShortVideoProps, timings: VoiceTimings, fps = 30): ShortVideoProps {
+  props = withVoiceLayout(props, timings);
   const layout = sceneLayout(props.scenes, fps);
   const scenes = props.scenes.map((s, i) => {
     const line = timings.lines.find((l) => l.scene === i);
@@ -34,5 +38,15 @@ export function withVoiceTimings(props: ShortVideoProps, timings: VoiceTimings, 
     const at = line.words.map((t) => Math.max(0, Math.round(t * fps) - layout[i].from - LEAD_FRAMES));
     return { ...s, props: { ...s.props, captionTiming: { ...s.props.captionTiming, at } } } as typeof s;
   });
-  return { ...props, scenes };
+  // The music ducks under every spoken line.
+  return { ...props, scenes, duck: timings.lines.map((l) => [l.start, l.end] as [number, number]) };
+}
+
+/** Scene lengths from the voice-over (when it was laid out automatically), so cuts follow the lines. */
+export function withVoiceLayout(props: ShortVideoProps, timings: VoiceTimings): ShortVideoProps {
+  if (!timings.scenes || timings.scenes.length !== props.scenes.length) return props;
+  return {
+    ...props,
+    scenes: props.scenes.map((s, i) => ({ ...s, seconds: timings.scenes![i].end - timings.scenes![i].start })),
+  };
 }

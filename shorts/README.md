@@ -6,8 +6,7 @@ palette with a single amber accent, paper grain, slow push-ins and parallax, and
 ```bash
 npm install
 npm run studio         # preview in Remotion Studio (http://localhost:3000)
-npm run render:day1    # → out/day1.mp4 (voice: af_heart)
-npm run render:day1-male  # → out/day1-male-voice.mp4 (same video, voice: am_michael, for A/B tests)
+npm run render:day1    # → out/day1.mp4
 npm run cover:day1     # → out/day1-cover.png (frame 0, the hook)
 ```
 
@@ -70,18 +69,21 @@ Motion is slow and eased (`src/components/motion.ts`); shapes move and fade but 
 
 ```bash
 npm run setup:tts      # once: local Kokoro-82M text-to-speech (Apache-2.0), fetched from npm into .tts/
-npm run voice:day1     # voice/day1.json → public/voice.mp3 + src/videos/day1.voice.json (word timings)
-npm run music:day1     # an original ambient bed synthesized with numpy → public/music.mp3
+npm run voice:day1     # voice/day1.json → public/voice.mp3 + src/videos/day1.voice.json (word timings, scene cuts)
+npm run music:day1     # original music synthesized with numpy, fitted to those cuts → public/music.mp3
 ```
 
-- `voice/day1.json` holds what's said, when, and in which voice. Use `|` to group spoken words per caption word
+- `voice/day1.json` holds what's said and in which voice (Day 1: `am_michael`). With `"layout": "auto"` the lines
+  run back to back with a short breath (`gap`) and every scene lasts as long as its line, so there's no dead air;
+  the video's length comes out of the voice (Day 1: about 20 s). Use `|` to group spoken words per caption word
   (`"Sixteen | channels. | Thirty-five million | ..."` lines up with the caption `16 channels. 35M ...`).
 - Change the voice with `"voice"` or `--voice` (e.g. `af_heart`, `af_bella`, `am_michael`, `am_fenrir`, `bf_emma`,
   `bm_george`). The captions follow the new timings automatically (`withVoiceTimings` in `src/videos/day1.ts`).
 - A line that's too long for its slot is sped up by up to 20%; if it still doesn't fit you get a warning.
-- The voice is compressed, limited and set to −14 LUFS (the level Reels and Shorts are mastered to); the video
-  plays the music at 15% underneath it.
-- `scripts/music.py` follows a plan of chords on the scene cuts (see `PLANS` in the script, or pass a JSON plan).
+- The voice is compressed, limited and set to about −14 LUFS (the level Reels and Shorts are mastered to). The music
+  plays at `musicVolume` between lines and ducks to `duckTo` × that under each spoken line (≈ 12 dB under the voice).
+- `scripts/music.py` follows a plan per scene: pads, a soft half-time lo-fi groove, bass, plucked keys, risers into
+  big moments (see `PLANS` in the script, or pass a JSON plan).
 
 ## Tools
 

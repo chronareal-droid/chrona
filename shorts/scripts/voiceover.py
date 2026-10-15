@@ -8,8 +8,10 @@ so captions can pop in with the voice.
 Voice script (JSON):
     voice     Kokoro voice id, e.g. af_heart, af_bella, am_michael, am_fenrir, bf_emma, bm_george
     speed     1.0 = natural pace
-    duration  video length in seconds
-    lines     [{ scene, at, say }]: `at` is the start time in seconds; `say` is the spoken text.
+    layout    "auto": lines run back to back (a `gap` breath between them) and the scene cuts follow the voice,
+              snapped to a `grid` (s); the video length comes out of it (`tail` s held after the last line).
+              Otherwise each line starts at its `at` and `duration` is the video length.
+    lines     [{ scene, say, at? }]: `say` is the spoken text.
               Split `say` with "|" into one group per caption word ("Sixteen | channels. | Thirty-five million"),
               so a spoken phrase can stand for one caption word ("16"). Without "|", every spoken word is a group.
 
@@ -146,28 +148,28 @@ def main() -> None:
     speed = args.speed or spec.get("speed", 1.0)
     output = ROOT / (args.output or spec["output"])
     timings_path = ROOT / (args.timings or spec["timings"])
-    duration = float(spec["duration"])
-    lines = sorted(spec["lines"], key=lambda l: l["at"])
+    auto = spec.get("layout") == "auto"
+    lines = spec["lines"] if auto else sorted(spec["lines"], key=lambda l: l["at"])
 
     if not pathlib.Path(args.model).exists():
         sys.exit("Model not found. Run scripts/setup-tts.sh first.")
     voice = Voice(pathlib.Path(args.model), pathlib.Path(args.voices), voice_id)
 
-    track = np.zeros(int(duration * SR) + SR, dtype=np.float32)
-    out_lines = []
+    # 1) Synthesize every line (and estimate its word onsets, relative to the start of speech).
+    takes = []
     for n, line in enumerate(lines):
         groups = [g.strip() for g in line["say"].split("|")] if "|" in line["say"] else line["say"].split()
         text = " ".join(groups)
-        slot = (lines[n + 1]["at"] if n + 1 < len(lines) else duration) - line["at"] - 0.08
+        slot = None if auto else (lines[n + 1]["at"] if n + 1 < len(lines) else float(spec["duration"])) - line["at"] - 0.08
         s = speed
         audio = voice.synth(text, s)
         lead, tail = voiced_span(audio)
-        # Too long for its slot: speed up a little (up to +20%) rather than overlap the next line.
-        while tail - lead > slot and s < speed * 1.2:
+        # Fixed layout only: too long for its slot → speed up a little (up to +20%) rather than overlap the next line.
+        while slot is not None and tail - lead > slot and s < speed * 1.2:
             s = round(s + 0.04, 2)
             audio = voice.synth(text, s)
             lead, tail = voiced_span(audio)
-        if tail - lead > slot:
+        if slot is not None and tail - lead > slot:
             print(f"warning: line {n} runs {tail - lead - slot:.2f}s over its slot: {text!r}", file=sys.stderr)
         onsets = word_onsets(voice, groups, audio)
         # Second opinion: the length of each spoken prefix ("Sixteen channels.") marks where the next group starts.
@@ -177,22 +179,47 @@ def main() -> None:
             p_audio = voice.synth(" ".join(groups[:k]), s)
             p_lead, p_tail = voiced_span(p_audio)
             onsets[k] = (onsets[k] + lead + (p_tail - p_lead)) / 2
-        # Trim the model's leading silence so speech starts right at `at`.
-        audio = audio[int(lead * SR) :]
-        at = int(line["at"] * SR)
-        seg = audio[: max(0, len(track) - at)]
+        takes.append({"line": line, "groups": groups, "text": text, "speed": s,
+                      "audio": audio[int(lead * SR) :],  # trimmed: speech starts at sample 0
+                      "length": tail - lead, "onsets": [o - lead for o in onsets]})
+
+    # 2) Place the lines. Fixed: at each line's `at`. Auto: back to back with a short breath between them, each
+    #    scene cut just before its line (snapped to the music's beat grid), so there's no dead air.
+    if auto:
+        gap, lead_in, tail_out = spec.get("gap", 0.4), spec.get("lead", 0.12), spec.get("tail", 1.4)
+        grid = spec.get("grid", 0.25)
+        snap = lambda t: round(t / grid) * grid  # noqa: E731
+        cuts, t = [], 0.0
+        for k, take in enumerate(takes):
+            cut = 0.0 if k == 0 else max(cuts[-1] + 1.0, snap(t - lead_in))
+            cuts.append(cut)
+            take["at"] = cut + lead_in if k else spec.get("first", 0.1)
+            t = take["at"] + take["length"] + gap
+        duration = snap(takes[-1]["at"] + takes[-1]["length"] + tail_out)
+        scenes = [{"start": c, "end": (cuts[k + 1] if k + 1 < len(cuts) else duration)} for k, c in enumerate(cuts)]
+    else:
+        duration = float(spec["duration"])
+        for take in takes:
+            take["at"] = take["line"]["at"]
+        scenes = None
+
+    track = np.zeros(int(duration * SR) + SR, dtype=np.float32)
+    out_lines = []
+    for n, take in enumerate(takes):
+        at = int(take["at"] * SR)
+        seg = take["audio"][: max(0, len(track) - at)]
         track[at : at + len(seg)] += seg
         out_lines.append(
             {
-                "scene": line["scene"],
-                "start": round(line["at"], 3),
-                "end": round(line["at"] + (tail - lead), 3),
-                "speed": s,
-                "words": [round(line["at"] + o - lead, 3) for o in onsets],
-                "text": groups,
+                "scene": take["line"]["scene"],
+                "start": round(take["at"], 3),
+                "end": round(take["at"] + take["length"], 3),
+                "speed": take["speed"],
+                "words": [round(take["at"] + o, 3) for o in take["onsets"]],
+                "text": take["groups"],
             }
         )
-        print(f"line {n}: {line['at']:5.2f}s → {line['at'] + tail - lead:5.2f}s  speed {s}  {text}")
+        print(f"line {n}: {take['at']:5.2f}s → {take['at'] + take['length']:5.2f}s  speed {take['speed']}  {take['text']}")
 
     track = track[: int(duration * SR)].astype(np.float64)
     # Voice chain for phone speakers: gentle compression, gain to −14 LUFS (the level Reels/Shorts are mastered
@@ -209,7 +236,12 @@ def main() -> None:
     final, peak = measure(output)
     print(f"voice: {final:.1f} LUFS, true peak {peak:.1f} dBTP")
     timings_path.parent.mkdir(parents=True, exist_ok=True)
-    timings_path.write_text(json.dumps({"voice": voice_id, "lines": out_lines}, indent=2) + "\n")
+    timings = {"voice": voice_id, "duration": duration, "lines": out_lines}
+    if scenes:
+        timings["scenes"] = scenes  # auto layout: the video's scene cuts follow the voice
+    timings_path.write_text(json.dumps(timings, indent=2) + "\n")
+    if scenes:
+        print("scenes: " + ", ".join(f"{sc['start']:.2f}–{sc['end']:.2f}" for sc in scenes) + f"  (video {duration:.2f}s)")
     print(f"wrote {output.relative_to(ROOT)} and {timings_path.relative_to(ROOT)}")
 
 

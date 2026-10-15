@@ -1,12 +1,12 @@
-import { sceneFrame, type VoiceTimings, withVoiceTimings } from '../components/voiceSync';
-import type { ShortVideoProps } from '../ShortVideo';
+import { sceneFrame, type VoiceTimings, withVoiceLayout, withVoiceTimings } from '../components/voiceSync';
+import { sceneLayout, type ShortVideoProps } from '../ShortVideo';
 import voiceTimings from './day1.voice.json';
-import maleVoiceTimings from './day1.voice.am_michael.json';
 
-// Day 1 of the build-in-public series. 25 s, scene boundaries at 3 / 7 / 11 / 15 / 21 s.
+// Day 1 of the build-in-public series. Voice: am_michael (Kokoro), from voice/day1.json.
+// The lines run back to back and each scene lasts as long as its line ("layout": "auto"), so there's no dead air:
+// `npm run voice:day1` regenerates public/voice.mp3 + ./day1.voice.json, then `npm run music:day1` re-fits the music.
+// The `seconds` below are only fallbacks for when no voice timings exist.
 // "\n" in a caption forces the line break; otherwise the caption balances itself over ≤ 2 lines.
-// Voice-over: voice/day1.json → `npm run voice:day1` regenerates public/voice.mp3 and ./day1.voice.json,
-// and the captions below pop in with the spoken words automatically.
 const script: ShortVideoProps = {
   scenes: [
     {
@@ -23,26 +23,27 @@ const script: ShortVideoProps = {
   ],
   voice: 'voice.mp3',
   music: 'music.mp3',
-  musicVolume: 0.15,
+  // Background music level between lines; it dips to 55% of this under the voice.
+  musicVolume: 0.42,
+  duckTo: 0.55,
 };
 
 const SCREENS_FADE = 8;
 
-/** The Day 1 script voiced by a given take: captions follow its word timings. */
-function voiced(timings: VoiceTimings, voiceFile: string): ShortVideoProps {
-  const props: ShortVideoProps = { ...script, voice: voiceFile, scenes: script.scenes.map((s) => ({ ...s, props: { ...s.props } }) as typeof s) };
+/** The Day 1 script voiced by a given take: scene lengths and caption pops follow its timings. */
+function voiced(timings: VoiceTimings): ShortVideoProps {
+  const props = withVoiceLayout(
+    { ...script, scenes: script.scenes.map((s) => ({ ...s, props: { ...s.props } }) as typeof s) },
+    timings,
+  );
   // The last screen finishes going dark just as "Gone." (word 4 of scene 1) is spoken.
   const gone = sceneFrame(props, timings, 1, 4);
   const screens = props.scenes[1];
   if (gone !== null && screens.scene === 'screens') {
-    const sceneFrames = 4 * 30 + 6; // 4 s plus the crossfade overlap on both sides
+    const sceneFrames = sceneLayout(props.scenes, 30)[1].durationInFrames;
     screens.props.darkTo = Math.min(0.95, (gone + SCREENS_FADE / 2) / sceneFrames);
   }
   return withVoiceTimings(props, timings);
 }
 
-/** Voice: af_heart (Kokoro). Regenerate with `npm run voice:day1`. */
-export const day1: ShortVideoProps = voiced(voiceTimings as VoiceTimings, 'voice.mp3');
-
-/** The same video with a male voice (am_michael), for A/B testing. */
-export const day1MaleVoice: ShortVideoProps = voiced(maleVoiceTimings as VoiceTimings, 'voice-am_michael.mp3');
+export const day1: ShortVideoProps = voiced(voiceTimings as VoiceTimings);

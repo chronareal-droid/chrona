@@ -2,7 +2,7 @@ import React from 'react';
 import { Composition, Folder } from 'remotion';
 import { ShortVideo, type ShortVideoProps, totalFrames } from './ShortVideo';
 import { VIDEO } from './style/theme';
-import { day1, day1MaleVoice } from './videos/day1';
+import { day1 } from './videos/day1';
 
 const short = (id: string, props: ShortVideoProps) => (
   <Composition
@@ -24,7 +24,6 @@ const sceneDemo = (scene: ShortVideoProps['scenes'][number]): ShortVideoProps =>
 export const RemotionRoot: React.FC = () => (
   <>
     {short('Day1', day1)}
-    <Folder name="Variants">{short('Day1MaleVoice', day1MaleVoice)}</Folder>
     <Folder name="Scenes">
       {short('SceneDesk', sceneDemo({ seconds: 4, scene: 'desk', props: { caption: 'A lone desk, late at night' } }))}
       {short('SceneScreens', sceneDemo({ seconds: 4, scene: 'screens', props: { caption: 'The screens go dark' } }))}

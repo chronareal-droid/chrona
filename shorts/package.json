@@ -12,9 +12,7 @@
     "contact-sheet": "python3 scripts/contact-sheet.py",
     "setup:tts": "bash scripts/setup-tts.sh",
     "voice:day1": ".tts/venv/bin/python scripts/voiceover.py voice/day1.json",
-    "music:day1": "python3 scripts/music.py --plan day1 --out public/music.mp3",
-    "voice:day1-male": ".tts/venv/bin/python scripts/voiceover.py voice/day1.json --voice am_michael --output public/voice-am_michael.mp3 --timings src/videos/day1.voice.am_michael.json",
-    "render:day1-male": "remotion render Day1MaleVoice out/day1-male-voice.mp4"
+    "music:day1": "python3 scripts/music.py --plan day1 --timings src/videos/day1.voice.json --out public/music.mp3"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.530",

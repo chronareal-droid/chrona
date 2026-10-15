@@ -8,7 +8,7 @@ import { COLORS } from '../style/theme';
 import { DeskSetup } from './Desk';
 
 export interface ScannerProps extends SceneCaptionProps {
-  /** Thumbnail grid size. Defaults 4 × 4. */
+  /** Thumbnail grid size. Defaults 4 × 3 (one slow pass of the lens covers all three rows). */
   columns?: number;
   rows?: number;
   /** Indices (row-major) of the thumbnails that turn amber as the lens passes. */
@@ -18,9 +18,9 @@ export interface ScannerProps extends SceneCaptionProps {
 }
 
 const GRID = { left: 110, right: 970, top: 200, bottom: 740, gap: 22 };
-const LENS_R = 104;
+const LENS_R = 140;
 /** The lens centre stays inside this x range, so the whole ring stays in frame (after the 3% push-in). */
-const LENS_X = { min: 150, max: 930 };
+const LENS_X = { min: LENS_R + 30, max: 1080 - LENS_R - 30 };
 const SWEEP = { start: 8, endBeforeSceneEnd: 14, accel: 24 };
 
 const Thumb: React.FC<{ x: number; y: number; w: number; h: number; variant: number; flag: number; checked: number }> = ({
@@ -75,8 +75,8 @@ export const Scanner: React.FC<ScannerProps> = ({
   caption,
   captionTiming,
   columns = 4,
-  rows = 4,
-  flagged = [1, 6, 8, 15],
+  rows = 3,
+  flagged = [1, 6, 8, 11],
   typing = 1.4,
 }) => {
   const frame = useCurrentFrame();
@@ -94,7 +94,7 @@ export const Scanner: React.FC<ScannerProps> = ({
   ]);
   const rowCentres = Array.from({ length: rows }, (_, r) => GRID.top + r * (h + GRID.gap) + h / 2);
   const colCentres = Array.from({ length: columns }, (_, c) => left + c * (w + GRID.gap) + w / 2);
-  const route = serpentine(rowCentres, colCentres, LENS_X);
+  const route = serpentine(rowCentres, colCentres, LENS_X, LENS_R - 4);
   const sweepEnd = d - SWEEP.endBeforeSceneEnd;
   const sweepFrames = sweepEnd - SWEEP.start;
   const lensAt = (f: number) => pointAt(route, cruise(f - SWEEP.start, sweepFrames, SWEEP.accel));

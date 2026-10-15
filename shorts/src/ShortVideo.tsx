@@ -38,6 +38,9 @@ export type ShortVideoProps = {
   voice?: string | null;
   music?: string | null;
   musicVolume?: number;
+  /** Spans (seconds) where the voice speaks; the music dips to `duckTo` × musicVolume under them. */
+  duck?: [number, number][];
+  duckTo?: number;
   crossfadeFrames?: number;
   grain?: number;
 };
@@ -105,6 +108,8 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({
   voice,
   music,
   musicVolume,
+  duck,
+  duckTo,
   crossfadeFrames = CROSSFADE_FRAMES,
   grain,
 }) => {
@@ -118,7 +123,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({
         </Sequence>
       ))}
       <PaperGrain opacity={grain} />
-      <Soundtrack voice={voice} music={music} musicVolume={musicVolume} />
+      <Soundtrack voice={voice} music={music} musicVolume={musicVolume} duck={duck} duckTo={duckTo} />
     </AbsoluteFill>
   );
 };

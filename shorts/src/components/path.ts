@@ -44,13 +44,22 @@ export function cruise(t: number, T: number, accel: number): number {
 }
 
 /**
- * Serpentine through the grid: one horizontal pass per pair of rows (the lens covers both), alternating
- * direction, joined by half-circle turns that keep the travelling point inside `bounds` (x).
+ * Serpentine through a grid: one horizontal pass per group of rows the travelling lens can cover at once
+ * (rows within `reach` of the pass), alternating direction, joined by half-circle turns that keep the
+ * travelling point inside `bounds` (x). A short scene with a big lens can be a single slow pass.
  */
-export function serpentine(rowCentres: number[], colCentres: number[], bounds: { min: number; max: number }): Segment[] {
+export function serpentine(
+  rowCentres: number[],
+  colCentres: number[],
+  bounds: { min: number; max: number },
+  reach = 70,
+): Segment[] {
   const passes: number[] = [];
-  for (let r = 0; r < rowCentres.length; r += 2) {
-    passes.push(r + 1 < rowCentres.length ? (rowCentres[r] + rowCentres[r + 1]) / 2 : rowCentres[r]);
+  for (let r = 0; r < rowCentres.length; ) {
+    let k = 1;
+    while (r + k < rowCentres.length && (rowCentres[r + k] - rowCentres[r]) / 2 <= reach) k++;
+    passes.push((rowCentres[r] + rowCentres[r + k - 1]) / 2);
+    r += k;
   }
   const radii = passes.slice(1).map((y, k) => (y - passes[k]) / 2);
   const rRight = Math.max(0, ...radii.filter((_, k) => k % 2 === 0));
