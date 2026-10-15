@@ -199,5 +199,6 @@ Deno.test("scriptSignals stays fast on the largest valid input (CPU budget)", ()
   const t0 = performance.now();
   scriptSignals(inputs);
   const ms = performance.now() - t0;
-  assert(ms < 400, `scriptSignals took ${ms.toFixed(0)} ms`);
+  // ~170 ms on a laptop; the bound leaves room for a slow CI runner and still catches the old 2.5 s behaviour.
+  assert(ms < 800, `scriptSignals took ${ms.toFixed(0)} ms`);
 });

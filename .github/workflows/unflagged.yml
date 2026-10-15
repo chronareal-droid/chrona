@@ -1,0 +1,52 @@
+name: Unflagged checks
+
+on:
+  push:
+    paths: ['unflagged/**', '.github/workflows/unflagged.yml']
+  pull_request:
+    paths: ['unflagged/**', '.github/workflows/unflagged.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unflagged-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: unflagged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: unflagged/package-lock.json
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: npm ci
+      - name: Typecheck and build
+        run: npm run build
+      - name: Edge Function tests
+        run: npm run test:functions
+      - name: Edge Function typecheck
+        run: npm run check:functions
+      - name: Migrations on Postgres (PGlite)
+        run: npm run test:db
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests (375px, mocked backend)
+        run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: unflagged/test-results
+          retention-days: 7
