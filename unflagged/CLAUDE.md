@@ -30,12 +30,14 @@ Brand name, prices and copy constants live in `src/lib/brand.ts` (renaming = edi
   Models come from secrets `MODEL_EXTRACT` / `MODEL_JUDGE` (two different Flash-Lite models = two daily quotas).
 - Payments: Dodo Payments hosted checkout (`create-checkout`), Standard Webhooks signature (`dodo-webhook`, `--no-verify-jwt`).
 - Analytics: PostHog (no-op when `VITE_POSTHOG_KEY` is empty or in the demo). `before_send` rewrites `/r/<id>` to `/r/:id`
-  (a report link is a bearer key and never goes to analytics) and keeps only `src`/`utm_*` query parameters. Feature flags, surveys, heatmaps and the like stay off:
-  they send data without passing `before_send` (the e2e suite checks every request PostHog would receive).
+  (a report link is a bearer key and never goes to analytics) and keeps only `src`/`utm_*`/`loc` query parameters.
+  Feature flags, surveys, heatmaps and the like stay off: they send data without passing `before_send` (the e2e suite
+  checks every request PostHog would receive).
 - Limits are atomic in Postgres (RPCs under an advisory lock or row lock): 3 scans and 10 attempts per salted-IP-hash
   (IPv6 grouped by /64) per day; one re-scan per paid report (`create_rescan`, `rescan_used`): failures on our side
   (capacity, timeout, internal) don't use it up, 5 failures on the creator's side do, and 15 attempts in all do;
-  5 waitlist calls per IP hash per day (`join_waitlist`; re-joins count too, so the limit reveals no membership). Stranded `processing` rows are expired before counting.
+  5 waitlist calls per IP hash per day (`join_waitlist`; re-joins count too, so the limit reveals no membership).
+  Stranded `processing` rows are expired before counting.
 
 ## Pipeline (`_shared/pipeline.ts`, runs under `EdgeRuntime.waitUntil` in `create-scan`)
 

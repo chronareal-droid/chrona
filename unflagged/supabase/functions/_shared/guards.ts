@@ -14,11 +14,13 @@ export function looseNormalize(s: string): string {
 /**
  * Quoted spans in a piece of model text: "double", “curly double”, ‘curly single’ and 'straight single' quotes.
  * Apostrophes inside words (don't, they’re, Sam's) are not quote marks. An elision ('90s, '24, 'til, 'em) isn't
- * either when it would pair with a plural possessive (creators' clips) into a bogus quote; otherwise a span that
- * starts with one ('90s Cartoons That Scarred Us', '10 places you should never visit') is a real quote. A single-quoted
- * span never runs on into the next one (Since '24 ... 'Top 10 Scariest Places').
+ * either when it reads as prose that runs into a plural possessive ("your '90s recaps lean on other creators' clips":
+ * a lowercase word follows it, and the first quote mark after it is "s'" before another lowercase word). Otherwise a
+ * span that starts with one is a real quote ('10 Scariest Places' and others, '90s Cartoons That Scarred Us',
+ * '12 things I wish I knew'). A single-quoted span never runs on into the next one (Since '24 ... 'Top 10 Places').
+ * Left ambiguous: a sentence-case title that ends in "s" right before a lowercase word ('10 scary places' and more).
  */
-const SQ_OPEN = String.raw`(?!(?:\d\ds?|til|em|cause|bout|n)\b(?=(?:(?!\s['‘])[^"“”])*?s['’]\s\p{Ll}))`;
+const SQ_OPEN = String.raw`(?!(?:\d\ds?|til|em|cause|bout|n)\b(?=\s\p{Ll}[^'’"“”]*?s['’]\s\p{Ll}))`;
 const SQ_BODY = String.raw`((?:(?!\s['‘])[^"“”])+?)`;
 const QUOTE_PATTERNS = [
   /["“”]([^"“”]+)["“”]/g,

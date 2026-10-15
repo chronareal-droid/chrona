@@ -25,8 +25,9 @@ const KEEP_PARAM = /^(src|loc|utm_[a-z]+)$/;
 
 /**
  * A report link is the only key to a report (and to a paid one's re-scan), so the id never goes to analytics:
- * `/r/<id>` becomes `/r/:id`. Query strings keep only attribution (`src`, `utm_*`): `?rescan=<id>`, and whatever
- * the checkout appends on return (`payment_id`, `status`, the buyer's `email`), are dropped.
+ * `/r/<id>` becomes `/r/:id`. Query strings keep only attribution (`src`, `utm_*`) and the QA region override
+ * (`loc`): `?rescan=<id>`, and whatever the checkout appends on return (`payment_id`, `status`, the buyer's
+ * `email`), are dropped.
  */
 export function scrubUrl(value: string): string {
   return value

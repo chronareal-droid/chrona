@@ -168,3 +168,13 @@ Deno.test("a short niche quoted whole is the creator's word", () => {
   assertEquals(reportIssues(r, { titles: TITLES, scripts: [SCRIPT], creatorText: ["Safe investing"], niche: "Safe investing" }), []);
   assert(reportIssues(r, { titles: TITLES, scripts: [SCRIPT] }).length === 1);
 });
+
+Deno.test("a number-led title is a quote even when it ends in a plural or a possessive comes later", () => {
+  assertEquals(quotesIn("Titles like '10 Scariest Places' and others repeat."), ["10 Scariest Places"]);
+  assertEquals(quotesIn("Titles like '10 places you should never visit' sit next to other creators' clips."), [
+    "10 places you should never visit",
+  ]);
+  assertEquals(quotesIn("Wait 'til other creators' clips drop."), []);
+  const r = sampleReport({ headline: "Titles like '10 Haunted Lighthouses' and others follow one frame." });
+  assertEquals(applyGuards(r, { titles: TITLES, scripts: [SCRIPT] }).ungrounded, ["headline"]);
+});

@@ -26,8 +26,9 @@ declare
   inserted int;
 begin
   perform pg_advisory_xact_lock(hashtext('waitlist:' || p_ip_hash));
-  -- Nothing below may depend on whether the email is already on the list: not the answer, and not the count that
-  -- decides the next answer.
+  -- Nothing a caller can see may depend on whether the email is already on the list: not the error, and not the
+  -- count that decides the next answer. (The function returns 'joined' or 'already' for logs; join-waitlist answers
+  -- both with the same { ok: true }.)
   if (select count(*) from waitlist_attempts where ip_hash = p_ip_hash and created_at > now() - interval '24 hours') >= p_limit then
     raise exception 'rate_limited' using errcode = 'P0001';
   end if;
