@@ -33,7 +33,8 @@ Deno.serve(async (req) => {
 
     let rescanUsed = false;
     if (row.paid && !row.rescan_of) {
-      // Same rule create_rescan enforces: a done or running re-scan uses it, and so do RESCAN_ATTEMPTS attempts.
+      // Same rule create_rescan enforces: a done or running re-scan uses it, as do RESCAN_ATTEMPTS creator-side
+      // failures or 3× RESCAN_ATTEMPTS attempts in all.
       const { data: used, error: e2 } = await supabase.rpc("rescan_used", {
         p_parent: row.id,
         p_attempt_limit: RESCAN_ATTEMPTS,

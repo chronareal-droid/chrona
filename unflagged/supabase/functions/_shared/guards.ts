@@ -13,14 +13,17 @@ export function looseNormalize(s: string): string {
 
 /**
  * Quoted spans in a piece of model text: "double", “curly double”, ‘curly single’ and 'straight single' quotes.
- * Apostrophes inside words (don't, they’re, Sam's) are not quote marks, and neither is an elision ('90s, '24, 'til,
- * 'em), which would otherwise pair with a plural possessive (creators') into a bogus quote. A title that starts with a
- * number ('10 Places You Should Never Visit') is still a quote.
+ * Apostrophes inside words (don't, they’re, Sam's) are not quote marks. An elision ('90s, '24, 'til, 'em) isn't
+ * either when it would pair with a plural possessive (creators' clips) into a bogus quote; otherwise a span that
+ * starts with one ('90s Cartoons That Scarred Us', '10 places you should never visit') is a real quote. A single-quoted
+ * span never runs on into the next one (Since '24 ... 'Top 10 Scariest Places').
  */
+const SQ_OPEN = String.raw`(?!(?:\d\ds?|til|em|cause|bout|n)\b(?=(?:(?!\s['‘])[^"“”])*?s['’]\s\p{Ll}))`;
+const SQ_BODY = String.raw`((?:(?!\s['‘])[^"“”])+?)`;
 const QUOTE_PATTERNS = [
   /["“”]([^"“”]+)["“”]/g,
-  /‘(?!\d\ds\b)([^"“”]+?)’(?![\p{L}\p{N}])/gu,
-  /(?<![\p{L}\p{N}])'(?!\d\ds\b|\d\d\b(?!\s\p{Lu})|(?:til|em|cause|bout|n)\b)([^"“”]+?)'(?![\p{L}\p{N}])/gu,
+  new RegExp(`‘${SQ_OPEN}${SQ_BODY}’(?![\\p{L}\\p{N}])`, "gu"),
+  new RegExp(`(?<![\\p{L}\\p{N}])'${SQ_OPEN}${SQ_BODY}'(?![\\p{L}\\p{N}])`, "gu"),
 ];
 
 export function quotesIn(text: string): string[] {
@@ -45,7 +48,9 @@ export interface GuardInputs {
   scripts: string[];
   /** The creator's own words besides titles and scripts: thumbnail text overlays, their niche. */
   creatorText?: string[];
-  /** Everything else the judge is shown and may quote: video details, signals, answers, niche, the policy brief. */
+  /** The creator's niche label: quoting it whole is quoting the creator, however short it is. */
+  niche?: string | null;
+  /** Everything else the judge is shown and may quote: video details, signals, answers, the policy brief. */
   otherText?: string[];
 }
 
@@ -64,26 +69,26 @@ const creatorTexts = (inputs: GuardInputs) => [...inputs.titles, ...inputs.scrip
 
 /**
  * The text with the creator's own quoted words swapped out, so the checks below judge only what the model wrote.
- * A quote counts as the creator's if it is a whole title, or if it appears in their material (titles, scripts,
- * thumbnail text, niche) with at least `minWords` words in one piece (an ellipsis splits a quote into pieces, as in
- * grounding). Short quotes otherwise stay, so a scare-quoted "safe" is still the model's word. Each different quote
+ * A quote counts as the creator's if it is a whole title or their whole niche, or if it appears in their material
+ * (titles, scripts, thumbnail text, niche) with at least `minWords` words in every piece (an ellipsis splits a quote
+ * into pieces, as in grounding). Short quotes otherwise stay, so a scare-quoted "safe" is still the model's word. Each different quote
  * becomes its own placeholder, so two sentences that differ only in the title they quote still differ.
  */
 export function creatorQuoteStripper(inputs?: GuardInputs): (text: string, minWords: number) => string {
   if (!inputs) return (text) => text;
   const corpus = ` ${creatorTexts(inputs).map(looseNormalize).join(" | ")} `; // built once per report
-  const titles = new Set(inputs.titles.map(titleKey));
+  const wholes = new Set([...inputs.titles, inputs.niche ?? ""].filter(Boolean).map(titleKey));
   const tokens = new Map<string, string>();
   const token = (normalized: string) => {
     let t = tokens.get(normalized);
     if (!t) tokens.set(normalized, (t = ` qz${tokens.size}qz `));
     return t;
   };
+  // Every piece must be long enough on its own: one-word pieces ("safe... in the next one") are in any long script.
   const isCreators = (q: string, minWords: number) => {
-    if (titles.has(titleKey(q))) return true;
+    if (wholes.has(titleKey(q))) return true;
     const pieces = q.split(/\.\.\.|…/).map(looseNormalize).filter(Boolean);
-    return pieces.length > 0 && pieces.every((p) => corpus.includes(` ${p} `)) &&
-      pieces.some((p) => p.split(" ").length >= minWords);
+    return pieces.length > 0 && pieces.every((p) => p.split(" ").length >= minWords && corpus.includes(` ${p} `));
   };
   return (text, minWords) =>
     QUOTE_PATTERNS.reduce(
@@ -178,7 +183,8 @@ export function reportIssues(r: Report, inputs?: GuardInputs, freeFindings = 2):
     ...r.top_findings.slice(freeFindings).flatMap((f) => [f.evidence, f.fix]),
   ]
     .map(own)
-    .filter((p) => p.length >= 24);
+    // Long enough to be telling in the model's own words: placeholders for quotes don't count toward it.
+    .filter((p) => p.replace(/qz\d+qz/g, "").replace(/ +/g, " ").trim().length >= 24);
   const leak = free.some((f) => planDays(f) >= 2) || free.some((f) => paid.some((p) => f.includes(p.slice(0, 40))));
   if (leak) issues.push("headline, summaries, confidence_note and the first findings must not repeat the 7-day plan, checklist or later findings");
   return issues;

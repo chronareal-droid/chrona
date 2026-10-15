@@ -149,14 +149,22 @@ assert.equal((await one(`select email, scan_id from waitlist where ip_hash='w1'`
 assert.equal(await join('a@X.com', 'w1'), 'already');
 assert.equal((await one(`select count(*)::int as n from waitlist where lower(email)='a@x.com'`)).n, 1);
 ok('joins once, case-insensitively; re-joining is a no-op');
-for (let i = 2; i <= 5; i++) await join(`u${i}@x.com`, 'w1');
+// Two calls so far from w1 (the join and the re-join): three more fill its 5 a day.
+for (let i = 3; i <= 5; i++) await join(`u${i}@x.com`, 'w1');
 assert.equal(await joinErr('u6@x.com', 'w1'), 'rate_limited');
-ok('5 sign-ups per IP per day');
+ok('5 sign-up calls per IP per day');
 // No answer may depend on whether an email is already on the list (that would reveal who signed up).
 assert.equal(await joinErr('a@x.com', 'w1'), 'rate_limited', 'a member past the limit: same answer as anyone');
 assert.equal(await joinErr('a@x.com', 'w2', '00000000-0000-4000-8000-000000000000'), 'invalid_scan');
 assert.equal(await joinErr('nobody@x.com', 'w2', '00000000-0000-4000-8000-000000000000'), 'invalid_scan');
 ok('rate limit and scan id are checked before membership');
+// Nor may the count behind the next answer: a member re-joining uses a slot exactly like a new sign-up.
+for (const [ip, target] of [['w3', 'a@x.com'], ['w4', 'stranger@x.com']]) {
+  for (let i = 1; i <= 4; i++) await join(`${ip}-${i}@x.com`, ip);
+  await join(target, ip);
+  assert.equal(await joinErr(`${ip}-canary@x.com`, ip), 'rate_limited', `${target} from ${ip}`);
+}
+ok('a re-join uses a slot too, so the limit reveals nothing about membership');
 
 // ---------- who can do what ----------
 
@@ -181,6 +189,7 @@ ok('only service_role may execute the RPCs (Supabase default grants revoked)');
 await db.exec(`set role anon`);
 assert.equal((await one(`select count(*)::int as n from scans`)).n, 0);
 assert.equal((await one(`select count(*)::int as n from waitlist`)).n, 0);
+assert.match(await err(`select count(*) from waitlist_attempts`), /permission denied/);
 assert.match(await err(`insert into waitlist (email) values ('x@x.com')`), /row-level security/);
 await db.exec(`reset role`);
 assert.ok((await one(`select count(*)::int as n from scans`)).n > 0);

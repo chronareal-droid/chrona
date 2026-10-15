@@ -223,12 +223,13 @@ export async function runPipeline(input: PipelineInput, deps: PipelineDeps): Pro
 
     // 3) Judgment, validated and guarded.
     await deps.update({ stage: "judge" });
-    // Everything the judge sees, so it may quote any of it: the creator's titles, scripts and thumbnail text, plus
-    // each video's details as listed, the signal lines, the answers, niche, extraction notes and the policy brief.
+    // Everything the judge sees, so it may quote any of it: the creator's titles, scripts, thumbnail text and niche,
+    // plus each video's details as listed, the signal lines, the answers, extraction notes and the policy brief.
     const guardInputs: GuardInputs = {
       titles: videos.map((v) => v.title),
       scripts: input.scripts,
       creatorText: [...videos.map((v) => v.thumbnail?.text_overlay ?? ""), input.niche ?? ""].filter(Boolean),
+      niche: input.niche,
       otherText: [
         ...videos.map(describeVideo),
         ...describeSignals(signals),

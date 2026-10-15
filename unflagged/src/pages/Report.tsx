@@ -107,8 +107,9 @@ export default function ReportPage() {
   const returnStatus = params.get('status')?.toLowerCase() ?? null;
   const paymentFailed = params.get('paid') === '1' && FAILED_RETURN.includes(returnStatus ?? '');
   const paidParam = params.get('paid') === '1' && !paymentFailed;
-  // Dodo said it went through: never offer to take the money again, however late the confirmation is.
-  const paidReported = paidParam && returnStatus === 'succeeded';
+  // Dodo said it went through or is going through: never offer to take the money again, however late the
+  // confirmation is (the late note points to support if it never lands).
+  const paidReported = paidParam && (returnStatus === 'succeeded' || returnStatus === 'processing');
   const { scan, phase, confirm, offline, refresh } = useScan(id, paidParam);
   const tracked = useRef(false);
 

@@ -20,23 +20,30 @@ const KEY = DEMO ? undefined : (import.meta.env.VITE_POSTHOG_KEY as string | und
 type PH = typeof import('posthog-js').default;
 let ready: Promise<PH | null> | null = null;
 
+/** Query parameters analytics may see. Everything else goes: the payment provider adds its own on the way back. */
+const KEEP_PARAM = /^(src|loc|utm_[a-z]+)$/;
+
 /**
  * A report link is the only key to a report (and to a paid one's re-scan), so the id never goes to analytics:
- * `/r/<id>` becomes `/r/:id`, and query strings that carry ids (`?rescan=`) or payment hints are dropped.
+ * `/r/<id>` becomes `/r/:id`. Query strings keep only attribution (`src`, `utm_*`): `?rescan=<id>`, and whatever
+ * the checkout appends on return (`payment_id`, `status`, the buyer's `email`), are dropped.
  */
 export function scrubUrl(value: string): string {
   return value
     .replace(/\/r\/[^/?#\s]+/g, '/r/:id')
-    .replace(/([?&])(rescan|paid|payment_id|subscription_id|status)=[^&#\s]*/g, '$1')
-    .replace(/&{2,}/g, '&')
-    .replace(/\?&/g, '?')
-    .replace(/[?&]+(?=#|$|\s)/g, '');
+    .replace(/\?([^#\s]*)/, (_, query: string) => {
+      const kept = query.split('&').filter((pair) => KEEP_PARAM.test(pair.split('=')[0]));
+      return kept.length ? `?${kept.join('&')}` : '';
+    });
 }
+
+/** Only URL-shaped strings are rewritten (a page title may well end in "?"). */
+const URL_LIKE = /^(https?:\/\/|\/)/;
 
 function scrubProps(props: Record<string, unknown> | undefined, depth = 0): void {
   if (!props || depth > 4) return;
   for (const [k, v] of Object.entries(props)) {
-    if (typeof v === 'string') props[k] = scrubUrl(v);
+    if (typeof v === 'string' && URL_LIKE.test(v)) props[k] = scrubUrl(v);
     else if (v && typeof v === 'object') scrubProps(v as Record<string, unknown>, depth + 1); // e.g. $initial_person_info
   }
 }

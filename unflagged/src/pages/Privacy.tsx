@@ -43,8 +43,9 @@ export default function Privacy() {
       <h2>Analytics</h2>
       <p>
         We use PostHog to count anonymous product events (for example, “scan submitted” or “unlock clicked”) and page views.
-        We don’t send your email, scripts or screenshots to analytics, and we don’t record sessions. Report links are removed
-        from page addresses before anything is sent, and PostHog is set to discard IP addresses.
+        We don’t send your email, scripts or screenshots to analytics, and we don’t record sessions. Report links, and
+        anything the checkout adds to a page address on the way back, are removed before anything is sent, and PostHog is
+        set to discard IP addresses.
       </p>
 
       <h2>Your report link</h2>

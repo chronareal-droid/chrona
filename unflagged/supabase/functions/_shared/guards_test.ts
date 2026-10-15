@@ -132,3 +132,39 @@ Deno.test("an ellipsis-shortened creator line and the creator's niche can be quo
   const scare = sampleReport({ headline: 'You look "safe... out" of trouble.' });
   assert(reportIssues(scare, inputs)[0].includes("guaranteed"));
 });
+
+Deno.test("single quotes: elisions only stop pairing when they'd hit a possessive; titles are quotes", () => {
+  assertEquals(quotesIn("Titles like '10 places you should never visit' repeat."), ["10 places you should never visit"]);
+  assertEquals(quotesIn("'90s Cartoons That Scarred Us Forever' is a list."), ["90s Cartoons That Scarred Us Forever"]);
+  assertEquals(quotesIn("Your uploads since ‘24 lean on other creators’ clips."), []);
+  assertEquals(quotesIn("Since '24 YouTube has flagged lists like 'Top 10 Scariest Places in Japan'."), [
+    "Top 10 Scariest Places in Japan",
+  ]);
+});
+
+Deno.test("a quote cut up with ellipses isn't the creator's unless every piece is", () => {
+  const inputs = { titles: TITLES, scripts: [OUTRO] };
+  const sneaky = sampleReport({ headline: 'Your channel looks "safe... in the next one" to apply.' });
+  assert(reportIssues(sneaky, inputs)[0].includes("guaranteed"));
+  const plan = ["Day 1: retitle the three newest list videos around one story you lived", "Day 2: b", "Day 3: c"];
+  const script = "Day 1 we retitle the three newest of my list of videos around one story you lived.";
+  const leak = sampleReport({
+    action_plan_7_days: [...plan, "Day 4: d", "Day 5: e"],
+    headline: 'Start with "Day 1... retitle... the three newest... list... videos... around one story you lived".',
+  });
+  assert(reportIssues(leak, { titles: TITLES, scripts: [script] }).some((m) => m.includes("7-day plan")));
+});
+
+Deno.test("placeholders for quoted titles don't count toward a paid line's length", () => {
+  const r = sampleReport();
+  r.categories[0].summary = '"Top 10 Scariest Places in Japan" uses a stock frame, like the rest.';
+  r.top_findings[3].evidence = '"Top 10 Scariest Places in Japan" uses a stock frame.';
+  assertEquals(reportIssues(r, { titles: TITLES, scripts: [SCRIPT] }), []);
+});
+
+Deno.test("a short niche quoted whole is the creator's word", () => {
+  const r = sampleReport();
+  r.categories[2].summary = 'Your niche, "Safe investing", is a sensitive money topic.';
+  assertEquals(reportIssues(r, { titles: TITLES, scripts: [SCRIPT], creatorText: ["Safe investing"], niche: "Safe investing" }), []);
+  assert(reportIssues(r, { titles: TITLES, scripts: [SCRIPT] }).length === 1);
+});

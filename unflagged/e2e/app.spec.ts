@@ -212,7 +212,7 @@ test.describe('report', () => {
       Object.defineProperty(Navigator.prototype, 'userAgentData', { get: () => undefined });
     });
     await mockApi(page, { scan: () => paidScan() });
-    await page.goto(`/r/${SCAN_ID}?paid=1&payment_id=pay_secret_1&status=succeeded`);
+    await page.goto(`/r/${SCAN_ID}?paid=1&payment_id=pay_secret_1&status=succeeded&email=buyer%40example.com&src=tt`);
     await expect(page.getByRole('heading', { name: 'All findings' })).toBeVisible();
     // Events go out in batches every few seconds: wait for this page's before leaving it.
     await expect.poll(() => sent.some((r) => r.body.includes('purchase_completed')), { timeout: 15_000 }).toBe(true);
@@ -223,6 +223,7 @@ test.describe('report', () => {
     for (const r of sent) {
       expect(r.url + r.body).not.toContain(SCAN_ID);
       expect(r.url + r.body).not.toContain('pay_secret_1');
+      expect(r.url + r.body).not.toContain('buyer');
     }
     expect(sent.some((r) => r.body.includes('/r/:id')), 'the report page view is counted, without its id').toBe(true);
     expect(sent.filter((r) => /\/(flags|decide)\b/.test(r.url))).toEqual([]);

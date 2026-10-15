@@ -4,7 +4,10 @@ import type { Report } from "./schemas.ts";
 
 export const FREE_FINDINGS = 2;
 export const RESCAN_WINDOW_DAYS = 30;
-/** A paid report's re-scan attempts (failed ones included); the first that succeeds uses the included re-scan. */
+/**
+ * Re-scans that fail on the creator's side (anything but capacity/timeout/internal) before the included re-scan is
+ * used up; 3× this many attempts in all also use it, and so does the first that succeeds or is still running.
+ */
 export const RESCAN_ATTEMPTS = 5;
 /** A scan still processing after this long has lost its worker (the pipeline's budget is 130 s). */
 export const STALE_PROCESSING_MS = 170_000;

@@ -182,3 +182,12 @@ Deno.test("pipeline: extraction may write a long list (four dense screenshots)",
   await runPipeline(input, h.deps);
   assertEquals(h.calls[0].maxOutputTokens, 8192);
 });
+
+Deno.test("pipeline: the creator's niche may be quoted, even with a banned word in it, without a retry", async () => {
+  const r = sampleReport();
+  r.categories[2].summary = 'Your niche, "Safe investing", is a sensitive money topic.';
+  const h = harness([() => extraction, () => r]);
+  await runPipeline({ ...input, niche: "Safe investing" }, h.deps);
+  assertEquals(h.merged().status, "done");
+  assertEquals(h.calls.length, 2, "extract + one judge call");
+});
